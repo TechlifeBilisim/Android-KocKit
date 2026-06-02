@@ -2,6 +2,8 @@ package com.techlife.kockit.core.designsystem.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -40,16 +42,23 @@ fun KocKitDropdownField(
 ) {
     val colors = KocKitTheme.extraColors
     var expanded by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
     val display = selectedOption ?: ""
+    val showActiveBorder = isFocused || expanded
 
     androidx.compose.foundation.layout.Column(modifier = modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = display,
             onValueChange = {},
             readOnly = true,
+            interactionSource = interactionSource,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { expanded = true },
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null
+                ) { expanded = true },
             placeholder = { KocKitText(text = label, color = colors.textSecondary) },
             trailingIcon = {
                 Icon(
@@ -63,8 +72,9 @@ fun KocKitDropdownField(
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = colors.cardBackground,
                 unfocusedContainerColor = colors.cardBackground,
-                focusedBorderColor = colors.primaryTeal,
-                unfocusedBorderColor = colors.borderLight
+                focusedBorderColor = colors.pastelGreen,
+                unfocusedBorderColor = if (showActiveBorder) colors.pastelGreen else colors.borderLight,
+                errorBorderColor = colors.coralAccent
             )
         )
         DropdownMenu(

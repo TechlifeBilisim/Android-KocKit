@@ -38,13 +38,18 @@ fun KocKitSelectableCard(
     modifier: Modifier = Modifier
 ) {
     val colors = KocKitTheme.extraColors
+    val containerColor = if (isSelected) {
+        backgroundColor.copy(alpha = 0.6f)
+    } else {
+        backgroundColor
+    }
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = CardShape,
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        border = if (isSelected) BorderStroke(1.5.dp, White.copy(alpha = 0.75f)) else null,
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        border = if (isSelected) BorderStroke(2.dp, backgroundColor) else null,
         elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 6.dp else 2.dp)
     ) {
         Row(
@@ -61,7 +66,7 @@ fun KocKitSelectableCard(
                 Box(
                     modifier = Modifier
                         .size(54.dp)
-                        .background(color = White.copy(alpha = 0.92f), shape = CircleShape),
+                        .background(color = White, shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(

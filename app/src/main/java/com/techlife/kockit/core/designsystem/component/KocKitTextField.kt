@@ -72,12 +72,13 @@ fun KocKitTextField(
                 focusedContainerColor = colors.cardBackground,
                 unfocusedContainerColor = colors.cardBackground,
                 disabledContainerColor = colors.cardBackground,
-                focusedBorderColor = colors.borderLight,
+                focusedBorderColor = colors.pastelGreen,
                 unfocusedBorderColor = colors.borderLight,
                 disabledBorderColor = colors.borderLight,
+                errorBorderColor = colors.coralAccent,
                 focusedLeadingIconColor = colors.textSecondary,
                 unfocusedLeadingIconColor = colors.textSecondary,
-                cursorColor = colors.primaryTeal
+                cursorColor = colors.pastelGreen
             ),
             singleLine = true
         )

@@ -2,8 +2,8 @@ package com.techlife.kockit.feature.goalsetup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.techlife.kockit.domain.onboarding.model.OnboardingInfo
 import com.techlife.kockit.domain.onboarding.model.Department
+import com.techlife.kockit.domain.onboarding.model.OnboardingInfo
 import com.techlife.kockit.domain.onboarding.model.University
 import com.techlife.kockit.domain.onboarding.usecase.GetDepartmentsUseCase
 import com.techlife.kockit.domain.onboarding.usecase.GetExamGoalsUseCase
@@ -55,15 +55,50 @@ class GoalSetupViewModel @Inject constructor(
 
     fun onEvent(event: GoalSetupEvent) {
         when (event) {
-            is GoalSetupEvent.ExamGoalSelected -> _uiState.update { it.copy(selectedExamGoalId = event.id, examError = null) }
-            is GoalSetupEvent.UniversitySelected -> _uiState.update { it.copy(selectedUniversityName = event.name, universityError = null) }
-            is GoalSetupEvent.DepartmentSelected -> _uiState.update { it.copy(selectedDepartmentName = event.name, departmentError = null) }
-            GoalSetupEvent.ContinueClicked -> save()
-            GoalSetupEvent.BackClicked -> emit(GoalSetupEffect.NavigateBack)
+            is GoalSetupEvent.ExamGoalSelected -> _uiState.update {
+                it.copy(selectedExamGoalId = event.id, examError = null)
+            }
+            is GoalSetupEvent.UniversitySelected -> _uiState.update {
+                it.copy(selectedUniversityName = event.name, universityError = null)
+            }
+            is GoalSetupEvent.DepartmentSelected -> _uiState.update {
+                it.copy(selectedDepartmentName = event.name, departmentError = null)
+            }
+            is GoalSetupEvent.StudyTimeSelected -> _uiState.update {
+                it.copy(selectedStudyTimeId = event.id, studyTimeError = null)
+            }
+            is GoalSetupEvent.RankGoalSelected -> _uiState.update {
+                it.copy(selectedRankGoalId = event.id, rankGoalError = null)
+            }
+            GoalSetupEvent.ContinueClicked -> onContinue()
+            GoalSetupEvent.BackClicked -> onBack()
         }
     }
 
-    private fun save() {
+    private fun onBack() {
+        val step = _uiState.value.currentStep
+        if (step > GoalSetupSteps.EXAM_AND_TARGET) {
+            _uiState.update { it.copy(currentStep = step - 1) }
+        } else {
+            emit(GoalSetupEffect.NavigateBack)
+        }
+    }
+
+    private fun onContinue() {
+        when (_uiState.value.currentStep) {
+            GoalSetupSteps.EXAM_AND_TARGET -> if (validateStep1()) {
+                _uiState.update { it.copy(currentStep = GoalSetupSteps.STUDY_TIME) }
+            }
+            GoalSetupSteps.STUDY_TIME -> if (validateStep2()) {
+                _uiState.update { it.copy(currentStep = GoalSetupSteps.RANK_GOAL) }
+            }
+            GoalSetupSteps.RANK_GOAL -> if (validateStep3()) {
+                save()
+            }
+        }
+    }
+
+    private fun validateStep1(): Boolean {
         val state = _uiState.value
         val exam = state.examGoals.find { it.id == state.selectedExamGoalId }
         val university = state.universities.find { it.name == state.selectedUniversityName }
@@ -73,13 +108,52 @@ class GoalSetupViewModel @Inject constructor(
         val departmentError = if (department == null) "Bölüm seçimi gerekli" else null
         if (examError != null || universityError != null || departmentError != null) {
             _uiState.update {
-                it.copy(examError = examError, universityError = universityError, departmentError = departmentError)
+                it.copy(
+                    examError = examError,
+                    universityError = universityError,
+                    departmentError = departmentError
+                )
             }
-            return
+            return false
         }
+        return true
+    }
+
+    private fun validateStep2(): Boolean {
+        val studyTimeError = if (_uiState.value.selectedStudyTimeId == null) {
+            "Çalışma süresi seçimi gerekli"
+        } else {
+            null
+        }
+        if (studyTimeError != null) {
+            _uiState.update { it.copy(studyTimeError = studyTimeError) }
+            return false
+        }
+        return true
+    }
+
+    private fun validateStep3(): Boolean {
+        val rankGoalError = if (_uiState.value.selectedRankGoalId == null) {
+            "Hedef seçimi gerekli"
+        } else {
+            null
+        }
+        if (rankGoalError != null) {
+            _uiState.update { it.copy(rankGoalError = rankGoalError) }
+            return false
+        }
+        return true
+    }
+
+    private fun save() {
+        val state = _uiState.value
+        val exam = state.examGoals.find { it.id == state.selectedExamGoalId } ?: return
+        val university = state.universities.find { it.name == state.selectedUniversityName } ?: return
+        val department = state.departments.find { it.name == state.selectedDepartmentName } ?: return
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            saveOnboardingInfoUseCase(OnboardingInfo(exam!!, university!!, department!!))
+            saveOnboardingInfoUseCase(OnboardingInfo(exam, university, department))
                 .onSuccess {
                     _uiState.update { it.copy(isLoading = false) }
                     emit(GoalSetupEffect.NavigateToHome)

@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.theme.Black
+import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.White
 
 private val SplashButtonShape = RoundedCornerShape(50)
@@ -42,7 +43,7 @@ fun KocKitSplashActionButton(
             ),
         shape = SplashButtonShape,
         colors = ButtonDefaults.buttonColors(
-            containerColor = White,
+            containerColor = PastelGreen.copy(0.8f),
             contentColor = Black
         ),
         elevation = ButtonDefaults.buttonElevation(
