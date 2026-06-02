@@ -2,7 +2,9 @@ package com.techlife.kockit.feature.goalsetup
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,12 +15,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.techlife.kockit.core.designsystem.background.KocKitBackground
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.component.KocKitDropdownField
+import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
@@ -60,12 +64,16 @@ fun GoalSetupScreen(
                     .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                KocKitBoldText(
+                KocKitExtraBoldText(
                     text = "Sınav Seçimi",
+                    color = Color.Black,
                     fontSize = KocKitTextDefaults.fontSizeHeadline,
                     lineHeight = KocKitTextDefaults.lineHeightHeadline
                 )
-                KocKitText("Hangi sınava hazırlanıyorsun?")
+                KocKitBoldText("Hangi sınava hazırlanıyorsun?")
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 val otherCardColors = listOf(LavenderAccent, OrangeAccent)
                 uiState.examGoals.forEachIndexed { index, goal ->
                     val cardColor = if (goal.id == "tyt") {
@@ -83,8 +91,12 @@ fun GoalSetupScreen(
                     )
                 }
                 uiState.examError?.let { KocKitText(text = it, color = colors.coralAccent) }
-                KocKitSemiText(
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                KocKitBoldText(
                     text = "Hedefini seç",
+                    color = Color.Black,
                     fontSize = KocKitTextDefaults.fontSizeTitle,
                     lineHeight = KocKitTextDefaults.lineHeightTitle
                 )

@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -93,6 +94,7 @@ fun RegisterScreen(
     val isStep1Filled =
         uiState.fullName.isNotBlank() &&
             uiState.email.isNotBlank() &&
+            uiState.nickname.isNotBlank() &&
             uiState.password.isNotBlank() &&
             uiState.confirmPassword.isNotBlank() &&
             uiState.isTermsAccepted
@@ -232,6 +234,13 @@ private fun RegisterStep1Content(
         "E-posta adresi",
         error = uiState.emailError,
         leadingIconVector = Icons.Filled.Email
+    )
+    KocKitTextField(
+        uiState.nickname,
+        { onEvent(RegisterEvent.NicknameChanged(it)) },
+        "Nickname",
+        error = uiState.nicknameError,
+        leadingIconVector = Icons.Filled.Tag
     )
     KocKitPasswordField(
         uiState.password,

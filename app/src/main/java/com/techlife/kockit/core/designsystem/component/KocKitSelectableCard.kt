@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.techlife.kockit.core.designsystem.theme.CardShape
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.White
@@ -59,7 +60,7 @@ fun KocKitSelectableCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(54.dp)
                         .background(color = White.copy(alpha = 0.92f), shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
@@ -70,14 +71,14 @@ fun KocKitSelectableCard(
                     )
                 }
                 Column {
-                    KocKitBoldText(text = title, color = White)
-                    KocKitText(text = subtitle, color = White.copy(alpha = 0.85f))
+                    KocKitBoldText(text = title, color = White, fontSize = 26.sp)
+                    KocKitText(text = subtitle, color = White.copy(alpha = 0.85f), fontSize = 16.sp)
                 }
             }
             Icon(
                 Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(32.dp),
                 tint = White
             )
         }
