@@ -53,7 +53,7 @@ fun GoalSetupScreen(
         }
     }
 
-    KocKitBackground {
+    KocKitBackground(useFormBackgroundImage = true) {
         Column(Modifier.fillMaxSize()) {
             KocKitTopBar(onBackClick = { viewModel.onEvent(GoalSetupEvent.BackClicked) })
             Column(
@@ -138,14 +138,18 @@ private fun GoalSetupExamStep(
         options = uiState.universities.map { it.name },
         selectedOption = uiState.selectedUniversityName,
         onOptionSelected = { onEvent(GoalSetupEvent.UniversitySelected(it)) },
-        error = uiState.universityError
+        error = uiState.universityError,
+        searchable = true,
+        searchPlaceholder = "Üniversite ara..."
     )
     KocKitDropdownField(
         label = "Bölüm",
         options = uiState.departments.map { it.name },
         selectedOption = uiState.selectedDepartmentName,
         onOptionSelected = { onEvent(GoalSetupEvent.DepartmentSelected(it)) },
-        error = uiState.departmentError
+        error = uiState.departmentError,
+        searchable = true,
+        searchPlaceholder = "Bölüm ara..."
     )
 }
 

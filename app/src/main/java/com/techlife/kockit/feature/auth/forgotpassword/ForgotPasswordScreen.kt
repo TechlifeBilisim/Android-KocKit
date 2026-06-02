@@ -41,7 +41,7 @@ fun ForgotPasswordScreen(
     var email by remember { mutableStateOf("") }
     val sendEnabled = email.isNotBlank()
 
-    KocKitBackground {
+    KocKitBackground(useFormBackgroundImage = true) {
         Column(
             modifier = Modifier
                 .fillMaxSize()

@@ -11,9 +11,9 @@ import com.techlife.kockit.R
  * open_sans_semibold.ttf, open_sans_bold.ttf
  */
 val KocKitFontFamily = FontFamily(
-    Font(R.font.opensans_extrabold, FontWeight.ExtraBold),
-    Font(R.font.opensans_regular, FontWeight.Normal),
-    Font(R.font.opensans_medium, FontWeight.Medium),
-    Font(R.font.opensans_semibold, FontWeight.SemiBold),
-    Font(R.font.opensans_bold, FontWeight.Bold)
+    Font(R.font.montserrat_extrabold, FontWeight.ExtraBold),
+    Font(R.font.montserrat_regular, FontWeight.Normal),
+    Font(R.font.montserrat_medium, FontWeight.Medium),
+    Font(R.font.montserrat_semibold, FontWeight.SemiBold),
+    Font(R.font.montserrat_bold, FontWeight.Bold)
 )

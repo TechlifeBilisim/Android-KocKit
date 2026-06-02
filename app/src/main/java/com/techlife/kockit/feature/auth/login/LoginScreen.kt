@@ -88,7 +88,7 @@ fun LoginScreen(
         }
     }
 
-    KocKitBackground {
+    KocKitBackground(useFormBackgroundImage = true) {
         Column(
             modifier = Modifier
                 .fillMaxSize()

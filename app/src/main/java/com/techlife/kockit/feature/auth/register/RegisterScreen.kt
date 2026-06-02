@@ -119,7 +119,7 @@ fun RegisterScreen(
         }
     }
 
-    KocKitBackground {
+    KocKitBackground(useFormBackgroundImage = true) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
