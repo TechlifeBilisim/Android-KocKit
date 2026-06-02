@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Tag
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,6 +45,7 @@ import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.component.KocKitPasswordField
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
+import com.techlife.kockit.core.designsystem.component.KocKitCheckbox
 import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
 import com.techlife.kockit.core.designsystem.component.KocKitTextField
 import com.techlife.kockit.core.designsystem.component.KocKitTopBar
@@ -267,10 +267,9 @@ private fun RegisterStep1Content(
             .padding(top = 2.dp, bottom = 2.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Checkbox(
+        KocKitCheckbox(
             checked = uiState.isTermsAccepted,
-            onCheckedChange = { onEvent(RegisterEvent.TermsCheckedChanged(it)) },
-            modifier = Modifier.size(20.dp)
+            onCheckedChange = { onEvent(RegisterEvent.TermsCheckedChanged(it)) }
         )
         Spacer(modifier = Modifier.size(10.dp))
         androidx.compose.foundation.text.ClickableText(
