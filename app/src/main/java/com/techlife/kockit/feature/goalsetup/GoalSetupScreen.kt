@@ -56,7 +56,8 @@ fun GoalSetupScreen(
             Column(
                 Modifier
                     .verticalScroll(rememberScrollState())
-                    .padding(24.dp),
+                    // Başlığı biraz yukarı almak için üst padding azaltıldı
+                    .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 KocKitBoldText(

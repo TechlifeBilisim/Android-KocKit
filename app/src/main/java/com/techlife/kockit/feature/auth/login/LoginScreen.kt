@@ -19,12 +19,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 import com.techlife.kockit.R
+import com.techlife.kockit.core.auth.GoogleSignInHelper
 import com.techlife.kockit.core.designsystem.background.KocKitBackground
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitLogo
@@ -44,17 +50,39 @@ import kotlinx.coroutines.flow.collectLatest
 fun LoginScreen(
     viewModel: LoginViewModel,
     onNavigateToRegister: () -> Unit,
-    onNavigateToHome: () -> Unit,
+    onNavigateToGoalSetup: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit,
     onShowMessage: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val colors = KocKitTheme.extraColors
+    val loginEnabled = uiState.email.isNotBlank() && uiState.password.isNotBlank()
+    val context = LocalContext.current
+
+    val googleLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            val data = result.data
+            try {
+                val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+                task.getResult(ApiException::class.java)
+                onNavigateToGoalSetup()
+            } catch (_: Exception) {
+                onShowMessage("Google hesabı seçilemedi.")
+            }
+        }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
                 LoginEffect.NavigateToRegister -> onNavigateToRegister()
-                LoginEffect.NavigateToHome -> onNavigateToHome()
+                LoginEffect.NavigateToGoalSetup -> onNavigateToGoalSetup()
+                LoginEffect.NavigateToForgotPassword -> onNavigateToForgotPassword()
+                LoginEffect.LaunchGoogleSignIn -> {
+                    val intent = GoogleSignInHelper.client(context).signInIntent
+                    googleLauncher.launch(intent)
+                }
                 is LoginEffect.ShowMessage -> onShowMessage(effect.message)
             }
         }
@@ -128,6 +156,7 @@ fun LoginScreen(
             KocKitPrimaryButton(
                 text = "Giriş Yap",
                 onClick = { viewModel.onEvent(LoginEvent.LoginClicked) },
+                enabled = loginEnabled,
                 isLoading = uiState.isLoading,
                 containerColor = PastelGreen
             )

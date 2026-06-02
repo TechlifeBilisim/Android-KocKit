@@ -24,7 +24,8 @@ fun KocKitPasswordField(
     onPasswordVisibilityToggle: () -> Unit,
     modifier: Modifier = Modifier,
     error: String? = null,
-    shape: Shape = LoginFieldShape
+    shape: Shape = LoginFieldShape,
+    showTrailingIcon: Boolean = true
 ) {
     val colors = KocKitTheme.extraColors
     KocKitTextField(
@@ -41,14 +42,16 @@ fun KocKitPasswordField(
         },
         error = error,
         shape = shape,
-        trailingIcon = {
-            IconButton(onClick = onPasswordVisibilityToggle) {
-                Icon(
-                    imageVector = if (isPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                    contentDescription = null,
-                    tint = colors.textSecondary
-                )
+        trailingIcon = if (showTrailingIcon) {
+            {
+                IconButton(onClick = onPasswordVisibilityToggle) {
+                    Icon(
+                        imageVector = if (isPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                        contentDescription = null,
+                        tint = colors.textSecondary
+                    )
+                }
             }
-        }
+        } else null
     )
 }

@@ -3,6 +3,8 @@ package com.techlife.kockit.feature.goalsetup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.techlife.kockit.domain.onboarding.model.OnboardingInfo
+import com.techlife.kockit.domain.onboarding.model.Department
+import com.techlife.kockit.domain.onboarding.model.University
 import com.techlife.kockit.domain.onboarding.usecase.GetDepartmentsUseCase
 import com.techlife.kockit.domain.onboarding.usecase.GetExamGoalsUseCase
 import com.techlife.kockit.domain.onboarding.usecase.GetUniversitiesUseCase
@@ -38,11 +40,13 @@ class GoalSetupViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
+            val universities = buildFakeUniversities()
+            val departments = buildFakeDepartments()
             _uiState.update {
                 it.copy(
                     examGoals = getExamGoalsUseCase(),
-                    universities = getUniversitiesUseCase(),
-                    departments = getDepartmentsUseCase(),
+                    universities = universities.ifEmpty { getUniversitiesUseCase() },
+                    departments = departments.ifEmpty { getDepartmentsUseCase() },
                     isDataLoading = false
                 )
             }
@@ -90,4 +94,30 @@ class GoalSetupViewModel @Inject constructor(
     private fun emit(effect: GoalSetupEffect) {
         viewModelScope.launch { _effect.emit(effect) }
     }
+
+    private fun buildFakeUniversities(): List<University> = listOf(
+        University("u1", "Boğaziçi Üniversitesi"),
+        University("u2", "ODTÜ"),
+        University("u3", "İTÜ"),
+        University("u4", "Bilkent Üniversitesi"),
+        University("u5", "Koç Üniversitesi"),
+        University("u6", "Sabancı Üniversitesi"),
+        University("u7", "Hacettepe Üniversitesi"),
+        University("u8", "Ankara Üniversitesi"),
+        University("u9", "Ege Üniversitesi"),
+        University("u10", "Dokuz Eylül Üniversitesi")
+    )
+
+    private fun buildFakeDepartments(): List<Department> = listOf(
+        Department("d1", "Bilgisayar Mühendisliği"),
+        Department("d2", "Yazılım Mühendisliği"),
+        Department("d3", "Elektrik-Elektronik Mühendisliği"),
+        Department("d4", "Endüstri Mühendisliği"),
+        Department("d5", "Makine Mühendisliği"),
+        Department("d6", "İnşaat Mühendisliği"),
+        Department("d7", "Tıp"),
+        Department("d8", "Diş Hekimliği"),
+        Department("d9", "Hukuk"),
+        Department("d10", "Psikoloji")
+    )
 }

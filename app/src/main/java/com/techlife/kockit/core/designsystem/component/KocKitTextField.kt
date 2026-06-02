@@ -43,7 +43,7 @@ fun KocKitTextField(
                 .fillMaxWidth()
                 .height(fieldHeight),
             placeholder = {
-                KocKitText(
+                KocKitSemiText(
                     text = placeholder,
                     color = colors.textSecondary,
                     fontSize = KocKitTextDefaults.fontSizeBodyLarge,
@@ -82,7 +82,7 @@ fun KocKitTextField(
             singleLine = true
         )
         error?.let {
-            KocKitText(
+            KocKitSemiText(
                 text = it,
                 color = colors.coralAccent,
                 fontSize = KocKitTextDefaults.fontSizeSmall,

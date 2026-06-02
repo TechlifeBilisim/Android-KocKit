@@ -3,6 +3,7 @@ package com.techlife.kockit.core.designsystem.component
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.DropdownMenu
@@ -45,7 +46,11 @@ fun KocKitDropdownField(
                 .clickable { expanded = true },
             placeholder = { KocKitText(text = label) },
             trailingIcon = {
-                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = null)
+                Icon(
+                    Icons.Filled.KeyboardArrowDown,
+                    contentDescription = null,
+                    modifier = Modifier.clickable { expanded = true }
+                )
             },
             shape = TextFieldShape,
             textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = KocKitFontFamily),
@@ -56,10 +61,14 @@ fun KocKitDropdownField(
                 unfocusedBorderColor = colors.borderLight
             )
         )
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.fillMaxWidth().wrapContentHeight()
+        ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { KocKitText(text = option) },
+                    text = { KocKitText(text = option, color = colors.textPrimary) },
                     onClick = {
                         onOptionSelected(option)
                         expanded = false

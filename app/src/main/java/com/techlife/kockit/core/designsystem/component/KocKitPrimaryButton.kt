@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.White
 
@@ -38,7 +39,8 @@ fun KocKitPrimaryButton(
         colors = ButtonDefaults.buttonColors(
             containerColor = buttonColor,
             contentColor = White,
-            disabledContainerColor = buttonColor.copy(alpha = 0.5f),
+            // İstenilen: disabled durumda alpha %20
+            disabledContainerColor = buttonColor.copy(alpha = 0.2f),
             disabledContentColor = White.copy(alpha = 0.7f)
         )
     ) {
@@ -51,7 +53,8 @@ fun KocKitPrimaryButton(
         } else {
             KocKitBoldText(
                 text = text,
-                color = Color.White
+                color = Color.White,
+                fontSize = 18.sp
             )
         }
     }

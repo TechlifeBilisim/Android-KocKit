@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(composeBom)

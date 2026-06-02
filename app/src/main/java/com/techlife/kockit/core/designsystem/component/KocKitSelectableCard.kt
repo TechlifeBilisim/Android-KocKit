@@ -1,13 +1,16 @@
 package com.techlife.kockit.core.designsystem.component
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Card
@@ -21,6 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.theme.CardShape
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
+import com.techlife.kockit.core.designsystem.theme.White
 
 @Composable
 fun KocKitSelectableCard(
@@ -39,13 +43,13 @@ fun KocKitSelectableCard(
             .clickable(onClick = onClick),
         shape = CardShape,
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        border = if (isSelected) BorderStroke(2.dp, colors.primaryTeal) else null,
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 1.dp)
+        border = if (isSelected) BorderStroke(1.5.dp, White.copy(alpha = 0.75f)) else null,
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 6.dp else 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 18.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -53,16 +57,28 @@ fun KocKitSelectableCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(leadingIcon, contentDescription = null, tint = colors.textPrimary)
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .background(color = White.copy(alpha = 0.92f), shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        leadingIcon,
+                        contentDescription = null,
+                        tint = backgroundColor
+                    )
+                }
                 Column {
-                    KocKitSemiText(text = title, color = colors.textPrimary)
-                    KocKitText(text = subtitle, color = colors.textSecondary)
+                    KocKitBoldText(text = title, color = White)
+                    KocKitText(text = subtitle, color = White.copy(alpha = 0.85f))
                 }
             }
             Icon(
                 Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(22.dp),
+                tint = White
             )
         }
     }
