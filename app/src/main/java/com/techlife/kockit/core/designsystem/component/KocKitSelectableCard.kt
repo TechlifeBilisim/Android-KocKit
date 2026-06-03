@@ -22,9 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.techlife.kockit.core.designsystem.theme.CardShape
-import com.techlife.kockit.core.designsystem.theme.KocKitTheme
+import androidx.compose.ui.unit.sp
 import com.techlife.kockit.core.designsystem.theme.White
 
 @Composable
@@ -37,20 +36,19 @@ fun KocKitSelectableCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = KocKitTheme.extraColors
-    val containerColor = if (isSelected) {
-        backgroundColor.copy(alpha = 0.6f)
-    } else {
-        backgroundColor
-    }
+    val containerColor = backgroundColor
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = CardShape,
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = if (isSelected) BorderStroke(2.dp, backgroundColor) else null,
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 6.dp else 2.dp)
+        border = if (isSelected) {
+            BorderStroke(2.dp, White.copy(alpha = 0.85f))
+        } else {
+            null
+        },
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 2.dp)
     ) {
         Row(
             modifier = Modifier

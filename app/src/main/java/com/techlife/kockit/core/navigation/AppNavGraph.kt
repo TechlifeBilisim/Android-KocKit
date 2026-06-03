@@ -2,12 +2,17 @@ package com.techlife.kockit.core.navigation
 
 import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.techlife.kockit.feature.auth.forgotpassword.ForgotPasswordScreen
 import com.techlife.kockit.feature.auth.login.LoginScreen
 import com.techlife.kockit.feature.auth.login.LoginViewModel
@@ -16,6 +21,11 @@ import com.techlife.kockit.feature.auth.register.RegisterViewModel
 import com.techlife.kockit.feature.goalsetup.GoalSetupScreen
 import com.techlife.kockit.feature.goalsetup.GoalSetupViewModel
 import com.techlife.kockit.feature.home.HomeScreen
+import com.techlife.kockit.feature.placementtest.PlacementTestExamScreen
+import com.techlife.kockit.feature.placementtest.PlacementTestInfoScreen
+import com.techlife.kockit.feature.placementtest.PlacementTestResultScreen
+import com.techlife.kockit.feature.placementtest.PlacementTestSection
+import com.techlife.kockit.feature.placementtest.PlacementTestViewModel
 import com.techlife.kockit.feature.splash.SplashScreen
 import com.techlife.kockit.feature.splash.SplashViewModel
 
@@ -96,13 +106,92 @@ fun AppNavGraph(
             GoalSetupScreen(
                 viewModel = viewModel,
                 onNavigateToHome = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(navController.graph.id) { inclusive = true }
+                    navController.navigate(Screen.Placement.route) {
+                        popUpTo(Screen.GoalSetup.route) { inclusive = true }
                     }
                 },
                 onNavigateBack = { navController.popBackStack() },
                 onShowMessage = ::showToast
             )
+        }
+
+        navigation(
+            route = Screen.Placement.route,
+            startDestination = Screen.placementInfo(PlacementTestSection.GENERAL_ABILITY.routeKey)
+        ) {
+            composable(
+                route = Screen.PLACEMENT_INFO_ROUTE,
+                arguments = listOf(
+                    navArgument(Screen.PLACEMENT_SECTION_ARG) { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val sectionKey = backStackEntry.arguments?.getString(Screen.PLACEMENT_SECTION_ARG).orEmpty()
+                val section = PlacementTestSection.fromRouteKey(sectionKey)
+                PlacementTestInfoScreen(
+                    section = section,
+                    onStartExam = {
+                        navController.navigate(Screen.placementExam(section.routeKey))
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.PLACEMENT_EXAM_ROUTE,
+                arguments = listOf(
+                    navArgument(Screen.PLACEMENT_SECTION_ARG) { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val sectionKey = backStackEntry.arguments?.getString(Screen.PLACEMENT_SECTION_ARG).orEmpty()
+                val section = PlacementTestSection.fromRouteKey(sectionKey)
+                val parentEntry = remember(backStackEntry) {
+                    navController.getBackStackEntry(Screen.Placement.route)
+                }
+                val viewModel: PlacementTestViewModel = hiltViewModel(parentEntry)
+
+                LaunchedEffect(section) {
+                    viewModel.loadExam(section)
+                }
+
+                PlacementTestExamScreen(
+                    section = section,
+                    viewModel = viewModel,
+                    onBackClick = { navController.popBackStack() },
+                    onFinishExam = {
+                        navController.navigate(Screen.placementResult(section.routeKey))
+                    }
+                )
+            }
+
+            composable(
+                route = Screen.PLACEMENT_RESULT_ROUTE,
+                arguments = listOf(
+                    navArgument(Screen.PLACEMENT_SECTION_ARG) { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val sectionKey = backStackEntry.arguments?.getString(Screen.PLACEMENT_SECTION_ARG).orEmpty()
+                val section = PlacementTestSection.fromRouteKey(sectionKey)
+
+                PlacementTestResultScreen(
+                    section = section,
+                    onBackClick = { navController.popBackStack() },
+                    onContinue = {
+                        when (section) {
+                            PlacementTestSection.GENERAL_ABILITY -> {
+                                navController.navigate(
+                                    Screen.placementInfo(PlacementTestSection.GENERAL_CULTURE.routeKey)
+                                ) {
+                                    popUpTo(Screen.placementInfo(section.routeKey)) { inclusive = true }
+                                }
+                            }
+                            PlacementTestSection.GENERAL_CULTURE -> {
+                                navController.navigate(Screen.Home.route) {
+                                    popUpTo(Screen.Placement.route) { inclusive = true }
+                                }
+                            }
+                        }
+                    }
+                )
+            }
         }
 
         composable(Screen.Home.route) {

@@ -38,9 +38,9 @@ object GoalSetupSteps {
     )
 
     val rankGoalOptions = listOf(
-        GoalSetupOption("50000", "ilk 50.000"),
-        GoalSetupOption("20000", "ilk 20.000"),
-        GoalSetupOption("10000", "ilk 10.000"),
-        GoalSetupOption("1000", "ilk 1.000")
+        GoalSetupOption("50000", "İlk 50.000"),
+        GoalSetupOption("20000", "İlk 20.000"),
+        GoalSetupOption("10000", "İlk 10.000"),
+        GoalSetupOption("1000", "İlk 1.000")
     )
 }
