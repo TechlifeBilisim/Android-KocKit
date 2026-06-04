@@ -7,6 +7,7 @@ sealed class Screen(val route: String) {
     data object ForgotPassword : Screen("forgot_password")
     data object GoalSetup : Screen("goal_setup")
     data object Placement : Screen("placement")
+    data object Main : Screen("main")
     data object Home : Screen("home")
 
     companion object {

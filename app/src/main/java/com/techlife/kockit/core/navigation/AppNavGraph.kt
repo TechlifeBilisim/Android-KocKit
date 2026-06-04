@@ -20,7 +20,7 @@ import com.techlife.kockit.feature.auth.register.RegisterScreen
 import com.techlife.kockit.feature.auth.register.RegisterViewModel
 import com.techlife.kockit.feature.goalsetup.GoalSetupScreen
 import com.techlife.kockit.feature.goalsetup.GoalSetupViewModel
-import com.techlife.kockit.feature.home.HomeScreen
+import com.techlife.kockit.feature.main.MainScreen
 import com.techlife.kockit.feature.placementtest.PlacementTestExamScreen
 import com.techlife.kockit.feature.placementtest.PlacementTestInfoScreen
 import com.techlife.kockit.feature.placementtest.PlacementTestResultScreen
@@ -41,7 +41,7 @@ fun AppNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route
+        startDestination = Screen.Main.route
     ) {
         composable(Screen.Splash.route) {
             val viewModel: SplashViewModel = hiltViewModel()
@@ -184,7 +184,7 @@ fun AppNavGraph(
                                 }
                             }
                             PlacementTestSection.GENERAL_CULTURE -> {
-                                navController.navigate(Screen.Home.route) {
+                                navController.navigate(Screen.Main.route) {
                                     popUpTo(Screen.Placement.route) { inclusive = true }
                                 }
                             }
@@ -194,8 +194,8 @@ fun AppNavGraph(
             }
         }
 
-        composable(Screen.Home.route) {
-            HomeScreen()
+        composable(Screen.Main.route) {
+            MainScreen()
         }
     }
 }
