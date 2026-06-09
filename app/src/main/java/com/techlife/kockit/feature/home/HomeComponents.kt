@@ -9,6 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -17,23 +19,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +53,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -74,9 +85,9 @@ private object HomePerformanceCardStyle {
 }
 
 @Composable
-fun HomeHeader(
-    userName: String,
+fun HomeTopBar(
     notificationCount: Int,
+    onMenuClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -84,19 +95,19 @@ fun HomeHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            KocKitExtraBoldText(
-                text = "Merhaba, $userName! 👋",
-                color = TextPrimary,
-                fontSize = KocKitTextDefaults.fontSizeTitle,
-                lineHeight = KocKitTextDefaults.lineHeightTitle
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            KocKitText(
-                text = "Bugün harika bir gün!",
-                color = TextSecondary,
-                fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(PastelGreen.copy(alpha = 0.18f))
+                .clickable(onClick = onMenuClick),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Menu,
+                contentDescription = "Menü",
+                modifier = Modifier.size(22.dp),
+                tint = PastelGreen
             )
         }
         Row(
@@ -105,14 +116,14 @@ fun HomeHeader(
         ) {
             Icon(
                 imageVector = Icons.Filled.Search,
-                contentDescription = null,
+                contentDescription = "Ara",
                 modifier = Modifier.size(28.dp),
                 tint = TextPrimary
             )
             Box {
                 Icon(
                     imageVector = Icons.Filled.Notifications,
-                    contentDescription = null,
+                    contentDescription = "Bildirimler",
                     modifier = Modifier.size(28.dp),
                     tint = TextPrimary
                 )
@@ -133,6 +144,163 @@ fun HomeHeader(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun HomeGreetingSection(
+    userName: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        KocKitExtraBoldText(
+            text = "Merhaba, $userName! 👋",
+            color = TextPrimary,
+            fontSize = KocKitTextDefaults.fontSizeTitle,
+            lineHeight = KocKitTextDefaults.lineHeightTitle
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        KocKitText(
+            text = "Bugün harika bir gün! Planlı adımlarla hedeflerine yaklaş.",
+            color = TextSecondary,
+            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
+            lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+        )
+    }
+}
+
+@Composable
+fun HomeDailyGoalCard(
+    completedNet: Int,
+    totalNet: Int,
+    remainingNet: Int,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = CardShape,
+        colors = CardDefaults.cardColors(containerColor = White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(PastelGreen.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CalendarToday,
+                        contentDescription = null,
+                        tint = PastelGreen,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    KocKitText(
+                        text = "Bugünkü Hedefin",
+                        color = TextSecondary,
+                        fontSize = KocKitTextDefaults.fontSizeSmall,
+                        lineHeight = KocKitTextDefaults.lineHeightSmall
+                    )
+                    KocKitBoldText(
+                        text = "$completedNet / $totalNet net",
+                        color = PastelGreen,
+                        fontSize = KocKitTextDefaults.fontSizeBodyLarge,
+                        lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(OrangeAccent.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.TrackChanges,
+                        contentDescription = null,
+                        tint = OrangeAccent,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    KocKitBoldText(
+                        text = "$remainingNet net kaldı",
+                        color = PastelGreen,
+                        fontSize = KocKitTextDefaults.fontSizeBody,
+                        lineHeight = KocKitTextDefaults.lineHeightBody
+                    )
+                    KocKitText(
+                        text = "Devam et, başaracaksın! 🔥",
+                        color = TextSecondary,
+                        fontSize = KocKitTextDefaults.fontSizeSmall,
+                        lineHeight = KocKitTextDefaults.lineHeightSmall,
+                        maxLines = 2
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HomeStatsCarousel(modifier: Modifier = Modifier) {
+    val pageCount = 3
+    val pagerState = rememberPagerState(pageCount = { pageCount })
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        HorizontalPager(
+            state = pagerState,
+            pageSize = PageSize.Fixed(168.dp),
+            pageSpacing = 10.dp,
+            contentPadding = PaddingValues(end = 24.dp)
+        ) { page ->
+            when (page) {
+                0 -> HomeProgressCard(modifier = Modifier.fillMaxWidth())
+                1 -> HomePointsCard(modifier = Modifier.fillMaxWidth())
+                else -> HomeExamAverageCard(modifier = Modifier.fillMaxWidth())
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            repeat(pageCount) { index ->
+                val selected = pagerState.currentPage == index
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = 3.dp)
+                        .height(6.dp)
+                        .width(if (selected) 18.dp else 6.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(
+                            if (selected) PastelGreen else Color(0xFFD1D5DB)
+                        )
+                )
             }
         }
     }
@@ -167,181 +335,195 @@ fun HomePerformanceCard(modifier: Modifier = Modifier) {
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    KocKitBoldText(
-                        text = "Performans Analizi",
+                KocKitBoldText(
+                    text = "Performans Analizi",
+                    color = TextPrimary,
+                    fontSize = KocKitTextDefaults.fontSizeBodyLarge,
+                    lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedButton(
+                    onClick = {},
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, HomePerformanceCardStyle.border),
+                    modifier = Modifier.height(32.dp)
+                ) {
+                    KocKitSemiText(
+                        text = "Detaylı Analiz >",
                         color = TextPrimary,
-                        fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                        lineHeight = KocKitTextDefaults.lineHeightBodyLarge
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    KocKitText(
-                        text = "Son analiz: Bugün",
-                        color = TextSecondary,
-                        fontSize = KocKitTextDefaults.fontSizeBody,
-                        lineHeight = KocKitTextDefaults.lineHeightBody
+                        fontSize = KocKitTextDefaults.fontSizeSmall,
+                        lineHeight = KocKitTextDefaults.lineHeightSmall
                     )
                 }
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = TextSecondary,
-                    modifier = Modifier.size(22.dp)
-                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            HomePerformanceInsightRow(
-                label = "En Güçlü Ders",
-                subject = "Matematik",
-                percent = "%78",
-                accentColor = HomePerformanceCardStyle.green,
-                accentLightColor = HomePerformanceCardStyle.greenLight,
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                        contentDescription = null,
-                        tint = HomePerformanceCardStyle.green,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HomePerformanceInsightCell(
+                    modifier = Modifier.weight(1f),
+                    label = "En Güçlü Ders",
+                    subject = "Matematik",
+                    percent = "%70",
+                    accentColor = HomePerformanceCardStyle.green,
+                    accentLightColor = HomePerformanceCardStyle.greenLight,
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                            contentDescription = null,
+                            tint = HomePerformanceCardStyle.green,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                )
+                VerticalDivider(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(horizontal = 8.dp),
+                    thickness = 1.dp,
+                    color = HomePerformanceCardStyle.border
+                )
+                HomePerformanceInsightCell(
+                    modifier = Modifier.weight(1f),
+                    label = "Gelişim Alanı",
+                    subject = "Fizik",
+                    percent = "%40",
+                    accentColor = HomePerformanceCardStyle.orange,
+                    accentLightColor = HomePerformanceCardStyle.orangeLight,
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.TrackChanges,
+                            contentDescription = null,
+                            tint = HomePerformanceCardStyle.orange,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             HorizontalDivider(
-                modifier = Modifier.padding(vertical = 14.dp),
                 thickness = 1.dp,
                 color = HomePerformanceCardStyle.border
             )
 
-            HomePerformanceInsightRow(
-                label = "Gelişim Alanı",
-                subject = "Fizik",
-                percent = "%42",
-                accentColor = HomePerformanceCardStyle.orange,
-                accentLightColor = HomePerformanceCardStyle.orangeLight,
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.TrackChanges,
-                        contentDescription = null,
-                        tint = HomePerformanceCardStyle.orange,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-            )
-
             Spacer(modifier = Modifier.height(14.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.TrendingUp,
-                    contentDescription = null,
-                    tint = HomePerformanceCardStyle.green,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                KocKitText(
-                    text = "Son 7 günde ",
-                    color = HomePerformanceCardStyle.summaryMuted,
-                    fontSize = KocKitTextDefaults.fontSizeBody,
-                    lineHeight = KocKitTextDefaults.lineHeightBody
-                )
-                KocKitBoldText(
-                    text = "+%6",
-                    color = HomePerformanceCardStyle.green,
-                    fontSize = KocKitTextDefaults.fontSizeBody,
-                    lineHeight = KocKitTextDefaults.lineHeightBody
-                )
-                KocKitText(
-                    text = " gelişim",
-                    color = HomePerformanceCardStyle.summaryMuted,
-                    fontSize = KocKitTextDefaults.fontSizeBody,
-                    lineHeight = KocKitTextDefaults.lineHeightBody
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .border(
-                        width = 1.dp,
-                        color = HomePerformanceCardStyle.green,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                    .clickable { },
-                contentAlignment = Alignment.Center
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                KocKitBoldText(
-                    text = "Detaylı Analizi Gör",
-                    color = HomePerformanceCardStyle.green,
-                    fontSize = KocKitTextDefaults.fontSizeBody,
-                    lineHeight = KocKitTextDefaults.lineHeightBody
-                )
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = HomePerformanceCardStyle.green,
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                        contentDescription = null,
+                        tint = HomePerformanceCardStyle.green,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    KocKitText(
+                        text = "Son 7 günde ",
+                        color = HomePerformanceCardStyle.summaryMuted,
+                        fontSize = KocKitTextDefaults.fontSizeSmall,
+                        lineHeight = KocKitTextDefaults.lineHeightSmall
+                    )
+                    KocKitBoldText(
+                        text = "+%6",
+                        color = HomePerformanceCardStyle.green,
+                        fontSize = KocKitTextDefaults.fontSizeSmall,
+                        lineHeight = KocKitTextDefaults.lineHeightSmall
+                    )
+                    KocKitText(
+                        text = " gelişim",
+                        color = HomePerformanceCardStyle.summaryMuted,
+                        fontSize = KocKitTextDefaults.fontSizeSmall,
+                        lineHeight = KocKitTextDefaults.lineHeightSmall
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Box(
                     modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 12.dp)
-                        .size(20.dp)
-                        .size(20.dp)
-                )
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .border(
+                            width = 1.dp,
+                            color = HomePerformanceCardStyle.green,
+                            shape = RoundedCornerShape(10.dp)
+                        )
+                        .clickable { }
+                        .padding(horizontal = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        KocKitBoldText(
+                            text = "Detaylı Analizi Gör",
+                            color = HomePerformanceCardStyle.green,
+                            fontSize = KocKitTextDefaults.fontSizeSmall,
+                            lineHeight = KocKitTextDefaults.lineHeightSmall
+                        )
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = HomePerformanceCardStyle.green,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun HomePerformanceInsightRow(
+private fun HomePerformanceInsightCell(
     label: String,
     subject: String,
     percent: String,
     accentColor: Color,
     accentLightColor: Color,
-    leadingIcon: @Composable () -> Unit
+    leadingIcon: @Composable () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(40.dp)
                 .clip(CircleShape)
                 .background(accentLightColor),
             contentAlignment = Alignment.Center
         ) {
             leadingIcon()
         }
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {
             KocKitSemiText(
                 text = label,
                 color = accentColor,
-                fontSize = KocKitTextDefaults.fontSizeBody,
-                lineHeight = KocKitTextDefaults.lineHeightBody
+                fontSize = KocKitTextDefaults.fontSizeSmall,
+                lineHeight = KocKitTextDefaults.lineHeightSmall,
+                maxLines = 2
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(accentColor)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                KocKitBoldText(
-                    text = subject,
-                    color = TextPrimary,
-                    fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                    lineHeight = KocKitTextDefaults.lineHeightBodyLarge
-                )
-            }
+            Spacer(modifier = Modifier.height(2.dp))
+            KocKitBoldText(
+                text = subject,
+                color = TextPrimary,
+                fontSize = KocKitTextDefaults.fontSizeBody,
+                lineHeight = KocKitTextDefaults.lineHeightBody,
+                maxLines = 1
+            )
         }
         Surface(
             shape = RoundedCornerShape(8.dp),
@@ -350,131 +532,193 @@ private fun HomePerformanceInsightRow(
             KocKitBoldText(
                 text = percent,
                 color = accentColor,
-                fontSize = KocKitTextDefaults.fontSizeBody,
-                lineHeight = KocKitTextDefaults.lineHeightBody,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                fontSize = KocKitTextDefaults.fontSizeSmall,
+                lineHeight = KocKitTextDefaults.lineHeightSmall,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
             )
+        }
+    }
+}
+
+private val HomeStatCardHeight = 220.dp
+
+@Composable
+private fun HomeStatCardShell(
+    modifier: Modifier = Modifier,
+    headerIcon: ImageVector,
+    headerIconBg: Color,
+    headerIconTint: Color,
+    title: String,
+    footerBg: Color,
+    footerTint: Color,
+    footerIcon: ImageVector,
+    footerText: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(HomeStatCardHeight),
+        shape = CardShape,
+        colors = CardDefaults.cardColors(containerColor = White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(headerIconBg),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = headerIcon,
+                        contentDescription = null,
+                        tint = headerIconTint,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                KocKitBoldText(
+                    text = title,
+                    color = TextPrimary,
+                    fontSize = KocKitTextDefaults.fontSizeSmall,
+                    lineHeight = KocKitTextDefaults.lineHeightSmall,
+                    modifier = Modifier.weight(1f),
+                    maxLines = 2
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = TextSecondary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                content = content
+            )
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                color = footerBg
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = footerIcon,
+                        contentDescription = null,
+                        tint = footerTint,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    KocKitSemiText(
+                        text = footerText,
+                        color = footerTint,
+                        fontSize = KocKitTextDefaults.fontSizeSmall,
+                        lineHeight = KocKitTextDefaults.lineHeightSmall,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
 fun HomeProgressCard(modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .fillMaxHeight(),
-        shape = CardShape,
-        colors = CardDefaults.cardColors(containerColor = White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    HomeStatCardShell(
+        modifier = modifier,
+        headerIcon = Icons.Outlined.BarChart,
+        headerIconBg = LavenderAccent.copy(alpha = 0.15f),
+        headerIconTint = LavenderAccent,
+        title = "Genel İlerleme",
+        footerBg = LavenderAccent.copy(alpha = 0.12f),
+        footerTint = LavenderAccent,
+        footerIcon = Icons.AutoMirrored.Filled.TrendingUp,
+        footerText = "Geçen haftaya göre +%8 artış"
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            KocKitBoldText(
-                text = "Genel İlerleme",
-                color = TextPrimary,
-                fontSize = KocKitTextDefaults.fontSizeSmall,
-                lineHeight = KocKitTextDefaults.lineHeightSmall,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                maxLines = 2
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            HomeCircularProgress(
-                progress = 0.68f,
-                percentText = "%68",
-                label = "İlerleme",
-                ringColor = LavenderAccent,
-                ringSize = 84.dp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            KocKitText(
-                text = "Geçen haftaya göre +%8 artış",
-                color = LavenderAccent,
-                fontSize = KocKitTextDefaults.fontSizeSmall,
-                lineHeight = KocKitTextDefaults.lineHeightSmall,
-                textAlign = TextAlign.Center,
-                maxLines = 3
-            )
-        }
+        HomeCircularProgress(
+            progress = HomeFakeData.GENERAL_PROGRESS,
+            percentText = HomeFakeData.GENERAL_PROGRESS_PERCENT,
+            label = "ilerleme",
+            ringColor = LavenderAccent,
+            ringSize = 84.dp
+        )
     }
 }
 
 @Composable
 fun HomePointsCard(modifier: Modifier = Modifier) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .fillMaxHeight(),
-        shape = CardShape,
-        colors = CardDefaults.cardColors(containerColor = White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    HomeStatCardShell(
+        modifier = modifier,
+        headerIcon = Icons.Outlined.EmojiEvents,
+        headerIconBg = OrangeAccent.copy(alpha = 0.15f),
+        headerIconTint = OrangeAccent,
+        title = "Toplam Puan",
+        footerBg = OrangeAccent.copy(alpha = 0.12f),
+        footerTint = OrangeAccent,
+        footerIcon = Icons.Outlined.EmojiEvents,
+        footerText = "İlk %10 Sıralaman"
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFFFF3D6)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Star,
-                    contentDescription = null,
-                    tint = Color(0xFFE8A830),
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(6.dp))
-            KocKitBoldText(
-                text = "Toplam Puan",
-                color = TextPrimary,
-                fontSize = KocKitTextDefaults.fontSizeSmall,
-                lineHeight = KocKitTextDefaults.lineHeightSmall,
-                textAlign = TextAlign.Center,
-                maxLines = 2
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            KocKitExtraBoldText(
-                text = "850",
-                color = TextPrimary,
-                fontSize = KocKitTextDefaults.fontSizeTitle,
-                lineHeight = KocKitTextDefaults.lineHeightTitle
-            )
-            KocKitText(
-                text = "Toplam Puan",
-                color = TextSecondary,
-                fontSize = KocKitTextDefaults.fontSizeSmall,
-                lineHeight = KocKitTextDefaults.lineHeightSmall
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = OrangeAccent.copy(alpha = 0.12f)
-            ) {
-                KocKitSemiText(
-                    text = "İlk %10 Sıralaman",
-                    color = OrangeAccent,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    maxLines = 2
-                )
-            }
-        }
+        KocKitExtraBoldText(
+            text = HomeFakeData.TOTAL_POINTS,
+            color = TextPrimary,
+            fontSize = KocKitTextDefaults.fontSizeTitle,
+            lineHeight = KocKitTextDefaults.lineHeightTitle
+        )
+        KocKitText(
+            text = "Toplam Puan",
+            color = TextSecondary,
+            fontSize = KocKitTextDefaults.fontSizeSmall,
+            lineHeight = KocKitTextDefaults.lineHeightSmall
+        )
+    }
+}
+
+@Composable
+fun HomeExamAverageCard(modifier: Modifier = Modifier) {
+    HomeStatCardShell(
+        modifier = modifier,
+        headerIcon = Icons.Outlined.Description,
+        headerIconBg = PastelGreen.copy(alpha = 0.15f),
+        headerIconTint = PastelGreen,
+        title = "Deneme Ortalaması",
+        footerBg = PastelGreen.copy(alpha = 0.12f),
+        footerTint = PastelGreen,
+        footerIcon = Icons.AutoMirrored.Filled.TrendingUp,
+        footerText = "Son 4 deneme +4 net artış"
+    ) {
+        KocKitExtraBoldText(
+            text = HomeFakeData.EXAM_AVERAGE_NET,
+            color = TextPrimary,
+            fontSize = KocKitTextDefaults.fontSizeTitle,
+            lineHeight = KocKitTextDefaults.lineHeightTitle
+        )
+        KocKitText(
+            text = "TYT Ortalama",
+            color = TextSecondary,
+            fontSize = KocKitTextDefaults.fontSizeSmall,
+            lineHeight = KocKitTextDefaults.lineHeightSmall
+        )
     }
 }
 
@@ -550,23 +794,25 @@ fun HomePriorityCard(
                 Icon(
                     Icons.Filled.TrackChanges,
                     contentDescription = null,
-                    tint = TextPrimary,
+                    tint = Color(0xFFE85D5D),
                     modifier = Modifier.size(22.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 KocKitBoldText(
                     text = "Bugünkü Önceliğin",
                     color = TextPrimary,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
+                    fontSize = KocKitTextDefaults.fontSizeBodyLarge,
                     lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedButton(
                     onClick = {},
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+                    modifier = Modifier.height(32.dp)
                 ) {
                     KocKitSemiText(
-                        text = "Planını Gör",
+                        text = "Planını Gör >",
                         color = TextPrimary,
                         fontSize = KocKitTextDefaults.fontSizeSmall,
                         lineHeight = KocKitTextDefaults.lineHeightSmall
@@ -579,6 +825,11 @@ fun HomePriorityCard(
             lessons.forEachIndexed { index, lesson ->
                 HomePriorityLessonRow(lesson = lesson)
                 if (index < lessons.lastIndex) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(
+                        thickness = 1.dp,
+                        color = Color(0xFFE5E7EB)
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                 }
             }
