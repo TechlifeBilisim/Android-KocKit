@@ -2,6 +2,7 @@ package com.techlife.kockit.feature.main
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.TrackChanges
@@ -20,8 +21,8 @@ enum class MainTab(
     ),
     EXAMS(
         label = "Denemeler",
-        selectedIcon = Icons.Outlined.Description,
-        unselectedIcon = Icons.Outlined.Description
+        selectedIcon = Icons.Filled.Description,
+        unselectedIcon = Icons.Filled.Description
     ),
     ANALYSIS(
         label = "Analiz",

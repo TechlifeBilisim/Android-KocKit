@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.theme.CardShape
@@ -34,21 +35,25 @@ fun KocKitSelectableCard(
     leadingIcon: ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    shape: Shape = CardShape,
+    showSelectionBorder: Boolean = true
 ) {
     val containerColor = backgroundColor
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = CardShape,
+        shape = shape,
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = if (isSelected) {
+        border = if (isSelected && showSelectionBorder) {
             BorderStroke(2.dp, White.copy(alpha = 0.85f))
         } else {
             null
         },
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 4.dp else 2.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected && showSelectionBorder) 4.dp else 2.dp
+        )
     ) {
         Row(
             modifier = Modifier

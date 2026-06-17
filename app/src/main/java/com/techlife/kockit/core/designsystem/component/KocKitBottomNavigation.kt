@@ -65,7 +65,7 @@ fun KocKitBottomNavigation(
             modifier = Modifier.fillMaxWidth(),
             shape = NavBarShape,
             color = White,
-            shadowElevation = 16.dp,
+            shadowElevation = 8.dp,
             tonalElevation = 0.dp,
             border = BorderStroke(1.dp, NavBarBorder)
         ) {
@@ -101,7 +101,7 @@ fun KocKitBottomNavigation(
                 ) {
                     tabs.forEachIndexed { index, tab ->
                         val isSelected = index == selectedIndex
-                        val interactionSource = remember { MutableInteractionSource() }
+                        val interactionSource = remember(tab) { MutableInteractionSource() }
 
                         Box(
                             modifier = Modifier
