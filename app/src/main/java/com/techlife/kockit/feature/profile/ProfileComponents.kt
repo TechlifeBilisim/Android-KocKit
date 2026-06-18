@@ -35,7 +35,6 @@ import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material.icons.outlined.TrackChanges
 import androidx.compose.material.icons.outlined.Verified
@@ -87,7 +86,6 @@ private object ProfileCardStyle {
     val purpleGradientEnd = Color(0xFFD4CCF0)
     val unavailableChipBg = Color(0xFFFFF5EE)
     val dividerColor = Color(0xFFF0F0F0)
-    val atomTint = Color(0xFFE8EEF5)
 }
 
 @Composable
@@ -180,20 +178,10 @@ fun ProfileSummaryCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
-            Icon(
-                imageVector = Icons.Outlined.Science,
-                contentDescription = null,
-                tint = ProfileCardStyle.atomTint,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 12.dp, end = 12.dp)
-                    .size(56.dp)
-            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(ProfileCardStyle.innerPadding)
-                    .padding(bottom = 56.dp),
+                    .padding(ProfileCardStyle.innerPadding),
                 verticalAlignment = Alignment.Top
             ) {
                 Box {
@@ -229,7 +217,11 @@ fun ProfileSummaryCard(
                     }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 72.dp)
+                ) {
                     KocKitBoldText(
                         text = fullName,
                         color = TextPrimary,
@@ -249,10 +241,10 @@ fun ProfileSummaryCard(
             ProfileLevelBadge(
                 levelLabel = levelLabel,
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
+                    .align(Alignment.TopEnd)
                     .padding(
-                        end = ProfileCardStyle.innerPadding,
-                        bottom = ProfileCardStyle.innerPadding
+                        top = ProfileCardStyle.innerPadding,
+                        end = ProfileCardStyle.innerPadding
                     )
             )
         }
@@ -523,48 +515,6 @@ private fun ProfileGoalCardShell(
 }
 
 @Composable
-fun ProfileEducationCard(
-    items: List<ProfileInfoRow>,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(ProfileCardStyle.innerPadding)
-        ) {
-            ProfileCardTitle(
-                icon = Icons.Outlined.School,
-                iconBg = PastelGreen.copy(alpha = 0.15f),
-                iconTint = PastelGreen,
-                title = "Eğitim Bilgileri"
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            items.forEachIndexed { index, item ->
-                ProfileInfoKeyValueRow(label = item.label, value = item.value)
-                if (index < items.lastIndex) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = PastelGreen,
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .size(18.dp)
-            )
-        }
-    }
-}
-
-@Composable
 fun ProfileStudyProgramCard(
     weeklyHours: String,
     weeklyProgress: Float,
@@ -573,14 +523,14 @@ fun ProfileStudyProgramCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(ProfileCardStyle.innerPadding)
         ) {
             ProfileCardTitle(
@@ -884,34 +834,6 @@ private fun ProfileCardTitle(
             color = TextPrimary,
             fontSize = 10.sp,
             lineHeight = 15.sp,
-            maxLines = 2
-        )
-    }
-}
-
-@Composable
-private fun ProfileInfoKeyValueRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Top
-    ) {
-        KocKitText(
-            text = label,
-            color = TextSecondary,
-            fontSize = 9.sp,
-            lineHeight = 11.sp,
-            modifier = Modifier.weight(0.95f),
-            maxLines = 2
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        KocKitSemiText(
-            text = value,
-            color = TextPrimary,
-            fontSize = 9.sp,
-            lineHeight = 11.sp,
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(1.05f),
             maxLines = 2
         )
     }

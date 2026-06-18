@@ -57,29 +57,14 @@ fun ProfileScreen(
                 pointsPeriod = ProfileFakeData.POINTS_PERIOD
             )
         }
-        item(key = "education_study_row") {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Max),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                ProfileEducationCard(
-                    items = ProfileFakeData.educationInfo,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                )
-                ProfileStudyProgramCard(
-                    weeklyHours = ProfileFakeData.WEEKLY_STUDY_HOURS,
-                    weeklyProgress = ProfileFakeData.WEEKLY_STUDY_PROGRESS,
-                    weeklyPercent = ProfileFakeData.WEEKLY_STUDY_PERCENT,
-                    details = ProfileFakeData.studyDetails,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                )
-            }
+        item(key = "study_program") {
+            ProfileStudyProgramCard(
+                weeklyHours = ProfileFakeData.WEEKLY_STUDY_HOURS,
+                weeklyProgress = ProfileFakeData.WEEKLY_STUDY_PROGRESS,
+                weeklyPercent = ProfileFakeData.WEEKLY_STUDY_PERCENT,
+                details = ProfileFakeData.studyDetails,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
         item(key = "prep_unavailable_row") {
             Row(
