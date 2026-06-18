@@ -14,6 +14,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.techlife.kockit.feature.auth.forgotpassword.ForgotPasswordScreen
+import com.techlife.kockit.feature.auth.forgotpassword.ForgotPasswordViewModel
 import com.techlife.kockit.feature.auth.login.LoginScreen
 import com.techlife.kockit.feature.auth.login.LoginViewModel
 import com.techlife.kockit.feature.auth.register.RegisterScreen
@@ -95,8 +96,13 @@ fun AppNavGraph(
         }
 
         composable(Screen.ForgotPassword.route) {
+            val viewModel: ForgotPasswordViewModel = hiltViewModel()
             ForgotPasswordScreen(
+                viewModel = viewModel,
                 onNavigateBack = { navController.popBackStack() },
+                onNavigateToLogin = {
+                    navController.popBackStack(Screen.Login.route, inclusive = false)
+                },
                 onShowMessage = ::showToast
             )
         }
