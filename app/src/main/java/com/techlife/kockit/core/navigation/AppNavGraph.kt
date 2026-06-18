@@ -42,7 +42,7 @@ fun AppNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.GoalSetup.route
+        startDestination = Screen.Main.route
     ) {
         composable(Screen.Splash.route) {
             val viewModel: SplashViewModel = hiltViewModel()
@@ -111,8 +111,13 @@ fun AppNavGraph(
             val viewModel: GoalSetupViewModel = hiltViewModel()
             GoalSetupScreen(
                 viewModel = viewModel,
-                onNavigateToHome = {
+                onNavigateToPlacement = {
                     navController.navigate(Screen.Placement.route) {
+                        popUpTo(Screen.GoalSetup.route) { inclusive = true }
+                    }
+                },
+                onNavigateToMain = {
+                    navController.navigate(Screen.Main.route) {
                         popUpTo(Screen.GoalSetup.route) { inclusive = true }
                     }
                 },
@@ -135,6 +140,7 @@ fun AppNavGraph(
                 val section = PlacementTestSection.fromRouteKey(sectionKey)
                 PlacementTestInfoScreen(
                     section = section,
+                    onBackClick = { navController.popBackStack() },
                     onStartExam = {
                         navController.navigate(Screen.placementExam(section.routeKey))
                     }
@@ -179,21 +185,16 @@ fun AppNavGraph(
 
                 PlacementTestResultScreen(
                     section = section,
-                    onBackClick = { navController.popBackStack() },
-                    onContinue = {
-                        when (section) {
-                            PlacementTestSection.GENERAL_ABILITY -> {
-                                navController.navigate(
-                                    Screen.placementInfo(PlacementTestSection.GENERAL_CULTURE.routeKey)
-                                ) {
-                                    popUpTo(Screen.placementInfo(section.routeKey)) { inclusive = true }
-                                }
-                            }
-                            PlacementTestSection.GENERAL_CULTURE -> {
-                                navController.navigate(Screen.Main.route) {
-                                    popUpTo(Screen.Placement.route) { inclusive = true }
-                                }
-                            }
+                    onGoToNextExam = {
+                        navController.navigate(
+                            Screen.placementInfo(PlacementTestSection.GENERAL_CULTURE.routeKey)
+                        ) {
+                            popUpTo(Screen.placementResult(section.routeKey)) { inclusive = true }
+                        }
+                    },
+                    onGoToHome = {
+                        navController.navigate(Screen.Main.route) {
+                            popUpTo(Screen.Placement.route) { inclusive = true }
                         }
                     }
                 )

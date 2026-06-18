@@ -1,7 +1,7 @@
 package com.techlife.kockit.feature.placementtest
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,22 +12,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
-import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.White
 
@@ -55,102 +51,112 @@ fun PlacementTestExamScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth()
                     .padding(horizontal = 24.dp, vertical = 8.dp)
             ) {
-                PlacementTestExamHeader(
-                    title = section.examTitle,
-                    onBackClick = onBackClick
-                )
+                PlacementExamTopBar(title = section.examTitle)
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                PlacementExamStatusBar(
-                    timerText = examState.timerText,
-                    questionLabel = "Soru ${examState.currentQuestionIndex + 1} / ${examState.totalQuestions}",
-                    currentQuestionIndex = examState.currentQuestionIndex,
-                    totalQuestions = examState.totalQuestions
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                question?.let { current ->
-                    KocKitBoldText(
-                        text = current.prompt,
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    KocKitSemiText(
+                        text = "${examState.currentQuestionIndex + 1}/${examState.totalQuestions}",
                         color = TextPrimary,
                         fontSize = KocKitTextDefaults.fontSizeBodyLarge,
                         lineHeight = KocKitTextDefaults.lineHeightBodyLarge
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    KocKitSemiText(
-                        text = current.detail,
-                        color = TextPrimary,
-                        fontSize = KocKitTextDefaults.fontSizeTitle,
-                        lineHeight = KocKitTextDefaults.lineHeightTitle
+                    PlacementTimerBadge(
+                        timerText = examState.timerText,
+                        accentColor = PlacementTestColors.green
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                PlacementSegmentedProgress(
+                    currentIndex = examState.currentQuestionIndex,
+                    totalQuestions = examState.totalQuestions,
+                    accentColor = PlacementTestColors.green
+                )
+
+                question?.let { current ->
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    PlacementSubjectChip(
+                        subject = current.subject,
+                        accentColor = section.accentColor
                     )
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    current.options.forEachIndexed { index, optionText ->
-                        PlacementAnswerOption(
-                            label = optionLabels.getOrElse(index) { "" },
-                            text = optionText,
-                            isSelected = examState.selectedOptionIndex == index,
-                            accentColor = section.accentColor,
-                            onClick = { viewModel.selectOption(index) }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                    }
-                }
-            }
-
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = { viewModel.goToPreviousQuestion() },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, Color(0xFFE0E0E0)),
-                        colors = ButtonDefaults.outlinedButtonColors(containerColor = White)
-                    ) {
-                        KocKitSemiText(
-                            text = "Önceki",
+                    if (current.prompt.isNotBlank()) {
+                        KocKitBoldText(
+                            text = current.prompt,
                             color = TextPrimary,
                             fontSize = KocKitTextDefaults.fontSizeBodyLarge,
                             lineHeight = KocKitTextDefaults.lineHeightBodyLarge
                         )
                     }
-                    Button(
-                        onClick = {
-                            if (isLastQuestion) onFinishExam()
-                            else viewModel.goToNextQuestion()
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(52.dp),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = PastelGreen)
-                    ) {
+                    if (current.detail.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(12.dp))
                         KocKitSemiText(
-                            text = if (isLastQuestion) "Bitir" else "Sonraki",
-                            color = White,
+                            text = current.detail,
+                            color = TextPrimary,
                             fontSize = KocKitTextDefaults.fontSizeBodyLarge,
                             lineHeight = KocKitTextDefaults.lineHeightBodyLarge
                         )
                     }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(8.dp))
+            question?.let { current ->
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    current.options.forEachIndexed { index, optionText ->
+                        PlacementAnswerOption(
+                            label = optionLabels.getOrElse(index) { "" },
+                            text = optionText,
+                            isSelected = examState.selectedOptionIndex == index,
+                            accentColor = PlacementTestColors.green,
+                            onClick = { viewModel.selectOption(index) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            } ?: Spacer(modifier = Modifier.weight(1f))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Button(
+                    onClick = {
+                        if (isLastQuestion) onFinishExam()
+                        else viewModel.goToNextQuestion()
+                    },
+                    enabled = examState.selectedOptionIndex != null,
+                    modifier = Modifier.height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = PlacementTestColors.green)
+                ) {
+                    KocKitSemiText(
+                        text = if (isLastQuestion) "Bitir" else "Sonraki",
+                        color = White,
+                        fontSize = KocKitTextDefaults.fontSizeBodyLarge,
+                        lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+                    )
+                }
             }
         }
     }

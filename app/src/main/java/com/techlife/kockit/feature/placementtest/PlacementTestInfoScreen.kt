@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,18 +16,18 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
-import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
-import com.techlife.kockit.core.designsystem.theme.TextSecondary
 
 @Composable
 fun PlacementTestInfoScreen(
     section: PlacementTestSection,
+    onBackClick: () -> Unit,
     onStartExam: () -> Unit
 ) {
     PlacementTestDecorBackground(accentSoftColor = section.accentSoftColor) {
@@ -43,7 +42,10 @@ fun PlacementTestInfoScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 24.dp, vertical = 16.dp)
             ) {
-                PlacementTestInfoHeader(title = section.infoTitle)
+                PlacementTestInfoBackHeader(
+                    title = section.infoTitle,
+                    onBackClick = onBackClick
+                )
 
                 Spacer(modifier = Modifier.height(20.dp))
 
@@ -57,7 +59,10 @@ fun PlacementTestInfoScreen(
                     color = TextPrimary,
                     fontSize = KocKitTextDefaults.fontSizeBodyLarge,
                     lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -72,7 +77,7 @@ fun PlacementTestInfoScreen(
                         modifier = Modifier.weight(1f)
                     )
                     PlacementStatCard(
-                        label = "Süre",
+                        label = section.durationLabel,
                         value = section.duration,
                         modifier = Modifier.weight(1f)
                     )
@@ -89,26 +94,8 @@ fun PlacementTestInfoScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                if (section == PlacementTestSection.GENERAL_CULTURE) {
-                    section.scopeItems.chunked(2).forEach { rowItems ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            rowItems.forEach { item ->
-                                Box(modifier = Modifier.weight(1f)) {
-                                    PlacementScopeItem(text = item)
-                                }
-                            }
-                            if (rowItems.size == 1) {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
-                        }
-                    }
-                } else {
-                    section.scopeItems.forEach { item ->
-                        PlacementScopeItem(text = item)
-                    }
+                section.scopeItems.forEach { item ->
+                    PlacementScopeItem(text = item)
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

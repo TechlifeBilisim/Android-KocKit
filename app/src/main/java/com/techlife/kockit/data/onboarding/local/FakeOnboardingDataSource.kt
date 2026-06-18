@@ -13,7 +13,7 @@ class FakeOnboardingDataSource @Inject constructor() {
 
     fun getExamGoals(): List<ExamGoal> = listOf(
         ExamGoal(id = "tyt", title = "TYT", subtitle = "Temel Yeterlilik Testi", type = "TYT"),
-        ExamGoal(id = "ayt", title = "AYT", subtitle = "Alan Yeterlilik Testi", type = "AYT"),
+        ExamGoal(id = "ayt", title = "AYT", subtitle = "Alan Yeterlilik Testleri", type = "AYT"),
         ExamGoal(id = "yks", title = "YKS", subtitle = "TYT + AYT", type = "YKS")
     )
 

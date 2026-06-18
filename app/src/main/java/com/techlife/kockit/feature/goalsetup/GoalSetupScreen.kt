@@ -20,7 +20,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.outlined.Assignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,15 +36,12 @@ import com.techlife.kockit.domain.onboarding.model.ExamGoal
 import com.techlife.kockit.domain.onboarding.model.UniversityType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.techlife.kockit.core.designsystem.background.KocKitBackground
-import com.techlife.kockit.R
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitDropdownField
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
-import com.techlife.kockit.core.designsystem.component.KocKitGoalMotivationCard
 import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
 import com.techlife.kockit.core.designsystem.component.KocKitSelectableCard
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
-import com.techlife.kockit.core.designsystem.component.KocKitSimpleSelectableCard
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.component.KocKitTopBar
@@ -57,59 +56,60 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun GoalSetupScreen(
     viewModel: GoalSetupViewModel,
-    onNavigateToHome: () -> Unit,
+    onNavigateToPlacement: () -> Unit,
+    onNavigateToMain: () -> Unit,
     onNavigateBack: () -> Unit,
     onShowMessage: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val colors = KocKitTheme.extraColors
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
-                GoalSetupEffect.NavigateToHome -> onNavigateToHome()
+                GoalSetupEffect.NavigateToPlacement -> onNavigateToPlacement()
+                GoalSetupEffect.NavigateToMain -> onNavigateToMain()
                 GoalSetupEffect.NavigateBack -> onNavigateBack()
                 is GoalSetupEffect.ShowMessage -> onShowMessage(effect.message)
             }
         }
     }
 
-    KocKitBackground(useFormBackgroundImage = true) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
-        ) {
-            KocKitTopBar(onBackClick = { viewModel.onEvent(GoalSetupEvent.BackClicked) })
+    Box(modifier = Modifier.fillMaxSize()) {
+        KocKitBackground(useFormBackgroundImage = true) {
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.systemBars)
             ) {
-                when (uiState.currentStep) {
-                    GoalSetupSteps.EXAM_AND_TARGET -> GoalSetupExamStep(
-                        uiState = uiState,
-                        onEvent = viewModel::onEvent
-                    )
-                    GoalSetupSteps.STUDY_TIME -> GoalSetupStudyTimeStep(
-                        uiState = uiState,
-                        onEvent = viewModel::onEvent
-                    )
-                    GoalSetupSteps.RANK_GOAL -> GoalSetupRankGoalStep(
+                KocKitTopBar(onBackClick = { viewModel.onEvent(GoalSetupEvent.BackClicked) })
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    GoalSetupExamStep(
                         uiState = uiState,
                         onEvent = viewModel::onEvent
                     )
                 }
+                KocKitPrimaryButton(
+                    text = "Devam Et",
+                    onClick = { viewModel.onEvent(GoalSetupEvent.ContinueClicked) },
+                    isLoading = uiState.isLoading,
+                    showTrailingArrow = false,
+                    containerColor = PastelGreen,
+                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 32.dp)
+                )
             }
-            KocKitPrimaryButton(
-                text = "Devam Et",
-                onClick = { viewModel.onEvent(GoalSetupEvent.ContinueClicked) },
-                isLoading = uiState.isLoading,
-                showTrailingArrow = true,
-                containerColor = PastelGreen,
-                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 32.dp)
+        }
+
+        if (uiState.showSuccessDialog) {
+            GoalSetupSuccessDialog(
+                onDismiss = { viewModel.onEvent(GoalSetupEvent.SuccessDialogDismissed) },
+                onGoToPlacement = { viewModel.onEvent(GoalSetupEvent.GoToPlacementClicked) },
+                onGoToHome = { viewModel.onEvent(GoalSetupEvent.GoToMainClicked) }
             )
         }
     }
@@ -133,6 +133,11 @@ private fun GoalSetupExamStep(
     Spacer(modifier = Modifier.height(8.dp))
 
     val otherCardColors = listOf(LavenderAccent, OrangeAccent)
+    val examIcons = mapOf(
+        "tyt" to Icons.Outlined.Assignment,
+        "ayt" to Icons.Filled.MenuBook,
+        "yks" to Icons.Filled.Badge
+    )
     uiState.examGoals.forEachIndexed { index, goal ->
         val cardColor = if (goal.id == "tyt") {
             PastelGreen
@@ -155,7 +160,7 @@ private fun GoalSetupExamStep(
                 title = goal.title,
                 subtitle = goal.subtitle,
                 backgroundColor = cardColor,
-                leadingIcon = Icons.Filled.School,
+                leadingIcon = examIcons[goal.id] ?: Icons.Filled.MenuBook,
                 isSelected = uiState.selectedExamGoalId == goal.id,
                 onClick = { onEvent(GoalSetupEvent.ExamGoalSelected(goal.id)) }
             )
@@ -220,96 +225,6 @@ private fun GoalSetupExamStep(
     )
 }
 
-@Composable
-private fun GoalSetupSimpleStepHeader(
-    title: String,
-    subtitle: String
-) {
-    val colors = KocKitTheme.extraColors
-
-    KocKitExtraBoldText(
-        text = title,
-        color = colors.textPrimary,
-        fontSize = KocKitTextDefaults.fontSizeHeadline,
-        lineHeight = KocKitTextDefaults.lineHeightHeadline
-    )
-    KocKitText(
-        text = subtitle,
-        color = colors.textSecondary,
-        fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-        lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
-        modifier = Modifier.padding(top = 4.dp)
-    )
-}
-
-@Composable
-private fun GoalSetupStudyTimeStep(
-    uiState: GoalSetupUiState,
-    onEvent: (GoalSetupEvent) -> Unit
-) {
-    val colors = KocKitTheme.extraColors
-
-    GoalSetupSimpleStepHeader(
-        title = "Çalışma Süreni Belirle",
-        subtitle = "Günlük çalışma süreni seç, sana özel plan oluşturalım."
-    )
-
-    Spacer(modifier = Modifier.height(12.dp))
-
-    uiState.studyTimeOptions.forEach { option ->
-        KocKitSimpleSelectableCard(
-            label = option.label,
-            isSelected = uiState.selectedStudyTimeId == option.id,
-            onClick = { onEvent(GoalSetupEvent.StudyTimeSelected(option.id)) },
-            accentColor = OrangeAccent
-        )
-    }
-
-    Spacer(modifier = Modifier.height(8.dp))
-
-    KocKitGoalMotivationCard(
-        message = "Düzenli çalışma, hedefe ulaşmanın anahtarıdır!",
-        iconResId = R.drawable.ic_goal_study,
-        accentColor = OrangeAccent
-    )
-
-    uiState.studyTimeError?.let { KocKitText(text = it, color = colors.coralAccent) }
-}
-
-@Composable
-private fun GoalSetupRankGoalStep(
-    uiState: GoalSetupUiState,
-    onEvent: (GoalSetupEvent) -> Unit
-) {
-    val colors = KocKitTheme.extraColors
-
-    GoalSetupSimpleStepHeader(
-        title = "Hedefini Belirle",
-        subtitle = "Hedefini seç, sana özel plan oluşturalım."
-    )
-
-    Spacer(modifier = Modifier.height(12.dp))
-
-    uiState.rankGoalOptions.forEach { option ->
-        KocKitSimpleSelectableCard(
-            label = option.label,
-            isSelected = uiState.selectedRankGoalId == option.id,
-            onClick = { onEvent(GoalSetupEvent.RankGoalSelected(option.id)) },
-            accentColor = OrangeAccent
-        )
-    }
-
-    Spacer(modifier = Modifier.height(8.dp))
-
-    KocKitGoalMotivationCard(
-        message = "Büyük hedefler, planlı adımlarla gerçekleşir!",
-        iconResId = R.drawable.img_target,
-        accentColor = OrangeAccent
-    )
-
-    uiState.rankGoalError?.let { KocKitText(text = it, color = colors.coralAccent) }
-}
-
 private val GoalSetupAttachedCardRadius = 20.dp
 
 @Composable
@@ -324,7 +239,6 @@ private fun GoalSetupAytExamCard(
     onFieldSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = KocKitTheme.extraColors
     val isExpanded = isSelected
     val topShape = if (isExpanded) {
         RoundedCornerShape(
@@ -354,11 +268,12 @@ private fun GoalSetupAytExamCard(
             title = goal.title,
             subtitle = goal.subtitle,
             backgroundColor = backgroundColor,
-            leadingIcon = Icons.Filled.School,
+            leadingIcon = Icons.Filled.MenuBook,
             isSelected = isSelected,
             onClick = onExamSelected,
             shape = topShape,
-            showSelectionBorder = false
+            showSelectionBorder = false,
+            showExpandArrow = true
         )
         if (isExpanded) {
             GoalSetupAytFieldPanel(
@@ -436,16 +351,8 @@ private fun GoalSetupAytFieldOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val chipBackground = if (isSelected) {
-        White
-    } else {
-        White.copy(alpha = 0.18f)
-    }
-    val borderColor = if (isSelected) {
-        White
-    } else {
-        White.copy(alpha = 0.35f)
-    }
+    val chipBackground = if (isSelected) White else White.copy(alpha = 0.18f)
+    val borderColor = if (isSelected) White else White.copy(alpha = 0.35f)
     val textColor = if (isSelected) backgroundColor else White
 
     Box(

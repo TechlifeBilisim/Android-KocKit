@@ -5,6 +5,11 @@ import androidx.compose.ui.graphics.Color
 import com.techlife.kockit.R
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 
+data class PlacementResultAreaItem(
+    val label: String,
+    val emoji: String
+)
+
 enum class PlacementTestSection(
     val routeKey: String,
     val infoTitle: String,
@@ -12,80 +17,94 @@ enum class PlacementTestSection(
     val description: String,
     val questionCount: String,
     val duration: String,
-    val difficulty: String,
+    val durationLabel: String,
     val scopeItems: List<String>,
-    val resultTitle: String,
-    val netScore: String,
-    val netLabel: String,
+    val resultScreenTitle: String,
     val correctCount: String,
     val wrongCount: String,
     val emptyCount: String,
-    val progress: Float,
+    val totalQuestionCount: String,
+    val completionTime: String,
+    val averageTime: String,
+    val strongAreas: List<PlacementResultAreaItem>,
+    val weakAreas: List<PlacementResultAreaItem>,
     val accentColor: Color,
     val accentSoftColor: Color,
     val startButtonText: String,
-    val resultButtonText: String,
-    @DrawableRes val heroIconRes: Int,
-    @DrawableRes val trophyIconRes: Int
+    val nextExamButtonText: String?,
+  @DrawableRes val heroIconRes: Int
 ) {
     GENERAL_ABILITY(
         routeKey = "ability",
         infoTitle = "Genel Yetenek Sınavı",
-        examTitle = "Genel Yetenek",
-        description = "Bu sınav, sayısal ve sözel yeteneklerinizi, mantıksal düşünme " +
-            "becerilerinizi ve problem çözme kapasitenizi ölçmek için tasarlanmıştır.",
-        questionCount = "2",
+        examTitle = "Seviye Testi",
+        description = "Sayısal, sözel, mantık ve problem çözme becerilerini ölçen sorular seni bekliyor.",
+        questionCount = "40",
         duration = "30 dk",
-        difficulty = "Orta",
+        durationLabel = "Toplam Süre",
         scopeItems = listOf(
             "Sayısal Yetenek",
             "Sözel Yetenek",
             "Mantık",
             "Problem Çözme"
         ),
-        resultTitle = "Genel Yetenek Sınavı Tamamlandı!",
-        netScore = "32 / 40",
-        netLabel = "Net",
-        correctCount = "34",
-        wrongCount = "5",
-        emptyCount = "1",
-        progress = 0.8f,
+        resultScreenTitle = "Seviye Sınavı Sonucu",
+        correctCount = "31",
+        wrongCount = "12",
+        emptyCount = "7",
+        totalQuestionCount = "50",
+        completionTime = "38 dk 24 sn",
+        averageTime = "Ortalama: 45 dk",
+        strongAreas = listOf(
+            PlacementResultAreaItem("Paragraf", "📄"),
+            PlacementResultAreaItem("Mantık", "🧠"),
+            PlacementResultAreaItem("Fen Bilimleri", "🧪")
+        ),
+        weakAreas = listOf(
+            PlacementResultAreaItem("Tarih", "🏛"),
+            PlacementResultAreaItem("Coğrafya", "🌍"),
+            PlacementResultAreaItem("Problem Çözme", "🧩")
+        ),
         accentColor = PlacementTestColors.orange,
         accentSoftColor = PlacementTestColors.orangeSoft,
         startButtonText = "Sınavı Başlat",
-        resultButtonText = "Devam Et",
-        heroIconRes = R.drawable.img_brain,
-        trophyIconRes = R.drawable.ic_placement_trophy_gold
+        nextExamButtonText = "Genel Kültür Sınavına Git",
+        heroIconRes = R.drawable.img_brain
     ),
     GENERAL_CULTURE(
         routeKey = "culture",
         infoTitle = "Genel Kültür Sınavı",
-        examTitle = "Genel Kültür",
-        description = "Bu sınav, tarih, coğrafya, vatandaşlık, fen bilimleri ve güncel " +
-            "olaylar konularındaki bilgi düzeyinizi ölçmek için hazırlanmıştır.",
-        questionCount = "2",
-        duration = "40 dk",
-        difficulty = "Orta",
+        examTitle = "Seviye Testi",
+        description = "Tarih, coğrafya, fen bilimleri ve güncel bilgilerden oluşan sorular seni bekliyor.",
+        questionCount = "40",
+        duration = "30 dk",
+        durationLabel = "Toplam Süre",
         scopeItems = listOf(
             "Tarih",
             "Coğrafya",
-            "Vatandaşlık",
             "Fen Bilimleri",
             "Güncel Bilgiler"
         ),
-        resultTitle = "Genel Kültür Sınavı Tamamlandı!",
-        netScore = "28 / 40",
-        netLabel = "Net",
-        correctCount = "30",
+        resultScreenTitle = "Seviye Sınavı Sonucu",
+        correctCount = "28",
         wrongCount = "8",
-        emptyCount = "2",
-        progress = 0.7f,
+        emptyCount = "4",
+        totalQuestionCount = "40",
+        completionTime = "27 dk 10 sn",
+        averageTime = "Ortalama: 30 dk",
+        strongAreas = listOf(
+            PlacementResultAreaItem("Tarih", "🏛"),
+            PlacementResultAreaItem("Güncel Bilgiler", "📰")
+        ),
+        weakAreas = listOf(
+            PlacementResultAreaItem("Coğrafya", "🌍"),
+            PlacementResultAreaItem("Fen Bilimleri", "🧪")
+        ),
         accentColor = PlacementTestColors.purple,
         accentSoftColor = PlacementTestColors.purpleSoft,
         startButtonText = "Sınavı Başlat",
-        resultButtonText = "Sonuçları Analiz Et",
-        heroIconRes = R.drawable.ic_placement_globe,
-        trophyIconRes = R.drawable.ic_placement_trophy_purple
+        nextExamButtonText = null,
+        heroIconRes = R.drawable.ic_placement_globe
     );
 
     companion object {
@@ -102,5 +121,5 @@ object PlacementTestColors {
     val green = PastelGreen
     val greenSoft = PastelGreen.copy(alpha = 0.14f)
     val wrongRed = Color(0xFFE85D5D)
-    val emptyBlue = Color(0xFF5B8DEF)
+    val emptyGray = Color(0xFF9AA0A6)
 }

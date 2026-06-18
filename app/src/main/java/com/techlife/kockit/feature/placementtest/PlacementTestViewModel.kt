@@ -11,12 +11,13 @@ import kotlinx.coroutines.flow.update
 data class PlacementQuestion(
     val prompt: String,
     val detail: String,
-    val options: List<String>
+    val options: List<String>,
+    val subject: String = "Matematik"
 )
 
 data class PlacementExamUiState(
     val currentQuestionIndex: Int = 0,
-    val timerText: String = "29:12",
+    val timerText: String = "03:45",
     val selectedOptionIndex: Int? = null,
     val questions: List<PlacementQuestion> = emptyList()
 ) {
@@ -30,26 +31,15 @@ class PlacementTestViewModel @Inject constructor() : ViewModel() {
     val examState: StateFlow<PlacementExamUiState> = _examState.asStateFlow()
 
     fun loadExam(section: PlacementTestSection) {
-        val questions = fakeQuestions(section)
         _examState.value = PlacementExamUiState(
             currentQuestionIndex = 0,
             selectedOptionIndex = null,
-            questions = questions
+            questions = fakeQuestions(section)
         )
     }
 
     fun selectOption(index: Int) {
         _examState.update { it.copy(selectedOptionIndex = index) }
-    }
-
-    fun goToPreviousQuestion() {
-        _examState.update { state ->
-            if (state.currentQuestionIndex <= 0) state
-            else state.copy(
-                currentQuestionIndex = state.currentQuestionIndex - 1,
-                selectedOptionIndex = null
-            )
-        }
     }
 
     fun goToNextQuestion() {
@@ -67,26 +57,42 @@ class PlacementTestViewModel @Inject constructor() : ViewModel() {
             return listOf(
                 PlacementQuestion(
                     prompt = "Aşağıdakilerden hangisi Cumhuriyet'in ilan edildiği yıldır?",
-                    detail = "Soru 1",
-                    options = listOf("1919", "1920", "1921", "1922", "1923")
+                    detail = "",
+                    options = listOf("1919", "1920", "1921", "1922", "1923"),
+                    subject = "Tarih"
                 ),
                 PlacementQuestion(
                     prompt = "Türkiye'nin başkenti aşağıdakilerden hangisidir?",
-                    detail = "Soru 2",
-                    options = listOf("İstanbul", "Ankara", "İzmir", "Bursa", "Antalya")
+                    detail = "",
+                    options = listOf("İstanbul", "Ankara", "İzmir", "Bursa", "Antalya"),
+                    subject = "Coğrafya"
+                ),
+                PlacementQuestion(
+                    prompt = "Aşağıdakilerden hangisi bir fizik kanunudur?",
+                    detail = "",
+                    options = listOf("Evrim", "Yerçekimi", "Fotosentez", "Mitoz", "Osmoz"),
+                    subject = "Fen Bilimleri"
                 )
             )
         }
         return listOf(
             PlacementQuestion(
-                prompt = "Aşağıdaki sayı dizisinde soru işareti yerine gelmesi gereken sayı kaçtır?",
-                detail = "2, 6, 12, 20, 30, ?",
-                options = listOf("38", "40", "42", "44", "46")
+                prompt = "1. x > 2 olmak üzere,",
+                detail = "f(x) = (x² - 4) / (x - 2) fonksiyonunun lim(x→2) f(x) değeri kaçtır?",
+                options = listOf("0", "2", "4", "-2", "1"),
+                subject = "Matematik"
             ),
             PlacementQuestion(
-                prompt = "Aşağıdaki ifadelerden hangisi verilen koşulları sağlar?",
-                detail = "Soru 2",
-                options = listOf("A", "B", "C", "D", "E")
+                prompt = "Aşağıdaki sayı dizisinde soru işareti yerine gelmesi gereken sayı kaçtır?",
+                detail = "2, 6, 12, 20, 30, ?",
+                options = listOf("38", "40", "42", "44", "46"),
+                subject = "Sayısal Yetenek"
+            ),
+            PlacementQuestion(
+                prompt = "Verilen paragrafta yazarın asıl vurgulamak istediği düşünce hangisidir?",
+                detail = "",
+                options = listOf("A", "B", "C", "D", "E"),
+                subject = "Sözel Yetenek"
             )
         )
     }

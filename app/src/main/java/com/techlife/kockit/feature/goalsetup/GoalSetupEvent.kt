@@ -10,8 +10,9 @@ sealed interface GoalSetupEvent {
     data class UniversityTypeSelected(val type: UniversityType) : GoalSetupEvent
     data class UniversitySelected(val name: String) : GoalSetupEvent
     data class DepartmentSelected(val name: String) : GoalSetupEvent
-    data class StudyTimeSelected(val id: String) : GoalSetupEvent
-    data class RankGoalSelected(val id: String) : GoalSetupEvent
     data object ContinueClicked : GoalSetupEvent
     data object BackClicked : GoalSetupEvent
+    data object SuccessDialogDismissed : GoalSetupEvent
+    data object GoToPlacementClicked : GoalSetupEvent
+    data object GoToMainClicked : GoalSetupEvent
 }

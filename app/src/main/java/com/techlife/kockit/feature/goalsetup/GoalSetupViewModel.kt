@@ -69,6 +69,17 @@ class GoalSetupViewModel @Inject constructor(
             is GoalSetupEvent.AytFieldSelected -> _uiState.update {
                 it.copy(selectedAytFieldId = event.id, aytFieldError = null)
             }
+            GoalSetupEvent.SuccessDialogDismissed -> _uiState.update {
+                it.copy(showSuccessDialog = false)
+            }
+            GoalSetupEvent.GoToPlacementClicked -> {
+                _uiState.update { it.copy(showSuccessDialog = false) }
+                emit(GoalSetupEffect.NavigateToPlacement)
+            }
+            GoalSetupEvent.GoToMainClicked -> {
+                _uiState.update { it.copy(showSuccessDialog = false) }
+                emit(GoalSetupEffect.NavigateToMain)
+            }
             is GoalSetupEvent.RegionSelected -> _uiState.update { state ->
                 applyUniversityFilters(
                     state.copy(
@@ -107,14 +118,8 @@ class GoalSetupViewModel @Inject constructor(
             is GoalSetupEvent.DepartmentSelected -> _uiState.update {
                 it.copy(selectedDepartmentName = event.name, departmentError = null)
             }
-            is GoalSetupEvent.StudyTimeSelected -> _uiState.update {
-                it.copy(selectedStudyTimeId = event.id, studyTimeError = null)
-            }
-            is GoalSetupEvent.RankGoalSelected -> _uiState.update {
-                it.copy(selectedRankGoalId = event.id, rankGoalError = null)
-            }
             GoalSetupEvent.ContinueClicked -> onContinue()
-            GoalSetupEvent.BackClicked -> onBack()
+            GoalSetupEvent.BackClicked -> emit(GoalSetupEffect.NavigateBack)
         }
     }
 
@@ -148,30 +153,13 @@ class GoalSetupViewModel @Inject constructor(
         )
     }
 
-    private fun onBack() {
-        val step = _uiState.value.currentStep
-        if (step > GoalSetupSteps.EXAM_AND_TARGET) {
-            _uiState.update { it.copy(currentStep = step - 1) }
-        } else {
-            emit(GoalSetupEffect.NavigateBack)
-        }
-    }
-
     private fun onContinue() {
-        when (_uiState.value.currentStep) {
-            GoalSetupSteps.EXAM_AND_TARGET -> if (validateStep1()) {
-                _uiState.update { it.copy(currentStep = GoalSetupSteps.STUDY_TIME) }
-            }
-            GoalSetupSteps.STUDY_TIME -> if (validateStep2()) {
-                _uiState.update { it.copy(currentStep = GoalSetupSteps.RANK_GOAL) }
-            }
-            GoalSetupSteps.RANK_GOAL -> if (validateStep3()) {
-                save()
-            }
+        if (validate()) {
+            save()
         }
     }
 
-    private fun validateStep1(): Boolean {
+    private fun validate(): Boolean {
         val state = _uiState.value
         val exam = state.examGoals.find { it.id == state.selectedExamGoalId }
         val university = state.universities.find { it.name == state.selectedUniversityName }
@@ -216,32 +204,6 @@ class GoalSetupViewModel @Inject constructor(
         return true
     }
 
-    private fun validateStep2(): Boolean {
-        val studyTimeError = if (_uiState.value.selectedStudyTimeId == null) {
-            "Çalışma süresi seçimi gerekli"
-        } else {
-            null
-        }
-        if (studyTimeError != null) {
-            _uiState.update { it.copy(studyTimeError = studyTimeError) }
-            return false
-        }
-        return true
-    }
-
-    private fun validateStep3(): Boolean {
-        val rankGoalError = if (_uiState.value.selectedRankGoalId == null) {
-            "Hedef seçimi gerekli"
-        } else {
-            null
-        }
-        if (rankGoalError != null) {
-            _uiState.update { it.copy(rankGoalError = rankGoalError) }
-            return false
-        }
-        return true
-    }
-
     private fun save() {
         val state = _uiState.value
         val exam = state.examGoals.find { it.id == state.selectedExamGoalId } ?: return
@@ -252,8 +214,7 @@ class GoalSetupViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             saveOnboardingInfoUseCase(OnboardingInfo(exam, university, department))
                 .onSuccess {
-                    _uiState.update { it.copy(isLoading = false) }
-                    emit(GoalSetupEffect.NavigateToHome)
+                    _uiState.update { it.copy(isLoading = false, showSuccessDialog = true) }
                 }
                 .onFailure {
                     _uiState.update { it.copy(isLoading = false) }

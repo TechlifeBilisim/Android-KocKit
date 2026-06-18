@@ -2,6 +2,7 @@ package com.techlife.kockit.core.designsystem.component
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,7 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -23,8 +25,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import com.techlife.kockit.core.designsystem.theme.CardShape
 import androidx.compose.ui.unit.sp
+import com.techlife.kockit.core.designsystem.theme.CardShape
 import com.techlife.kockit.core.designsystem.theme.White
 
 @Composable
@@ -37,15 +39,16 @@ fun KocKitSelectableCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     shape: Shape = CardShape,
-    showSelectionBorder: Boolean = true
+    showSelectionBorder: Boolean = true,
+    showRadioButton: Boolean = true,
+    showExpandArrow: Boolean = false
 ) {
-    val containerColor = backgroundColor
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = shape,
-        colors = CardDefaults.cardColors(containerColor = containerColor),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
         border = if (isSelected && showSelectionBorder) {
             BorderStroke(2.dp, White.copy(alpha = 0.85f))
         } else {
@@ -64,7 +67,8 @@ fun KocKitSelectableCard(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.weight(1f)
             ) {
                 Box(
                     modifier = Modifier
@@ -79,15 +83,53 @@ fun KocKitSelectableCard(
                     )
                 }
                 Column {
-                    KocKitBoldText(text = title, color = White, fontSize = 26.sp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        KocKitBoldText(text = title, color = White, fontSize = 26.sp)
+                        if (showExpandArrow) {
+                            Icon(
+                                imageVector = Icons.Filled.KeyboardArrowDown,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp),
+                                tint = White
+                            )
+                        }
+                    }
                     KocKitText(text = subtitle, color = White.copy(alpha = 0.85f), fontSize = 16.sp)
                 }
             }
+            if (showRadioButton) {
+                KocKitExamRadioButton(isSelected = isSelected)
+            }
+        }
+    }
+}
+
+@Composable
+fun KocKitExamRadioButton(
+    isSelected: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(28.dp)
+            .then(
+                if (isSelected) {
+                    Modifier.background(White, CircleShape)
+                } else {
+                    Modifier.border(2.dp, White.copy(alpha = 0.9f), CircleShape)
+                }
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isSelected) {
             Icon(
-                Icons.AutoMirrored.Filled.ArrowForward,
+                imageVector = Icons.Filled.Check,
                 contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = White
+                tint = Color(0xFF5BB199),
+                modifier = Modifier.size(18.dp)
             )
         }
     }
