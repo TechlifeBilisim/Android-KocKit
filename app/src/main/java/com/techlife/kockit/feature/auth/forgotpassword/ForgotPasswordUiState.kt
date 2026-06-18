@@ -12,7 +12,8 @@ data class ForgotPasswordUiState(
     val codeError: String? = null,
     val newPasswordError: String? = null,
     val confirmPasswordError: String? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val resendSecondsRemaining: Int = 0
 )
 
 object ForgotPasswordSteps {

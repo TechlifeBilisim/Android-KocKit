@@ -9,4 +9,5 @@ sealed interface ForgotPasswordEvent {
     data object ConfirmPasswordVisibilityChanged : ForgotPasswordEvent
     data object ContinueClicked : ForgotPasswordEvent
     data object BackClicked : ForgotPasswordEvent
+    data object ResendCodeClicked : ForgotPasswordEvent
 }

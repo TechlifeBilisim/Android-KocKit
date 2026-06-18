@@ -3,6 +3,7 @@ package com.techlife.kockit.feature.auth.forgotpassword
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,8 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
 
     private val _effect = MutableSharedFlow<ForgotPasswordEffect>()
     val effect: SharedFlow<ForgotPasswordEffect> = _effect.asSharedFlow()
+
+    private var resendCountdownJob: Job? = null
 
     fun onEvent(event: ForgotPasswordEvent) {
         when (event) {
@@ -45,6 +48,7 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
             }
             ForgotPasswordEvent.ContinueClicked -> onContinue()
             ForgotPasswordEvent.BackClicked -> onBack()
+            ForgotPasswordEvent.ResendCodeClicked -> onResendCode()
         }
     }
 
@@ -78,6 +82,7 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
                     code = ""
                 )
             }
+            startResendCountdown()
             emit(ForgotPasswordEffect.ShowMessage("Doğrulama kodu e-posta adresine gönderildi."))
         }
     }
@@ -137,6 +142,32 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    private fun onResendCode() {
+        if (_uiState.value.resendSecondsRemaining > 0) return
+        viewModelScope.launch {
+            emit(ForgotPasswordEffect.ShowMessage("Doğrulama kodu yeniden gönderildi."))
+            startResendCountdown()
+        }
+    }
+
+    private fun startResendCountdown() {
+        resendCountdownJob?.cancel()
+        _uiState.update { it.copy(resendSecondsRemaining = RESEND_COOLDOWN_SECONDS) }
+        resendCountdownJob = viewModelScope.launch {
+            while (_uiState.value.resendSecondsRemaining > 0) {
+                delay(1_000)
+                _uiState.update { state ->
+                    state.copy(resendSecondsRemaining = (state.resendSecondsRemaining - 1).coerceAtLeast(0))
+                }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        resendCountdownJob?.cancel()
+        super.onCleared()
+    }
+
     private fun onBack() {
         when (_uiState.value.currentStep) {
             ForgotPasswordSteps.EMAIL -> emit(ForgotPasswordEffect.NavigateBack)
@@ -157,5 +188,9 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
 
     private fun emit(effect: ForgotPasswordEffect) {
         viewModelScope.launch { _effect.emit(effect) }
+    }
+
+    private companion object {
+        const val RESEND_COOLDOWN_SECONDS = 178
     }
 }

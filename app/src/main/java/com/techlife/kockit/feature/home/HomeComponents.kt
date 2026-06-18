@@ -77,7 +77,7 @@ private object HomePerformanceCardStyle {
     val summaryMuted = Color(0xFF6B7280)
 }
 
-private val HomeStatCardHeight = 196.dp
+private val HomeStatCardHeight = 150.dp
 private val HomeCardInnerPadding = 16.dp
 private val HomeCardSectionSpacing = 14.dp
 
@@ -562,7 +562,7 @@ private fun HomeStatCardShell(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(10.dp),
+                .padding(horizontal = 10.dp, vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -580,15 +580,15 @@ private fun HomeStatCardShell(
                         imageVector = headerIcon,
                         contentDescription = null,
                         tint = headerIconTint,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(12.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(6.dp))
-                KocKitBoldText(
+                Spacer(modifier = Modifier.width(4.dp))
+                KocKitSemiText(
                     text = title,
                     color = TextPrimary,
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp,
+                    fontSize = 9.sp,
+                    lineHeight = 12.sp,
                     modifier = Modifier.weight(1f),
                     maxLines = 2
                 )
@@ -596,7 +596,7 @@ private fun HomeStatCardShell(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = TextSecondary.copy(alpha = 0.6f),
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(12.dp)
                 )
             }
             Box(
@@ -617,13 +617,6 @@ private fun HomeStatCardShell(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Icon(
-                        imageVector = footerIcon,
-                        contentDescription = null,
-                        tint = footerTint,
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
                     KocKitSemiText(
                         text = footerText,
                         color = footerTint,
@@ -741,7 +734,7 @@ private fun HomeCircularProgress(
             modifier = Modifier.fillMaxSize(),
             color = ringColor,
             trackColor = Color(0xFFE8E8E8),
-            strokeWidth = 7.dp,
+            strokeWidth = 4.dp,
             strokeCap = StrokeCap.Round
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {

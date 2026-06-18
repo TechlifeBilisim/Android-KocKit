@@ -42,7 +42,7 @@ fun AppNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Main.route
+        startDestination = Screen.Splash.route
     ) {
         composable(Screen.Splash.route) {
             val viewModel: SplashViewModel = hiltViewModel()
@@ -102,6 +102,11 @@ fun AppNavGraph(
                 onNavigateBack = { navController.popBackStack() },
                 onNavigateToLogin = {
                     navController.popBackStack(Screen.Login.route, inclusive = false)
+                },
+                onNavigateToRegister = {
+                    navController.navigate(Screen.Register.route) {
+                        popUpTo(Screen.ForgotPassword.route) { inclusive = true }
+                    }
                 },
                 onShowMessage = ::showToast
             )

@@ -23,6 +23,7 @@ import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.theme.CreamBackground
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.feature.home.HomeScreen
+import com.techlife.kockit.feature.profile.ProfileScreen
 
 @Composable
 fun MainScreen() {
@@ -50,8 +51,10 @@ fun MainScreen() {
                 MainTab.HOME -> HomeScreen()
                 MainTab.EXAMS,
                 MainTab.ANALYSIS,
-                MainTab.GOALS,
-                MainTab.PROFILE -> MainTabPlaceholder(tab = selectedTab)
+                MainTab.GOALS -> MainTabPlaceholder(tab = selectedTab)
+                MainTab.PROFILE -> ProfileScreen(
+                    onBackClick = { selectedTab = MainTab.HOME }
+                )
             }
         }
     }
