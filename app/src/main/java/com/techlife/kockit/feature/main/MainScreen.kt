@@ -24,12 +24,15 @@ import com.techlife.kockit.core.designsystem.theme.CreamBackground
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.feature.home.HomeScreen
 import com.techlife.kockit.feature.profile.ProfileScreen
+import com.techlife.kockit.feature.search.SearchScreen
 
 @Composable
 fun MainScreen(
-    onNavigateToPlacement: (sectionKey: String) -> Unit = {}
+    onNavigateToPlacement: (sectionKey: String) -> Unit = {},
+    onNavigateToLogin: () -> Unit = {}
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
+    var showSearch by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -40,7 +43,10 @@ fun MainScreen(
         bottomBar = {
             KocKitBottomNavigation(
                 selectedTab = selectedTab,
-                onTabSelected = { selectedTab = it }
+                onTabSelected = {
+                    showSearch = false
+                    selectedTab = it
+                }
             )
         }
     ) { innerPadding ->
@@ -50,7 +56,17 @@ fun MainScreen(
                 .padding(innerPadding)
         ) {
             when (selectedTab) {
-                MainTab.HOME -> HomeScreen(onNavigateToPlacement = onNavigateToPlacement)
+                MainTab.HOME -> {
+                    if (showSearch) {
+                        SearchScreen(onBackClick = { showSearch = false })
+                    } else {
+                        HomeScreen(
+                            onNavigateToPlacement = onNavigateToPlacement,
+                            onNavigateToLogin = onNavigateToLogin,
+                            onSearchClick = { showSearch = true }
+                        )
+                    }
+                }
                 MainTab.EXAMS,
                 MainTab.ANALYSIS,
                 MainTab.GOALS -> MainTabPlaceholder(tab = selectedTab)

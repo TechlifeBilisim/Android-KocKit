@@ -28,7 +28,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onNavigateToPlacement: (sectionKey: String) -> Unit = {}
+    onNavigateToPlacement: (sectionKey: String) -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
+    onSearchClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -43,7 +45,7 @@ fun HomeScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
-                HomeEffect.NavigateToLogin -> Unit
+                HomeEffect.NavigateToLogin -> onNavigateToLogin()
                 is HomeEffect.NavigateToPlacement -> onNavigateToPlacement(effect.sectionKey)
             }
         }
@@ -52,7 +54,13 @@ fun HomeScreen(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            HomeDrawerContent(userName = uiState.fullName.ifBlank { HomeFakeData.USER_NAME })
+            HomeDrawerContent(
+                userName = uiState.fullName.ifBlank { HomeFakeData.USER_NAME },
+                onLogoutClick = {
+                    scope.launch { drawerState.close() }
+                    viewModel.onLogoutClick()
+                }
+            )
         }
     ) {
         LazyColumn(
@@ -66,7 +74,8 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 HomeTopBar(
                     notificationCount = HomeFakeData.NOTIFICATION_COUNT,
-                    onMenuClick = onMenuClick
+                    onMenuClick = onMenuClick,
+                    onSearchClick = onSearchClick
                 )
             }
             item(key = "greeting") {

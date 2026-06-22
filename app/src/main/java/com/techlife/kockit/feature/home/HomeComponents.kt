@@ -90,6 +90,7 @@ private val HomeCardSectionSpacing = 14.dp
 fun HomeTopBar(
     notificationCount: Int,
     onMenuClick: () -> Unit,
+    onSearchClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -119,7 +120,9 @@ fun HomeTopBar(
             Icon(
                 imageVector = Icons.Filled.Search,
                 contentDescription = "Ara",
-                modifier = Modifier.size(28.dp),
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable(onClick = onSearchClick),
                 tint = TextPrimary
             )
             Box {

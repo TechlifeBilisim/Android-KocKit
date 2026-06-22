@@ -43,7 +43,7 @@ fun AppNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route
+        startDestination = Screen.Main.route
     ) {
         composable(Screen.Splash.route) {
             val viewModel: SplashViewModel = hiltViewModel()
@@ -216,6 +216,11 @@ fun AppNavGraph(
             MainScreen(
                 onNavigateToPlacement = { sectionKey ->
                     navController.navigate(Screen.placementInfo(sectionKey))
+                },
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Main.route) { inclusive = true }
+                    }
                 }
             )
         }

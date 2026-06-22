@@ -1,6 +1,7 @@
 package com.techlife.kockit.feature.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -36,6 +37,7 @@ private val drawerItems = listOf(
 @Composable
 fun HomeDrawerContent(
     userName: String,
+    onLogoutClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     ModalDrawerSheet(
@@ -72,6 +74,9 @@ fun HomeDrawerContent(
                     lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clickable(enabled = item == "Çıkış Yap") {
+                            if (item == "Çıkış Yap") onLogoutClick()
+                        }
                         .padding(vertical = 14.dp)
                 )
             }
