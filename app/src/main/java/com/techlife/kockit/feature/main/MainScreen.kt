@@ -25,6 +25,7 @@ import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.feature.home.HomeScreen
 import com.techlife.kockit.feature.profile.ProfileScreen
 import com.techlife.kockit.feature.search.SearchScreen
+import com.techlife.kockit.feature.studyplan.StudyPlanScreen
 
 @Composable
 fun MainScreen(
@@ -33,6 +34,7 @@ fun MainScreen(
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
+    var showStudyPlan by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -45,6 +47,7 @@ fun MainScreen(
                 selectedTab = selectedTab,
                 onTabSelected = {
                     showSearch = false
+                    showStudyPlan = false
                     selectedTab = it
                 }
             )
@@ -57,14 +60,21 @@ fun MainScreen(
         ) {
             when (selectedTab) {
                 MainTab.HOME -> {
-                    if (showSearch) {
-                        SearchScreen(onBackClick = { showSearch = false })
-                    } else {
-                        HomeScreen(
-                            onNavigateToPlacement = onNavigateToPlacement,
-                            onNavigateToLogin = onNavigateToLogin,
-                            onSearchClick = { showSearch = true }
-                        )
+                    when {
+                        showSearch -> {
+                            SearchScreen(onBackClick = { showSearch = false })
+                        }
+                        showStudyPlan -> {
+                            StudyPlanScreen(onBackClick = { showStudyPlan = false })
+                        }
+                        else -> {
+                            HomeScreen(
+                                onNavigateToPlacement = onNavigateToPlacement,
+                                onNavigateToLogin = onNavigateToLogin,
+                                onSearchClick = { showSearch = true },
+                                onStudyPlanClick = { showStudyPlan = true }
+                            )
+                        }
                     }
                 }
                 MainTab.EXAMS,

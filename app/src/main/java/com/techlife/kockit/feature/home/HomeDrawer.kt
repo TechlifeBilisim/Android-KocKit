@@ -27,6 +27,7 @@ import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.core.designsystem.theme.White
 
 private val drawerItems = listOf(
+    "Çalışma Planı",
     "Profil",
     "Hedeflerim",
     "Ayarlar",
@@ -37,6 +38,7 @@ private val drawerItems = listOf(
 @Composable
 fun HomeDrawerContent(
     userName: String,
+    onStudyPlanClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -67,6 +69,7 @@ fun HomeDrawerContent(
             HorizontalDivider(color = TextSecondary.copy(alpha = 0.2f))
             Spacer(modifier = Modifier.height(16.dp))
             drawerItems.forEach { item ->
+                val isClickable = item == "Çalışma Planı" || item == "Çıkış Yap"
                 KocKitSemiText(
                     text = item,
                     color = if (item == "Çıkış Yap") OrangeAccent else TextPrimary,
@@ -74,8 +77,11 @@ fun HomeDrawerContent(
                     lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(enabled = item == "Çıkış Yap") {
-                            if (item == "Çıkış Yap") onLogoutClick()
+                        .clickable(enabled = isClickable) {
+                            when (item) {
+                                "Çalışma Planı" -> onStudyPlanClick()
+                                "Çıkış Yap" -> onLogoutClick()
+                            }
                         }
                         .padding(vertical = 14.dp)
                 )

@@ -30,7 +30,8 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToPlacement: (sectionKey: String) -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
-    onSearchClick: () -> Unit = {}
+    onSearchClick: () -> Unit = {},
+    onStudyPlanClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -56,6 +57,10 @@ fun HomeScreen(
         drawerContent = {
             HomeDrawerContent(
                 userName = uiState.fullName.ifBlank { HomeFakeData.USER_NAME },
+                onStudyPlanClick = {
+                    scope.launch { drawerState.close() }
+                    onStudyPlanClick()
+                },
                 onLogoutClick = {
                     scope.launch { drawerState.close() }
                     viewModel.onLogoutClick()
