@@ -39,12 +39,14 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.R
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
+import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.LavenderAccent
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
@@ -278,3 +280,15 @@ private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
         indication = null,
         onClick = onClick
     )
+
+@Preview(showBackground = true)
+@Composable
+fun GoalSetupSuccessDialogPreview() {
+    KocKitTheme {
+        GoalSetupSuccessDialog(
+            onDismiss = {},
+            onGoToPlacement = {},
+            onGoToHome = {}
+        )
+    }
+}

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.techlife.kockit.domain.auth.model.UserSession
+import com.techlife.kockit.domain.placement.model.PlacementProgress
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -17,6 +18,10 @@ class UserPreferencesDataStore @Inject constructor(
 
     override val userSessionFlow: Flow<UserSession> = dataStore.data.map { prefs ->
         prefs.toUserSession()
+    }
+
+    override val placementProgressFlow: Flow<PlacementProgress> = dataStore.data.map { prefs ->
+        prefs.toPlacementProgress()
     }
 
     override suspend fun getUserSession(): UserSession = dataStore.data.first().toUserSession()
@@ -64,6 +69,17 @@ class UserPreferencesDataStore @Inject constructor(
     override suspend fun getPassword(): String? =
         dataStore.data.first()[Keys.PASSWORD]
 
+    override suspend fun setPlacementSectionCompleted(sectionKey: String, completed: Boolean) {
+        dataStore.edit { prefs ->
+            when (sectionKey) {
+                PlacementProgress.SECTION_GENERAL_ABILITY ->
+                    prefs[Keys.PLACEMENT_ABILITY_COMPLETED] = completed
+                PlacementProgress.SECTION_GENERAL_CULTURE ->
+                    prefs[Keys.PLACEMENT_CULTURE_COMPLETED] = completed
+            }
+        }
+    }
+
     override suspend fun clearSession() {
         dataStore.edit { prefs ->
             prefs[Keys.IS_LOGGED_IN] = false
@@ -75,8 +91,15 @@ class UserPreferencesDataStore @Inject constructor(
             prefs.remove(Keys.SELECTED_UNIVERSITY)
             prefs.remove(Keys.SELECTED_DEPARTMENT)
             prefs.remove(Keys.PASSWORD)
+            prefs.remove(Keys.PLACEMENT_ABILITY_COMPLETED)
+            prefs.remove(Keys.PLACEMENT_CULTURE_COMPLETED)
         }
     }
+
+    private fun Preferences.toPlacementProgress(): PlacementProgress = PlacementProgress(
+        isGeneralAbilityCompleted = this[Keys.PLACEMENT_ABILITY_COMPLETED] ?: false,
+        isGeneralCultureCompleted = this[Keys.PLACEMENT_CULTURE_COMPLETED] ?: false
+    )
 
     private fun Preferences.toUserSession(): UserSession = UserSession(
         isFirstLaunch = this[Keys.IS_FIRST_LAUNCH] ?: true,
@@ -101,5 +124,7 @@ class UserPreferencesDataStore @Inject constructor(
         val SELECTED_UNIVERSITY = stringPreferencesKey("selected_university")
         val SELECTED_DEPARTMENT = stringPreferencesKey("selected_department")
         val PASSWORD = stringPreferencesKey("password")
+        val PLACEMENT_ABILITY_COMPLETED = booleanPreferencesKey("placement_ability_completed")
+        val PLACEMENT_CULTURE_COMPLETED = booleanPreferencesKey("placement_culture_completed")
     }
 }

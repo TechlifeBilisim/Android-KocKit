@@ -1,6 +1,5 @@
 package com.techlife.kockit.feature.goalsetup
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,8 +31,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.techlife.kockit.domain.onboarding.model.ExamGoal
-import com.techlife.kockit.domain.onboarding.model.UniversityType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.techlife.kockit.core.designsystem.background.KocKitBackground
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
@@ -45,12 +42,16 @@ import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.component.KocKitTopBar
-import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.CardShape
+import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.LavenderAccent
 import com.techlife.kockit.core.designsystem.theme.OrangeAccent
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.White
+import com.techlife.kockit.domain.onboarding.model.Department
+import com.techlife.kockit.domain.onboarding.model.ExamGoal
+import com.techlife.kockit.domain.onboarding.model.University
+import com.techlife.kockit.domain.onboarding.model.UniversityType
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -74,6 +75,17 @@ fun GoalSetupScreen(
         }
     }
 
+    GoalSetupScreenContent(
+        uiState = uiState,
+        onEvent = viewModel::onEvent
+    )
+}
+
+@Composable
+fun GoalSetupScreenContent(
+    uiState: GoalSetupUiState,
+    onEvent: (GoalSetupEvent) -> Unit
+) {
     Box(modifier = Modifier.fillMaxSize()) {
         KocKitBackground(useFormBackgroundImage = true) {
             Column(
@@ -81,7 +93,7 @@ fun GoalSetupScreen(
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.systemBars)
             ) {
-                KocKitTopBar(onBackClick = { viewModel.onEvent(GoalSetupEvent.BackClicked) })
+                KocKitTopBar(onBackClick = { onEvent(GoalSetupEvent.BackClicked) })
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -91,12 +103,12 @@ fun GoalSetupScreen(
                 ) {
                     GoalSetupExamStep(
                         uiState = uiState,
-                        onEvent = viewModel::onEvent
+                        onEvent = onEvent
                     )
                 }
                 KocKitPrimaryButton(
                     text = "Devam Et",
-                    onClick = { viewModel.onEvent(GoalSetupEvent.ContinueClicked) },
+                    onClick = { onEvent(GoalSetupEvent.ContinueClicked) },
                     isLoading = uiState.isLoading,
                     showTrailingArrow = false,
                     containerColor = PastelGreen,
@@ -107,9 +119,9 @@ fun GoalSetupScreen(
 
         if (uiState.showSuccessDialog) {
             GoalSetupSuccessDialog(
-                onDismiss = { viewModel.onEvent(GoalSetupEvent.SuccessDialogDismissed) },
-                onGoToPlacement = { viewModel.onEvent(GoalSetupEvent.GoToPlacementClicked) },
-                onGoToHome = { viewModel.onEvent(GoalSetupEvent.GoToMainClicked) }
+                onDismiss = { onEvent(GoalSetupEvent.SuccessDialogDismissed) },
+                onGoToPlacement = { onEvent(GoalSetupEvent.GoToPlacementClicked) },
+                onGoToHome = { onEvent(GoalSetupEvent.GoToMainClicked) }
             )
         }
     }
@@ -414,5 +426,36 @@ private fun GoalSetupUniversityTypeSwitch(
                 )
             }
         }
+    }
+}
+
+@androidx.compose.ui.tooling.preview.Preview
+@Composable
+private fun GoalSetupScreenPreview() {
+    KocKitTheme {
+        GoalSetupScreenContent(
+            uiState = GoalSetupUiState(
+                examGoals = listOf(
+                    ExamGoal("tyt", "TYT", "Temel Yeterlilik Testi", "tyt"),
+                    ExamGoal("ayt", "AYT", "Alan Yeterlilik Testi", "ayt"),
+                    ExamGoal("yks", "YKS", "Yükseköğretim Kurumları Sınavı", "yks")
+                ),
+                universities = listOf(
+                    University("u001", "Boğaziçi Üniversitesi", "İstanbul", "Marmara", UniversityType.DEVLET),
+                    University("u002", "İstanbul Teknik Üniversitesi", "İstanbul", "Marmara", UniversityType.DEVLET)
+                ),
+                departments = listOf(
+                    Department("d01", "Bilgisayar Mühendisliği"),
+                    Department("d02", "Yazılım Mühendisliği")
+                ),
+                selectedExamGoalId = "tyt",
+                selectedRegion = "Marmara",
+                selectedCity = "İstanbul",
+                selectedUniversityType = UniversityType.DEVLET,
+                selectedUniversityName = "Boğaziçi Üniversitesi",
+                selectedDepartmentName = "Bilgisayar Mühendisliği"
+            ),
+            onEvent = {}
+        )
     }
 }

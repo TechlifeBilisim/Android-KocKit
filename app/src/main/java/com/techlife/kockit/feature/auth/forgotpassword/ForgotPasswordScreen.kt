@@ -43,7 +43,9 @@ import com.techlife.kockit.core.designsystem.component.KocKitOtpCodeField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
+import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
@@ -75,6 +77,21 @@ fun ForgotPasswordScreen(
         }
     }
 
+    ForgotPasswordContent(
+        uiState = uiState,
+        onEvent = { viewModel.onEvent(it) },
+        onNavigateToLogin = onNavigateToLogin,
+        onNavigateToRegister = onNavigateToRegister
+    )
+}
+
+@Composable
+private fun ForgotPasswordContent(
+    uiState: ForgotPasswordUiState,
+    onEvent: (ForgotPasswordEvent) -> Unit,
+    onNavigateToLogin: () -> Unit,
+    onNavigateToRegister: () -> Unit
+) {
     KocKitBackground(useFormBackgroundImage = true) {
         Column(
             modifier = Modifier
@@ -87,8 +104,8 @@ fun ForgotPasswordScreen(
                     email = uiState.email,
                     emailError = uiState.emailError,
                     isLoading = uiState.isLoading,
-                    onEmailChange = { viewModel.onEvent(ForgotPasswordEvent.EmailChanged(it)) },
-                    onContinue = { viewModel.onEvent(ForgotPasswordEvent.ContinueClicked) },
+                    onEmailChange = { onEvent(ForgotPasswordEvent.EmailChanged(it)) },
+                    onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) },
                     onNavigateToLogin = onNavigateToLogin,
                     onNavigateToRegister = onNavigateToRegister
                 )
@@ -97,10 +114,10 @@ fun ForgotPasswordScreen(
                     codeError = uiState.codeError,
                     isLoading = uiState.isLoading,
                     resendSecondsRemaining = uiState.resendSecondsRemaining,
-                    onCodeChange = { viewModel.onEvent(ForgotPasswordEvent.CodeChanged(it)) },
-                    onContinue = { viewModel.onEvent(ForgotPasswordEvent.ContinueClicked) },
-                    onBack = { viewModel.onEvent(ForgotPasswordEvent.BackClicked) },
-                    onResendCode = { viewModel.onEvent(ForgotPasswordEvent.ResendCodeClicked) }
+                    onCodeChange = { onEvent(ForgotPasswordEvent.CodeChanged(it)) },
+                    onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) },
+                    onBack = { onEvent(ForgotPasswordEvent.BackClicked) },
+                    onResendCode = { onEvent(ForgotPasswordEvent.ResendCodeClicked) }
                 )
                 ForgotPasswordSteps.NEW_PASSWORD -> ForgotPasswordNewPasswordStep(
                     newPassword = uiState.newPassword,
@@ -108,10 +125,10 @@ fun ForgotPasswordScreen(
                     newPasswordError = uiState.newPasswordError,
                     confirmPasswordError = uiState.confirmPasswordError,
                     isLoading = uiState.isLoading,
-                    onNewPasswordChange = { viewModel.onEvent(ForgotPasswordEvent.NewPasswordChanged(it)) },
-                    onConfirmPasswordChange = { viewModel.onEvent(ForgotPasswordEvent.ConfirmPasswordChanged(it)) },
-                    onContinue = { viewModel.onEvent(ForgotPasswordEvent.ContinueClicked) },
-                    onBack = { viewModel.onEvent(ForgotPasswordEvent.BackClicked) }
+                    onNewPasswordChange = { onEvent(ForgotPasswordEvent.NewPasswordChanged(it)) },
+                    onConfirmPasswordChange = { onEvent(ForgotPasswordEvent.ConfirmPasswordChanged(it)) },
+                    onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) },
+                    onBack = { onEvent(ForgotPasswordEvent.BackClicked) }
                 )
             }
         }
@@ -463,6 +480,45 @@ private fun ForgotPasswordOutlinedButton(
             color = PastelGreen,
             fontSize = KocKitTextDefaults.fontSizeButton,
             lineHeight = KocKitTextDefaults.lineHeightButton
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ForgotPasswordEmailStepPreview() {
+    KocKitTheme {
+        ForgotPasswordContent(
+            uiState = ForgotPasswordUiState(currentStep = ForgotPasswordSteps.EMAIL),
+            onEvent = {},
+            onNavigateToLogin = {},
+            onNavigateToRegister = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ForgotPasswordCodeStepPreview() {
+    KocKitTheme {
+        ForgotPasswordContent(
+            uiState = ForgotPasswordUiState(currentStep = ForgotPasswordSteps.CODE),
+            onEvent = {},
+            onNavigateToLogin = {},
+            onNavigateToRegister = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ForgotPasswordNewPasswordStepPreview() {
+    KocKitTheme {
+        ForgotPasswordContent(
+            uiState = ForgotPasswordUiState(currentStep = ForgotPasswordSteps.NEW_PASSWORD),
+            onEvent = {},
+            onNavigateToLogin = {},
+            onNavigateToRegister = {}
         )
     }
 }

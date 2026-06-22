@@ -24,6 +24,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
+import androidx.compose.ui.tooling.preview.Preview
+import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.White
 
@@ -35,6 +37,26 @@ fun PlacementTestExamScreen(
     onFinishExam: () -> Unit
 ) {
     val examState by viewModel.examState.collectAsStateWithLifecycle()
+
+    PlacementTestExamContent(
+        section = section,
+        examState = examState,
+        onBackClick = onBackClick,
+        onFinishExam = onFinishExam,
+        onSelectOption = viewModel::selectOption,
+        onNextClick = viewModel::goToNextQuestion
+    )
+}
+
+@Composable
+fun PlacementTestExamContent(
+    section: PlacementTestSection,
+    examState: PlacementExamUiState,
+    onBackClick: () -> Unit,
+    onFinishExam: () -> Unit,
+    onSelectOption: (Int) -> Unit,
+    onNextClick: () -> Unit,
+) {
     val questionIndex = examState.currentQuestionIndex.coerceIn(
         0,
         (examState.questions.size - 1).coerceAtLeast(0)
@@ -54,7 +76,10 @@ fun PlacementTestExamScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp, vertical = 8.dp)
             ) {
-                PlacementExamTopBar(title = section.examTitle)
+                PlacementTestExamHeader(
+                    title = section.examTitle,
+                    onBackClick = onBackClick
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -127,7 +152,7 @@ fun PlacementTestExamScreen(
                             text = optionText,
                             isSelected = examState.selectedOptionIndex == index,
                             accentColor = PlacementTestColors.green,
-                            onClick = { viewModel.selectOption(index) },
+                            onClick = { onSelectOption(index) },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -143,7 +168,7 @@ fun PlacementTestExamScreen(
                 Button(
                     onClick = {
                         if (isLastQuestion) onFinishExam()
-                        else viewModel.goToNextQuestion()
+                        else onNextClick()
                     },
                     enabled = examState.selectedOptionIndex != null,
                     modifier = Modifier.height(52.dp),
@@ -159,5 +184,32 @@ fun PlacementTestExamScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PlacementTestExamScreenPreview() {
+    KocKitTheme {
+        PlacementTestExamContent(
+            section = PlacementTestSection.GENERAL_ABILITY,
+            examState = PlacementExamUiState(
+                currentQuestionIndex = 0,
+                timerText = "03:45",
+                selectedOptionIndex = 1,
+                questions = listOf(
+                    PlacementQuestion(
+                        prompt = "1. x > 2 olmak üzere,",
+                        detail = "f(x) = (x² - 4) / (x - 2) fonksiyonunun lim(x→2) f(x) değeri kaçtır?",
+                        options = listOf("0", "2", "4", "-2", "1"),
+                        subject = "Matematik"
+                    )
+                )
+            ),
+            onBackClick = {},
+            onFinishExam = {},
+            onSelectOption = {},
+            onNextClick = {}
+        )
     }
 }

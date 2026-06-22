@@ -13,6 +13,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.tooling.preview.Preview
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 
 @Composable
@@ -54,4 +55,32 @@ fun KocKitPasswordField(
             }
         } else null
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun KocKitPasswordFieldPreview() {
+    KocKitTheme {
+        KocKitPasswordField(
+            value = "password123",
+            onValueChange = {},
+            placeholder = "Enter your password",
+            isPasswordVisible = false,
+            onPasswordVisibilityToggle = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun KocKitPasswordFieldVisiblePreview() {
+    KocKitTheme {
+        KocKitPasswordField(
+            value = "password123",
+            onValueChange = {},
+            placeholder = "Enter your password",
+            isPasswordVisible = true,
+            onPasswordVisibilityToggle = {}
+        )
+    }
 }

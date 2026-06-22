@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -15,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.theme.KocKitFontFamily
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
@@ -85,7 +88,7 @@ fun KocKitTextField(
         error?.let {
             KocKitSemiText(
                 text = it,
-                color = colors.coralAccent,
+                color = colors.errorAccent,
                 fontSize = KocKitTextDefaults.fontSizeSmall,
                 lineHeight = KocKitTextDefaults.lineHeightSmall,
                 modifier = Modifier.padding(start = 4.dp, top = 4.dp)
@@ -95,3 +98,30 @@ fun KocKitTextField(
 }
 
 val LoginFieldShape = RoundedCornerShape(12.dp)
+
+@Preview(showBackground = true)
+@Composable
+private fun KocKitTextFieldPreview() {
+    KocKitTheme {
+        KocKitTextField(
+            value = "",
+            onValueChange = {},
+            placeholder = "Email Address",
+            leadingIconVector = Icons.Filled.Email
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun KocKitTextFieldErrorPreview() {
+    KocKitTheme {
+        KocKitTextField(
+            value = "invalid email",
+            onValueChange = {},
+            placeholder = "Email Address",
+            leadingIconVector = Icons.Filled.Email,
+            error = "Please enter a valid email address"
+        )
+    }
+}

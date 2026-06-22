@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.theme.KocKitFontFamily
@@ -273,5 +274,36 @@ private fun KocKitDropdownSheetOption(
             lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
             maxLines = 2
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun KocKitDropdownFieldPreview() {
+    KocKitTheme {
+        Column(modifier = Modifier.padding(16.dp)) {
+            KocKitDropdownField(
+                label = "Ders Seçin",
+                options = listOf("Matematik", "Türkçe", "Fizik", "Kimya", "Biyoloji"),
+                selectedOption = null,
+                onOptionSelected = {}
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            KocKitDropdownField(
+                label = "Şehir Seçin",
+                options = listOf("İstanbul", "Ankara", "İzmir", "Bursa", "Antalya"),
+                selectedOption = "Ankara",
+                onOptionSelected = {},
+                searchable = true
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            KocKitDropdownField(
+                label = "Hata Durumu",
+                options = listOf("Opsiyon 1", "Opsiyon 2"),
+                selectedOption = null,
+                onOptionSelected = {},
+                error = "Lütfen bir seçenek belirleyin"
+            )
+        }
     }
 }

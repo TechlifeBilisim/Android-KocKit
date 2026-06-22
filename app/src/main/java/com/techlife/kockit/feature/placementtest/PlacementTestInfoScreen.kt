@@ -14,14 +14,15 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
+import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 
 @Composable
@@ -110,5 +111,17 @@ fun PlacementTestInfoScreen(
                     .padding(top = 8.dp, bottom = 24.dp)
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PlacementTestInfoScreenPreview() {
+    KocKitTheme {
+        PlacementTestInfoScreen(
+            section = PlacementTestSection.GENERAL_ABILITY,
+            onBackClick = {},
+            onStartExam = {}
+        )
     }
 }

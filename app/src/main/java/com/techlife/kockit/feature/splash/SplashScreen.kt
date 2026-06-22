@@ -18,9 +18,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.R
-import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitSplashActionButton
 import com.techlife.kockit.core.designsystem.component.KocKitText
@@ -34,8 +34,6 @@ fun SplashScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    val colors = KocKitTheme.extraColors
-
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
@@ -45,6 +43,18 @@ fun SplashScreen(
         }
     }
 
+    SplashScreenContent(
+        onStartClicked = { viewModel.onEvent(SplashEvent.StartClicked) },
+        onLoginClicked = { viewModel.onEvent(SplashEvent.LoginClicked) }
+    )
+}
+
+@Composable
+internal fun SplashScreenContent(
+    onStartClicked: () -> Unit,
+    onLoginClicked: () -> Unit
+) {
+    val colors = KocKitTheme.extraColors
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -68,7 +78,7 @@ fun SplashScreen(
         ) {
             KocKitSplashActionButton(
                 text = "Başlayalım",
-                onClick = { viewModel.onEvent(SplashEvent.StartClicked) }
+                onClick = onStartClicked
             )
 
             Row(
@@ -83,12 +93,23 @@ fun SplashScreen(
                 )
                 KocKitSemiText(
                     text = "Giriş Yap",
-                    modifier = Modifier.clickable { viewModel.onEvent(SplashEvent.LoginClicked) },
+                    modifier = Modifier.clickable { onLoginClicked() },
                     fontSize = KocKitTextDefaults.fontSizeSubhead,
                     lineHeight = KocKitTextDefaults.lineHeightSubhead,
                     color = colors.textPrimary
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SplashScreenPreview() {
+    KocKitTheme {
+        SplashScreenContent(
+            onStartClicked = {},
+            onLoginClicked = {}
+        )
     }
 }

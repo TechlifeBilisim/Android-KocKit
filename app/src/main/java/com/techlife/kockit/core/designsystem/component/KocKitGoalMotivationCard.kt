@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.theme.CardShape
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
@@ -57,5 +58,17 @@ fun KocKitGoalMotivationCard(
                 modifier = Modifier.weight(1f)
             )
         }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFFFDF7F2)
+@Composable
+private fun KocKitGoalMotivationCardPreview() {
+    KocKitTheme {
+        KocKitGoalMotivationCard(
+            message = "Great choice! This goal helps you build consistent learning habits.",
+            iconResId = com.techlife.kockit.R.drawable.ic_goal_target,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

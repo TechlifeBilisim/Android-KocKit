@@ -2,8 +2,10 @@ package com.techlife.kockit.di
 
 import com.techlife.kockit.data.auth.repository.AuthRepositoryImpl
 import com.techlife.kockit.data.onboarding.repository.OnboardingRepositoryImpl
+import com.techlife.kockit.data.placement.repository.PlacementRepositoryImpl
 import com.techlife.kockit.domain.auth.repository.AuthRepository
 import com.techlife.kockit.domain.onboarding.repository.OnboardingRepository
+import com.techlife.kockit.domain.placement.repository.PlacementRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -21,4 +23,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindOnboardingRepository(impl: OnboardingRepositoryImpl): OnboardingRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPlacementRepository(impl: PlacementRepositoryImpl): PlacementRepository
 }

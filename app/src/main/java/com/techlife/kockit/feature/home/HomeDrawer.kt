@@ -13,11 +13,13 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.theme.CreamBackground
+import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.OrangeAccent
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
@@ -74,5 +76,15 @@ fun HomeDrawerContent(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun HomeDrawerContentPreview() {
+    KocKitTheme {
+        HomeDrawerContent(
+            userName = HomeFakeData.USER_NAME
+        )
     }
 }

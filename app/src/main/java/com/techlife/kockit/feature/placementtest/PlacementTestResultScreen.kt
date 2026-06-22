@@ -13,8 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
+import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 
 @Composable
@@ -64,5 +66,17 @@ fun PlacementTestResultScreen(
                 modifier = Modifier.fillMaxWidth()
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PlacementTestResultScreenPreview() {
+    KocKitTheme {
+        PlacementTestResultScreen(
+            section = PlacementTestSection.GENERAL_ABILITY,
+            onGoToNextExam = {},
+            onGoToHome = {}
+        )
     }
 }

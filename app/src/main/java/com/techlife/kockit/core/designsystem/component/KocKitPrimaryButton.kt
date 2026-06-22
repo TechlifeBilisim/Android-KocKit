@@ -1,7 +1,10 @@
 package com.techlife.kockit.core.designsystem.component
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -10,6 +13,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
@@ -55,6 +59,32 @@ fun KocKitPrimaryButton(
                 text = text,
                 color = Color.White,
                 fontSize = 18.sp
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun KocKitPrimaryButtonPreview() {
+    KocKitTheme {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            KocKitPrimaryButton(
+                text = "Primary Button",
+                onClick = {}
+            )
+            KocKitPrimaryButton(
+                text = "Loading Button",
+                onClick = {},
+                isLoading = true
+            )
+            KocKitPrimaryButton(
+                text = "Disabled Button",
+                onClick = {},
+                enabled = false
             )
         }
     }

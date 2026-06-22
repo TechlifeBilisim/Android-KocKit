@@ -58,6 +58,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -74,7 +75,6 @@ fun RegisterScreen(
     onShowMessage: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val colors = KocKitTheme.extraColors
     val context = LocalContext.current
 
     val googleLauncher =
@@ -91,19 +91,6 @@ fun RegisterScreen(
             }
         }
 
-    val isStep1Filled =
-        uiState.fullName.isNotBlank() &&
-            uiState.email.isNotBlank() &&
-            uiState.nickname.isNotBlank() &&
-            uiState.password.isNotBlank() &&
-            uiState.confirmPassword.isNotBlank() &&
-            uiState.isTermsAccepted
-
-    val continueEnabled = when (uiState.currentStep) {
-        1 -> isStep1Filled
-        else -> true
-    }
-
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
@@ -119,13 +106,39 @@ fun RegisterScreen(
         }
     }
 
+    RegisterScreenContent(
+        uiState = uiState,
+        onEvent = viewModel::onEvent,
+        onGoogleClicked = viewModel::onGoogleClicked
+    )
+}
+
+@Composable
+private fun RegisterScreenContent(
+    uiState: RegisterUiState,
+    onEvent: (RegisterEvent) -> Unit,
+    onGoogleClicked: () -> Unit
+) {
+    val isStep1Filled =
+        uiState.fullName.isNotBlank() &&
+            uiState.email.isNotBlank() &&
+            uiState.nickname.isNotBlank() &&
+            uiState.password.isNotBlank() &&
+            uiState.confirmPassword.isNotBlank() &&
+            uiState.isTermsAccepted
+
+    val continueEnabled = when (uiState.currentStep) {
+        1 -> isStep1Filled
+        else -> true
+    }
+
     KocKitBackground(useFormBackgroundImage = true) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            KocKitTopBar(onBackClick = { viewModel.onEvent(RegisterEvent.BackClicked) })
+            KocKitTopBar(onBackClick = { onEvent(RegisterEvent.BackClicked) })
             Column(
                 modifier = Modifier.padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -146,7 +159,7 @@ fun RegisterScreen(
                 )
 
                 when (uiState.currentStep) {
-                    1 -> RegisterStep1Content(uiState, viewModel::onEvent)
+                    1 -> RegisterStep1Content(uiState, onEvent)
                     2 -> RegisterStepPlaceholderContent(
                         title = "Doğrula",
                         description = "Doğrulama adımı tasarımı yakında eklenecek."
@@ -161,7 +174,7 @@ fun RegisterScreen(
 
                 KocKitPrimaryButton(
                     text = "Devam Et",
-                    onClick = { viewModel.onEvent(RegisterEvent.ContinueClicked) },
+                    onClick = { onEvent(RegisterEvent.ContinueClicked) },
                     enabled = continueEnabled,
                     isLoading = uiState.isLoading,
                     showTrailingArrow = true,
@@ -177,7 +190,7 @@ fun RegisterScreen(
                     Surface(
                         modifier = Modifier
                             .size(52.dp)
-                            .clickable { viewModel.onGoogleClicked() }
+                            .clickable { onGoogleClicked() }
                             .clip(CircleShape),
                         shape = CircleShape,
                         color = Color.White,
@@ -321,5 +334,21 @@ private fun RegisterStepPlaceholderContent(
             lineHeight = KocKitTextDefaults.lineHeightTitle
         )
         KocKitText(description, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RegisterScreenPreview() {
+    KocKitTheme {
+        RegisterScreenContent(
+            uiState = RegisterUiState(
+                fullName = "Adem KocKit",
+                email = "adem@kockit.com",
+                nickname = "ademkockit"
+            ),
+            onEvent = {},
+            onGoogleClicked = {}
+        )
     }
 }

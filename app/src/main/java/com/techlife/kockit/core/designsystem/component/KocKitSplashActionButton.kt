@@ -16,10 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.theme.Black
+import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
-import com.techlife.kockit.core.designsystem.theme.White
 
 private val SplashButtonShape = RoundedCornerShape(50)
 
@@ -75,5 +76,17 @@ fun KocKitSplashActionButton(
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun KocKitSplashActionButtonPreview() {
+    KocKitTheme {
+        KocKitSplashActionButton(
+            text = "Hadi Başlayalım",
+            onClick = {},
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }

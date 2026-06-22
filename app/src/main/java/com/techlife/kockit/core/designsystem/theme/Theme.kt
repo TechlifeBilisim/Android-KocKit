@@ -16,6 +16,7 @@ data class KocKitExtraColors(
     val textSecondary: Color = TextSecondary,
     val cardBackground: Color = CardBackground,
     val coralAccent: Color = CoralAccent,
+    val errorAccent: Color = ErrorAccent,
     val orangeAccent: Color = OrangeAccent,
     val lavenderAccent: Color = LavenderAccent,
     val borderLight: Color = BorderLight,
@@ -33,7 +34,7 @@ private val LightColorScheme = lightColorScheme(
     onBackground = TextPrimary,
     surface = CardBackground,
     onSurface = TextPrimary,
-    error = CoralAccent,
+    error = ErrorAccent,
     onError = White
 )
 

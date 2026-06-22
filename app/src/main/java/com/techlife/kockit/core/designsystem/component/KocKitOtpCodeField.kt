@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.theme.KocKitFontFamily
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
@@ -98,6 +99,37 @@ fun KocKitOtpCodeField(
                 text = it,
                 color = colors.coralAccent,
                 modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun KocKitOtpCodeFieldPreview() {
+    KocKitTheme {
+        Column(
+            modifier = Modifier
+                .background(KocKitTheme.extraColors.creamBackground)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            KocKitOtpCodeField(
+                value = "",
+                onValueChange = {}
+            )
+            KocKitOtpCodeField(
+                value = "123",
+                onValueChange = {}
+            )
+            KocKitOtpCodeField(
+                value = "123456",
+                onValueChange = {}
+            )
+            KocKitOtpCodeField(
+                value = "123",
+                onValueChange = {},
+                error = "Kod hatalı, lütfen tekrar dene."
             )
         }
     }

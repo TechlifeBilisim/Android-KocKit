@@ -26,6 +26,7 @@ import com.techlife.kockit.feature.placementtest.PlacementTestExamScreen
 import com.techlife.kockit.feature.placementtest.PlacementTestInfoScreen
 import com.techlife.kockit.feature.placementtest.PlacementTestResultScreen
 import com.techlife.kockit.feature.placementtest.PlacementTestSection
+import com.techlife.kockit.feature.placementtest.PlacementTestResultViewModel
 import com.techlife.kockit.feature.placementtest.PlacementTestViewModel
 import com.techlife.kockit.feature.splash.SplashScreen
 import com.techlife.kockit.feature.splash.SplashViewModel
@@ -42,7 +43,7 @@ fun AppNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Main.route
+        startDestination = Screen.Splash.route
     ) {
         composable(Screen.Splash.route) {
             val viewModel: SplashViewModel = hiltViewModel()
@@ -187,6 +188,11 @@ fun AppNavGraph(
             ) { backStackEntry ->
                 val sectionKey = backStackEntry.arguments?.getString(Screen.PLACEMENT_SECTION_ARG).orEmpty()
                 val section = PlacementTestSection.fromRouteKey(sectionKey)
+                val resultViewModel: PlacementTestResultViewModel = hiltViewModel()
+
+                LaunchedEffect(section) {
+                    resultViewModel.onResultShown(section)
+                }
 
                 PlacementTestResultScreen(
                     section = section,
@@ -207,7 +213,11 @@ fun AppNavGraph(
         }
 
         composable(Screen.Main.route) {
-            MainScreen()
+            MainScreen(
+                onNavigateToPlacement = { sectionKey ->
+                    navController.navigate(Screen.placementInfo(sectionKey))
+                }
+            )
         }
     }
 }

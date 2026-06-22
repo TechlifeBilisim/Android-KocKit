@@ -26,7 +26,11 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import com.techlife.kockit.core.designsystem.theme.CardShape
+import com.techlife.kockit.core.designsystem.theme.KocKitTheme
+import com.techlife.kockit.core.designsystem.theme.OrangeAccent
+import com.techlife.kockit.core.designsystem.theme.PrimaryTeal
 import com.techlife.kockit.core.designsystem.theme.White
 
 @Composable
@@ -132,5 +136,35 @@ fun KocKitExamRadioButton(
                 modifier = Modifier.size(18.dp)
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun KocKitSelectableCardSelectedPreview() {
+    KocKitTheme {
+        KocKitSelectableCard(
+            title = "Matematik",
+            subtitle = "Problemler",
+            backgroundColor = PrimaryTeal,
+            leadingIcon = Icons.Filled.Check,
+            isSelected = true,
+            onClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun KocKitSelectableCardUnselectedPreview() {
+    KocKitTheme {
+        KocKitSelectableCard(
+            title = "Türkçe",
+            subtitle = "Paragraf",
+            backgroundColor = OrangeAccent,
+            leadingIcon = Icons.Filled.Check,
+            isSelected = false,
+            onClick = {}
+        )
     }
 }

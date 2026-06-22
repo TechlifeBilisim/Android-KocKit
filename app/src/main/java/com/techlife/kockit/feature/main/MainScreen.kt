@@ -26,7 +26,9 @@ import com.techlife.kockit.feature.home.HomeScreen
 import com.techlife.kockit.feature.profile.ProfileScreen
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onNavigateToPlacement: (sectionKey: String) -> Unit = {}
+) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
 
     Scaffold(
@@ -48,7 +50,7 @@ fun MainScreen() {
                 .padding(innerPadding)
         ) {
             when (selectedTab) {
-                MainTab.HOME -> HomeScreen()
+                MainTab.HOME -> HomeScreen(onNavigateToPlacement = onNavigateToPlacement)
                 MainTab.EXAMS,
                 MainTab.ANALYSIS,
                 MainTab.GOALS -> MainTabPlaceholder(tab = selectedTab)

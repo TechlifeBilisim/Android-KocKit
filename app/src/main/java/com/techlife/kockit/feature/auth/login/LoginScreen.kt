@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,8 +56,6 @@ fun LoginScreen(
     onShowMessage: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val colors = KocKitTheme.extraColors
-    val loginEnabled = uiState.email.isNotBlank() && uiState.password.isNotBlank()
     val context = LocalContext.current
 
     val googleLauncher =
@@ -87,6 +86,32 @@ fun LoginScreen(
             }
         }
     }
+
+    LoginContent(
+        uiState = uiState,
+        onEmailChanged = { viewModel.onEvent(LoginEvent.EmailChanged(it)) },
+        onPasswordChanged = { viewModel.onEvent(LoginEvent.PasswordChanged(it)) },
+        onPasswordVisibilityToggle = { viewModel.onEvent(LoginEvent.PasswordVisibilityChanged) },
+        onForgotPasswordClick = { viewModel.onEvent(LoginEvent.ForgotPasswordClicked) },
+        onLoginClick = { viewModel.onEvent(LoginEvent.LoginClicked) },
+        onGoogleLoginClick = { viewModel.onEvent(LoginEvent.GoogleLoginClicked) },
+        onRegisterClick = { viewModel.onEvent(LoginEvent.RegisterClicked) }
+    )
+}
+
+@Composable
+private fun LoginContent(
+    uiState: LoginUiState,
+    onEmailChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onPasswordVisibilityToggle: () -> Unit,
+    onForgotPasswordClick: () -> Unit,
+    onLoginClick: () -> Unit,
+    onGoogleLoginClick: () -> Unit,
+    onRegisterClick: () -> Unit,
+) {
+    val colors = KocKitTheme.extraColors
+    val loginEnabled = uiState.email.isNotBlank() && uiState.password.isNotBlank()
 
     KocKitBackground(useFormBackgroundImage = true) {
         Column(
@@ -122,7 +147,7 @@ fun LoginScreen(
 
             KocKitTextField(
                 value = uiState.email,
-                onValueChange = { viewModel.onEvent(LoginEvent.EmailChanged(it)) },
+                onValueChange = onEmailChanged,
                 placeholder = "E-posta adresin",
                 leadingIconVector = Icons.Filled.Email,
                 error = uiState.emailError,
@@ -133,10 +158,10 @@ fun LoginScreen(
 
             KocKitPasswordField(
                 value = uiState.password,
-                onValueChange = { viewModel.onEvent(LoginEvent.PasswordChanged(it)) },
+                onValueChange = onPasswordChanged,
                 placeholder = "Şifren",
                 isPasswordVisible = uiState.isPasswordVisible,
-                onPasswordVisibilityToggle = { viewModel.onEvent(LoginEvent.PasswordVisibilityChanged) },
+                onPasswordVisibilityToggle = onPasswordVisibilityToggle,
                 error = uiState.passwordError,
                 shape = LoginFieldShape
             )
@@ -147,7 +172,7 @@ fun LoginScreen(
                 text = "Şifremi unuttum?",
                 modifier = Modifier
                     .align(Alignment.End)
-                    .clickable { viewModel.onEvent(LoginEvent.ForgotPasswordClicked) },
+                    .clickable { onForgotPasswordClick() },
                 color = colors.textPrimary
             )
 
@@ -155,7 +180,7 @@ fun LoginScreen(
 
             KocKitPrimaryButton(
                 text = "Giriş Yap",
-                onClick = { viewModel.onEvent(LoginEvent.LoginClicked) },
+                onClick = onLoginClick,
                 enabled = loginEnabled,
                 isLoading = uiState.isLoading,
                 containerColor = PastelGreen
@@ -169,14 +194,14 @@ fun LoginScreen(
 
             KocKitSocialButton(
                 text = "Google ile giriş yap",
-                onClick = { viewModel.onEvent(LoginEvent.GoogleLoginClicked) },
+                onClick = onGoogleLoginClick,
                 iconPainter = painterResource(R.drawable.ic_google)
             )
 
             Spacer(modifier = Modifier.height(14.dp))
 
             LoginRegisterFooter(
-                onRegisterClick = { viewModel.onEvent(LoginEvent.RegisterClicked) },
+                onRegisterClick = onRegisterClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
@@ -234,6 +259,23 @@ private fun LoginRegisterFooter(
             fontSize = KocKitTextDefaults.fontSizeSubhead,
             lineHeight = KocKitTextDefaults.lineHeightSubhead,
             color = colors.primaryTeal
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LoginScreenPreview() {
+    KocKitTheme {
+        LoginContent(
+            uiState = LoginUiState(),
+            onEmailChanged = {},
+            onPasswordChanged = {},
+            onPasswordVisibilityToggle = {},
+            onForgotPasswordClick = {},
+            onLoginClick = {},
+            onGoogleLoginClick = {},
+            onRegisterClick = {}
         )
     }
 }

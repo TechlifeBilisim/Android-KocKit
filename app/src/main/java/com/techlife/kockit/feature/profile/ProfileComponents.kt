@@ -455,10 +455,10 @@ private fun ProfilePointsGoalCard(
             lineHeight = 32.sp
         )
         Spacer(modifier = Modifier.weight(1f))
-        KocKitText(
+        KocKitSemiText(
             text = period,
             color = TextSecondary,
-            fontSize = 10.sp,
+            fontSize = 14.sp,
             lineHeight = 12.sp
         )
     }

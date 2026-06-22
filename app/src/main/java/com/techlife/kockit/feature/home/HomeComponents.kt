@@ -30,7 +30,11 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.outlined.EmojiEvents
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -67,6 +71,7 @@ import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.core.designsystem.theme.White
+import com.techlife.kockit.feature.placementtest.PlacementTestColors
 
 private object HomePerformanceCardStyle {
     val green = Color(0xFF4DB6AC)
@@ -900,6 +905,108 @@ private fun HomePriorityLessonRow(lesson: HomePriorityLesson) {
                 tint = TextSecondary.copy(alpha = 0.7f),
                 modifier = Modifier.size(18.dp)
             )
+        }
+    }
+}
+
+@Composable
+fun HomePlacementReminderCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        shape = CardShape,
+        colors = CardDefaults.cardColors(containerColor = PlacementTestColors.orangeSoft),
+        border = BorderStroke(1.dp, PlacementTestColors.orange.copy(alpha = 0.45f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(modifier = Modifier.size(52.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(White),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Description,
+                        contentDescription = null,
+                        tint = PlacementTestColors.orange,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 2.dp, y = (-2).dp)
+                        .size(18.dp)
+                        .clip(CircleShape)
+                        .background(PlacementTestColors.orange),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Notifications,
+                        contentDescription = null,
+                        tint = White,
+                        modifier = Modifier.size(10.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                KocKitBoldText(
+                    text = "Seviye Testini Yapmayı Unutma...",
+                    color = TextPrimary,
+                    fontSize = 12.sp,
+                    lineHeight = 15.sp,
+                    maxLines = 2
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                KocKitText(
+                    text = "Sana en uygun çalışma planını oluşturabilmemiz için seviye testini çözmelisin.",
+                    color = TextSecondary,
+                    fontSize = 10.sp,
+                    lineHeight = 13.sp,
+                    maxLines = 3
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(
+                onClick = onClick,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PlacementTestColors.orange,
+                    contentColor = White
+                ),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    horizontal = 10.dp,
+                    vertical = 8.dp
+                ),
+                modifier = Modifier.height(40.dp)
+            ) {
+                KocKitSemiText(
+                    text = "Teste Başla",
+                    color = White,
+                    fontSize = 10.sp,
+                    lineHeight = 12.sp
+                )
+                Spacer(modifier = Modifier.width(2.dp))
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = White,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
         }
     }
 }
