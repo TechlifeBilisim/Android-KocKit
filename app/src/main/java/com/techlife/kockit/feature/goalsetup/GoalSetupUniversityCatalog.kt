@@ -11,7 +11,8 @@ object GoalSetupUniversityCatalog {
         "Akdeniz",
         "Karadeniz",
         "Doğu Anadolu",
-        "Güneydoğu Anadolu"
+        "Güneydoğu Anadolu",
+        "KKTC"
     )
 
     val universities = listOf(
@@ -162,7 +163,9 @@ object GoalSetupUniversityCatalog {
         University("u130", "Siirt Üniversitesi", "Siirt", "Güneydoğu Anadolu", UniversityType.DEVLET),
         University("u131", "Şırnak Üniversitesi", "Şırnak", "Güneydoğu Anadolu", UniversityType.DEVLET),
         University("u132", "Kilis 7 Aralık Üniversitesi", "Kilis", "Güneydoğu Anadolu", UniversityType.DEVLET),
-        University("u133", "Adıyaman Üniversitesi", "Adıyaman", "Güneydoğu Anadolu", UniversityType.DEVLET)
+        University("u133", "Adıyaman Üniversitesi", "Adıyaman", "Güneydoğu Anadolu", UniversityType.DEVLET),
+
+        University("u134", "Yakın Doğu Üniversitesi", "Lefkoşa", "KKTC", UniversityType.DEVLET)
     )
 
     val cities: List<String> = universities.map { it.city }.distinct().sorted()

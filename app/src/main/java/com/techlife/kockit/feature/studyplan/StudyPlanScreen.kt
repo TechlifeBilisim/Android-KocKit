@@ -1,11 +1,8 @@
 package com.techlife.kockit.feature.studyplan
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -27,74 +24,98 @@ fun StudyPlanScreen(
     modifier: Modifier = Modifier
 ) {
     var days by remember { mutableStateOf(StudyPlanFakeData.initialDays) }
-    var studyPeriodMinutes by remember { mutableIntStateOf(StudyPlanFakeData.INITIAL_STUDY_PERIOD_MINUTES) }
+    var sessionMinutes by remember { mutableIntStateOf(StudyPlanFakeData.INITIAL_SESSION_MINUTES) }
     var paragraphMinutes by remember { mutableIntStateOf(StudyPlanFakeData.INITIAL_PARAGRAPH_MINUTES) }
-    val weeklyHours = days.sumOf { it.hours }
+    var problemMinutes by remember { mutableIntStateOf(StudyPlanFakeData.INITIAL_PROBLEM_MINUTES) }
+    var revisionDay by remember { mutableStateOf(StudyPlanFakeData.INITIAL_REVISION_DAY) }
+    var unavailableDays by remember { mutableStateOf(StudyPlanFakeData.initialUnavailableDays) }
+    var specialDates by remember { mutableStateOf(StudyPlanFakeData.initialSpecialDates) }
+    var showAddSpecialDateSheet by remember { mutableStateOf(false) }
+
+    val totalHours = days.sumOf { it.hours }
+
+    if (showAddSpecialDateSheet) {
+        StudyPlanAddSpecialDateSheet(
+            onDismiss = { showAddSpecialDateSheet = false },
+            onAdd = { newDate ->
+                specialDates = specialDates + newDate
+                showAddSpecialDateSheet = false
+            }
+        )
+    }
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(CreamBackground)
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(horizontal = 16.dp)
     ) {
-        item(key = "top_bar") {
+        item(key = "header") {
             Spacer(modifier = Modifier.height(8.dp))
-            StudyPlanTopBar(onBackClick = onBackClick)
-            Spacer(modifier = Modifier.height(4.dp))
-        }
-        item(key = "weekly_summary") {
-            StudyPlanWeeklySummaryCard(weeklyHours = weeklyHours)
-        }
-        item(key = "days_grid") {
-            days.chunked(3).forEachIndexed { rowIndex, rowDays ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    rowDays.forEachIndexed { colIndex, day ->
-                        val dayIndex = rowIndex * 3 + colIndex
-                        StudyPlanDayCard(
-                            day = day,
-                            onHoursChange = { newHours ->
-                                days = days.mapIndexed { index, item ->
-                                    if (index == dayIndex) item.copy(hours = newHours) else item
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    repeat(3 - rowDays.size) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-                if (rowIndex < days.lastIndex / 3) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                }
-            }
-        }
-        item(key = "study_period") {
-            StudyPlanSettingCard(
-                title = "Günlük Çalışma Periyodu",
-                subtitle = "Çalışma Periyodu Belirleyin",
-                value = studyPeriodMinutes,
-                onValueChange = { studyPeriodMinutes = it },
-                pickerTitle = "Günlük Çalışma Periyodu (dk)",
-                range = 15..180,
-                suffix = "dk"
+            StudyPlanHeader(
+                onBackClick = onBackClick,
+                onAutoPlanClick = { },
+                description = StudyPlanFakeData.DESCRIPTION
             )
+            Spacer(modifier = Modifier.height(20.dp))
         }
-        item(key = "paragraph") {
-            StudyPlanSettingCard(
-                title = "Her gün kaç dakika paragraf soruları çözeceksiniz?",
-                subtitle = "Günlük Paragraf Süresi",
-                value = paragraphMinutes,
-                onValueChange = { paragraphMinutes = it },
-                pickerTitle = "Günlük Paragraf Süresi (dk)",
-                range = 0..120,
-                suffix = "dk"
+
+        item(key = "days") {
+            StudyPlanDaysSection(
+                days = days,
+                totalHours = totalHours,
+                onHoursChange = { index, newHours ->
+                    days = days.mapIndexed { i, item ->
+                        if (i == index) item.copy(hours = newHours) else item
+                    }
+                }
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        item(key = "parameters") {
+            StudyPlanParametersSection(
+                sessionMinutes = sessionMinutes,
+                onSessionChange = { sessionMinutes = it },
+                paragraphMinutes = paragraphMinutes,
+                onParagraphChange = { paragraphMinutes = it },
+                problemMinutes = problemMinutes,
+                onProblemChange = { problemMinutes = it },
+                revisionDay = revisionDay,
+                onRevisionDayChange = { revisionDay = it },
+                revisionOptions = StudyPlanFakeData.revisionDayOptions
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        item(key = "unavailable") {
+            StudyPlanUnavailableSection(
+                weekDayOptions = StudyPlanFakeData.weekDayOptions,
+                selectedUnavailableDays = unavailableDays,
+                specialDates = specialDates,
+                onUnavailableDayToggle = { shortName ->
+                    unavailableDays = if (shortName in unavailableDays) {
+                        unavailableDays - shortName
+                    } else {
+                        unavailableDays + shortName
+                    }
+                },
+                onRemoveSpecialDate = { id ->
+                    specialDates = specialDates.filterNot { it.id == id }
+                },
+                onAddSpecialDateClick = { showAddSpecialDateSheet = true }
             )
             Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        item(key = "save") {
+            StudyPlanSaveButton(onClick = { })
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
+        item(key = "info") {
+            StudyPlanInfoNote(text = StudyPlanFakeData.SAVE_INFO_NOTE)
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

@@ -78,7 +78,7 @@ fun KocKitTextField(
                 focusedBorderColor = colors.pastelGreen,
                 unfocusedBorderColor = colors.borderLight,
                 disabledBorderColor = colors.borderLight,
-                errorBorderColor = colors.coralAccent,
+                errorBorderColor = colors.errorAccent,
                 focusedLeadingIconColor = colors.textSecondary,
                 unfocusedLeadingIconColor = colors.textSecondary,
                 cursorColor = colors.pastelGreen

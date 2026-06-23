@@ -130,7 +130,10 @@ fun KocKitNumberPickerField(
     pickerTitle: String,
     modifier: Modifier = Modifier,
     suffix: String? = null,
-    compact: Boolean = false
+    compact: Boolean = false,
+    showContainer: Boolean = true,
+    centerFontSize: androidx.compose.ui.unit.TextUnit? = null,
+    centerLineHeight: androidx.compose.ui.unit.TextUnit? = null
 ) {
     val colors = KocKitTheme.extraColors
     var expanded by remember { mutableStateOf(false) }
@@ -142,29 +145,44 @@ fun KocKitNumberPickerField(
         "$value $suffix"
     }
 
+    val triggerModifier = modifier
+        .then(
+            when {
+                !showContainer -> Modifier.clickable { expanded = true }
+                compact -> Modifier
+                    .fillMaxWidth()
+                    .height(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(White)
+                    .clickable { expanded = true }
+                else -> Modifier
+                    .width(72.dp)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(White)
+                    .clickable { expanded = true }
+            }
+        )
+
     Box(
-        modifier = modifier
-            .then(
-                if (compact) {
-                    Modifier
-                        .fillMaxWidth()
-                        .height(36.dp)
-                } else {
-                    Modifier
-                        .width(72.dp)
-                        .height(40.dp)
-                }
-            )
-            .clip(RoundedCornerShape(if (compact) 10.dp else 12.dp))
-            .background(White)
-            .clickable { expanded = true },
+        modifier = triggerModifier,
         contentAlignment = Alignment.Center
     ) {
         KocKitExtraBoldText(
             text = displayText,
             color = TextPrimary,
-            fontSize = if (compact) 14.sp else 13.sp,
-            lineHeight = if (compact) 16.sp else 15.sp,
+            fontSize = centerFontSize ?: when {
+                !showContainer && suffix != null -> 12.sp
+                !showContainer -> 12.sp
+                compact -> 14.sp
+                else -> 13.sp
+            },
+            lineHeight = centerLineHeight ?: when {
+                !showContainer && suffix != null -> 14.sp
+                !showContainer -> 14.sp
+                compact -> 16.sp
+                else -> 15.sp
+            },
             maxLines = 1
         )
     }

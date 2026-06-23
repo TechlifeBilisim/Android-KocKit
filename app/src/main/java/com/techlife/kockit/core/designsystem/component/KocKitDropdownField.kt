@@ -223,7 +223,7 @@ fun KocKitDropdownField(
         error?.let {
             KocKitText(
                 text = it,
-                color = colors.coralAccent,
+                color = colors.errorAccent,
                 modifier = Modifier.padding(start = 4.dp, top = 4.dp)
             )
         }

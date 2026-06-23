@@ -32,7 +32,6 @@ fun ProfileScreen(
         item(key = "top_bar") {
             Spacer(modifier = Modifier.height(8.dp))
             ProfileTopBar(
-                notificationCount = ProfileFakeData.NOTIFICATION_COUNT,
                 onBackClick = onBackClick
             )
         }

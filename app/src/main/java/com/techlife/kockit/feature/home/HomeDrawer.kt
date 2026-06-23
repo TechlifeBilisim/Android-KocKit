@@ -20,6 +20,7 @@ import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.theme.CreamBackground
+import com.techlife.kockit.core.designsystem.theme.ErrorAccent
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.OrangeAccent
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
@@ -72,7 +73,7 @@ fun HomeDrawerContent(
                 val isClickable = item == "Çalışma Planı" || item == "Çıkış Yap"
                 KocKitSemiText(
                     text = item,
-                    color = if (item == "Çıkış Yap") OrangeAccent else TextPrimary,
+                    color = if (item == "Çıkış Yap") ErrorAccent else TextPrimary,
                     fontSize = KocKitTextDefaults.fontSizeBodyLarge,
                     lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
                     modifier = Modifier

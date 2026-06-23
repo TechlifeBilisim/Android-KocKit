@@ -127,7 +127,7 @@ private fun KocKitOtpCodeFieldPreview() {
                 onValueChange = {}
             )
             KocKitOtpCodeField(
-                value = "123",
+                value = "010101",
                 onValueChange = {},
                 error = "Kod hatalı, lütfen tekrar dene."
             )

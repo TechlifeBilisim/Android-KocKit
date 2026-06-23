@@ -90,7 +90,6 @@ private object ProfileCardStyle {
 
 @Composable
 fun ProfileTopBar(
-    notificationCount: Int,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -112,32 +111,6 @@ fun ProfileTopBar(
                 modifier = Modifier.size(24.dp),
                 tint = TextPrimary
             )
-        }
-        Box {
-            Icon(
-                imageVector = Icons.Filled.Notifications,
-                contentDescription = "Bildirimler",
-                modifier = Modifier.size(26.dp),
-                tint = TextPrimary
-            )
-            if (notificationCount > 0) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .offset(x = 4.dp, y = (-2).dp)
-                        .size(16.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFE85D5D)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    KocKitText(
-                        text = notificationCount.toString(),
-                        color = White,
-                        fontSize = 9.sp,
-                        lineHeight = 10.sp
-                    )
-                }
-            }
         }
     }
 }

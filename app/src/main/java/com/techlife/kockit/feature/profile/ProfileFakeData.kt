@@ -6,7 +6,7 @@ data class ProfileStudyDetail(
 )
 
 object ProfileFakeData {
-    const val NOTIFICATION_COUNT = 3
+    const val NOTIFICATION_COUNT = 5
     const val FULL_NAME = "Adem POLAT"
     const val GRADE = "12. Sınıf"
     const val EXAM_TYPE = "TYT + AYT"

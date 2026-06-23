@@ -1002,13 +1002,6 @@ fun HomePlacementReminderCard(
                     fontSize = 10.sp,
                     lineHeight = 12.sp
                 )
-                Spacer(modifier = Modifier.width(2.dp))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = White,
-                    modifier = Modifier.size(14.dp)
-                )
             }
         }
     }
