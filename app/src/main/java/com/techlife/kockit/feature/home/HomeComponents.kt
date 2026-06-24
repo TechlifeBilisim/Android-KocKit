@@ -56,6 +56,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.techlife.kockit.R
@@ -64,6 +65,8 @@ import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
+import com.techlife.kockit.core.designsystem.layout.HomeLayoutMetrics
+import com.techlife.kockit.core.designsystem.layout.LocalHomeLayoutMetrics
 import com.techlife.kockit.core.designsystem.theme.CardShape
 import com.techlife.kockit.core.designsystem.theme.LavenderAccent
 import com.techlife.kockit.core.designsystem.theme.OrangeAccent
@@ -82,9 +85,8 @@ private object HomePerformanceCardStyle {
     val summaryMuted = Color(0xFF6B7280)
 }
 
-private val HomeStatCardHeight = 150.dp
-private val HomeCardInnerPadding = 16.dp
-private val HomeCardSectionSpacing = 14.dp
+@Composable
+private fun homeMetrics() = LocalHomeLayoutMetrics.current
 
 @Composable
 fun HomeTopBar(
@@ -93,6 +95,7 @@ fun HomeTopBar(
     onSearchClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val metrics = homeMetrics()
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -100,7 +103,7 @@ fun HomeTopBar(
     ) {
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(metrics.menuButtonSize)
                 .clip(CircleShape)
                 .background(PastelGreen.copy(alpha = 0.18f))
                 .clickable(onClick = onMenuClick),
@@ -109,7 +112,7 @@ fun HomeTopBar(
             Icon(
                 imageVector = Icons.Filled.Menu,
                 contentDescription = "Menü",
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(metrics.menuIconSize),
                 tint = PastelGreen
             )
         }
@@ -121,7 +124,7 @@ fun HomeTopBar(
                 imageVector = Icons.Filled.Search,
                 contentDescription = "Ara",
                 modifier = Modifier
-                    .size(28.dp)
+                    .size(metrics.topBarActionSize)
                     .clickable(onClick = onSearchClick),
                 tint = TextPrimary
             )
@@ -129,14 +132,14 @@ fun HomeTopBar(
                 Icon(
                     imageVector = Icons.Filled.Notifications,
                     contentDescription = "Bildirimler",
-                    modifier = Modifier.size(28.dp),
+                    modifier = Modifier.size(metrics.topBarActionSize),
                     tint = TextPrimary
                 )
                 if (notificationCount > 0) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .size(18.dp)
+                            .size(if (metrics.isExpanded) 20.dp else 18.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFE85D5D)),
                         contentAlignment = Alignment.Center
@@ -144,8 +147,8 @@ fun HomeTopBar(
                         KocKitText(
                             text = notificationCount.toString(),
                             color = White,
-                            fontSize = KocKitTextDefaults.fontSizeSmall,
-                            lineHeight = KocKitTextDefaults.lineHeightSmall
+                            fontSize = metrics.cardCaptionSize,
+                            lineHeight = metrics.cardCaptionLineHeight
                         )
                     }
                 }
@@ -159,19 +162,20 @@ fun HomeGreetingSection(
     userName: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = homeMetrics()
     Column(modifier = modifier.fillMaxWidth()) {
         KocKitExtraBoldText(
             text = "Merhaba, $userName!",
             color = TextPrimary,
-            fontSize = KocKitTextDefaults.fontSizeTitle,
-            lineHeight = KocKitTextDefaults.lineHeightTitle
+            fontSize = metrics.greetingTitleSize,
+            lineHeight = metrics.greetingTitleLineHeight
         )
         Spacer(modifier = Modifier.height(4.dp))
         KocKitText(
             text = "Bugün harika bir gün!",
             color = TextSecondary,
-            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-            lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+            fontSize = metrics.greetingSubtitleSize,
+            lineHeight = metrics.greetingSubtitleLineHeight
         )
     }
 }
@@ -183,6 +187,7 @@ fun HomeDailyGoalCard(
     remainingNet: Int,
     modifier: Modifier = Modifier
 ) {
+    val metrics = homeMetrics()
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = CardShape,
@@ -192,7 +197,7 @@ fun HomeDailyGoalCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(metrics.cardInnerPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
@@ -201,7 +206,7 @@ fun HomeDailyGoalCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(metrics.dailyGoalIconSize)
                         .clip(RoundedCornerShape(12.dp))
                         .background(PastelGreen.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
@@ -210,7 +215,7 @@ fun HomeDailyGoalCard(
                         imageVector = Icons.Filled.CalendarToday,
                         contentDescription = null,
                         tint = PastelGreen,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(if (metrics.isExpanded) 26.dp else 22.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(10.dp))
@@ -218,20 +223,20 @@ fun HomeDailyGoalCard(
                     KocKitText(
                         text = "Bugünkü Hedefin",
                         color = TextSecondary,
-                        fontSize = KocKitTextDefaults.fontSizeSmall,
-                        lineHeight = KocKitTextDefaults.lineHeightSmall
+                        fontSize = metrics.cardCaptionSize,
+                        lineHeight = metrics.cardCaptionLineHeight
                     )
                     KocKitBoldText(
                         text = "$completedNet / $totalNet net",
                         color = PastelGreen,
-                        fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                        lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+                        fontSize = metrics.cardTitleSize,
+                        lineHeight = metrics.cardTitleLineHeight
                     )
                 }
             }
             VerticalDivider(
                 modifier = Modifier
-                    .height(48.dp)
+                    .height(if (metrics.isExpanded) 56.dp else 48.dp)
                     .padding(horizontal = 8.dp),
                 thickness = 1.dp,
                 color = Color(0xFFE5E7EB)
@@ -242,7 +247,7 @@ fun HomeDailyGoalCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(metrics.dailyGoalIconSize)
                         .clip(RoundedCornerShape(12.dp))
                         .background(OrangeAccent.copy(alpha = 0.15f)),
                     contentAlignment = Alignment.Center
@@ -251,7 +256,7 @@ fun HomeDailyGoalCard(
                         imageVector = Icons.Filled.TrackChanges,
                         contentDescription = null,
                         tint = OrangeAccent,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(if (metrics.isExpanded) 26.dp else 22.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(10.dp))
@@ -259,14 +264,14 @@ fun HomeDailyGoalCard(
                     KocKitBoldText(
                         text = "$remainingNet net kaldı",
                         color = PastelGreen,
-                        fontSize = KocKitTextDefaults.fontSizeBody,
-                        lineHeight = KocKitTextDefaults.lineHeightBody
+                        fontSize = metrics.cardBodySize,
+                        lineHeight = metrics.cardBodyLineHeight
                     )
                     KocKitText(
                         text = "Devam et!",
                         color = TextSecondary,
-                        fontSize = KocKitTextDefaults.fontSizeSmall,
-                        lineHeight = KocKitTextDefaults.lineHeightSmall,
+                        fontSize = metrics.cardCaptionSize,
+                        lineHeight = metrics.cardCaptionLineHeight,
                         maxLines = 2
                     )
                 }
@@ -277,11 +282,12 @@ fun HomeDailyGoalCard(
 
 @Composable
 fun HomeStatsCarousel(modifier: Modifier = Modifier) {
+    val metrics = homeMetrics()
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(HomeStatCardHeight),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+            .height(metrics.statCardHeight),
+        horizontalArrangement = Arrangement.spacedBy(if (metrics.isExpanded) 14.dp else 10.dp)
     ) {
         HomeProgressCard(
             modifier = Modifier
@@ -306,20 +312,21 @@ private fun HomeLessonProgressBar(
     completed: Int,
     total: Int,
     accentColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    barHeight: Dp = 5.dp
 ) {
     val progress = if (total <= 0) 0f else completed.toFloat() / total.toFloat()
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(5.dp)
+            .height(barHeight)
             .clip(RoundedCornerShape(3.dp))
             .background(Color(0xFFECECEC))
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth(progress.coerceIn(0f, 1f))
-                .height(5.dp)
+                .height(barHeight)
                 .clip(RoundedCornerShape(3.dp))
                 .background(accentColor)
         )
@@ -328,6 +335,7 @@ private fun HomeLessonProgressBar(
 
 @Composable
 fun HomePerformanceCard(modifier: Modifier = Modifier) {
+    val metrics = homeMetrics()
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = CardShape,
@@ -335,14 +343,14 @@ fun HomePerformanceCard(modifier: Modifier = Modifier) {
         border = BorderStroke(1.dp, HomePerformanceCardStyle.border),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(HomeCardInnerPadding)) {
+        Column(modifier = Modifier.padding(metrics.cardInnerPadding)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(if (metrics.isExpanded) 42.dp else 36.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(HomePerformanceCardStyle.greenLight),
                     contentAlignment = Alignment.Center
@@ -351,15 +359,15 @@ fun HomePerformanceCard(modifier: Modifier = Modifier) {
                         imageVector = Icons.Outlined.BarChart,
                         contentDescription = null,
                         tint = HomePerformanceCardStyle.green,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(if (metrics.isExpanded) 24.dp else 20.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 KocKitBoldText(
                     text = "Performans Analizi",
                     color = TextPrimary,
-                    fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                    lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
+                    fontSize = metrics.cardTitleSize,
+                    lineHeight = metrics.cardTitleLineHeight,
                     modifier = Modifier.weight(1f)
                 )
                 Row(
@@ -369,19 +377,19 @@ fun HomePerformanceCard(modifier: Modifier = Modifier) {
                     KocKitSemiText(
                         text = "Detaylı Analiz",
                         color = HomePerformanceCardStyle.green,
-                        fontSize = KocKitTextDefaults.fontSizeSmall,
-                        lineHeight = KocKitTextDefaults.lineHeightSmall
+                        fontSize = metrics.cardCaptionSize,
+                        lineHeight = metrics.cardCaptionLineHeight
                     )
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
                         tint = HomePerformanceCardStyle.green,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(if (metrics.isExpanded) 20.dp else 18.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(HomeCardSectionSpacing))
+            Spacer(modifier = Modifier.height(metrics.cardSectionSpacing))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -399,7 +407,7 @@ fun HomePerformanceCard(modifier: Modifier = Modifier) {
                             imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                             contentDescription = null,
                             tint = HomePerformanceCardStyle.green,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(if (metrics.isExpanded) 20.dp else 18.dp)
                         )
                     }
                 )
@@ -415,13 +423,13 @@ fun HomePerformanceCard(modifier: Modifier = Modifier) {
                             imageVector = Icons.Filled.TrackChanges,
                             contentDescription = null,
                             tint = HomePerformanceCardStyle.orange,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(if (metrics.isExpanded) 20.dp else 18.dp)
                         )
                     }
                 )
             }
 
-            Spacer(modifier = Modifier.height(HomeCardSectionSpacing))
+            Spacer(modifier = Modifier.height(metrics.cardSectionSpacing))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -431,26 +439,26 @@ fun HomePerformanceCard(modifier: Modifier = Modifier) {
                     imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                     contentDescription = null,
                     tint = HomePerformanceCardStyle.green,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(if (metrics.isExpanded) 18.dp else 16.dp)
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 KocKitText(
                     text = "Son 7 günde ",
                     color = HomePerformanceCardStyle.summaryMuted,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall
+                    fontSize = metrics.cardCaptionSize,
+                    lineHeight = metrics.cardCaptionLineHeight
                 )
                 KocKitBoldText(
                     text = "+%6",
                     color = HomePerformanceCardStyle.green,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall
+                    fontSize = metrics.cardCaptionSize,
+                    lineHeight = metrics.cardCaptionLineHeight
                 )
                 KocKitText(
                     text = " gelişim",
                     color = HomePerformanceCardStyle.summaryMuted,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall
+                    fontSize = metrics.cardCaptionSize,
+                    lineHeight = metrics.cardCaptionLineHeight
                 )
             }
 
@@ -459,7 +467,7 @@ fun HomePerformanceCard(modifier: Modifier = Modifier) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(44.dp)
+                    .height(if (metrics.isExpanded) 52.dp else 44.dp)
                     .clip(RoundedCornerShape(12.dp))
                     .border(
                         width = 1.dp,
@@ -473,14 +481,14 @@ fun HomePerformanceCard(modifier: Modifier = Modifier) {
                     KocKitSemiText(
                         text = "Detaylı Analizi Gör",
                         color = HomePerformanceCardStyle.green,
-                        fontSize = KocKitTextDefaults.fontSizeBody,
-                        lineHeight = KocKitTextDefaults.lineHeightBody
+                        fontSize = metrics.cardBodySize,
+                        lineHeight = metrics.cardBodyLineHeight
                     )
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = null,
                         tint = HomePerformanceCardStyle.green,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(if (metrics.isExpanded) 20.dp else 18.dp)
                     )
                 }
             }
@@ -498,11 +506,12 @@ private fun HomePerformanceInsightBox(
     leadingIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = homeMetrics()
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(14.dp))
             .background(accentLightColor)
-            .padding(12.dp)
+            .padding(if (metrics.isExpanded) 14.dp else 12.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -511,8 +520,8 @@ private fun HomePerformanceInsightBox(
                 KocKitSemiText(
                     text = label,
                     color = accentColor,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall,
+                    fontSize = metrics.cardCaptionSize,
+                    lineHeight = metrics.cardCaptionLineHeight,
                     maxLines = 2,
                     modifier = Modifier.weight(1f)
                 )
@@ -521,8 +530,8 @@ private fun HomePerformanceInsightBox(
             KocKitBoldText(
                 text = subject,
                 color = TextPrimary,
-                fontSize = KocKitTextDefaults.fontSizeBody,
-                lineHeight = KocKitTextDefaults.lineHeightBody,
+                fontSize = metrics.cardBodySize,
+                lineHeight = metrics.cardBodyLineHeight,
                 maxLines = 1
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -534,8 +543,8 @@ private fun HomePerformanceInsightBox(
                     KocKitBoldText(
                         text = percent,
                         color = accentColor,
-                        fontSize = KocKitTextDefaults.fontSizeSmall,
-                        lineHeight = KocKitTextDefaults.lineHeightSmall,
+                        fontSize = metrics.cardCaptionSize,
+                        lineHeight = metrics.cardCaptionLineHeight,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -558,10 +567,11 @@ private fun HomeStatCardShell(
     footerText: String,
     content: @Composable () -> Unit
 ) {
+    val metrics = homeMetrics()
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(HomeStatCardHeight),
+            .height(metrics.statCardHeight),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = White),
         border = BorderStroke(1.dp, borderColor.copy(alpha = 0.35f)),
@@ -570,7 +580,10 @@ private fun HomeStatCardShell(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 10.dp, vertical = 6.dp),
+                .padding(
+                    horizontal = if (metrics.isExpanded) 12.dp else 10.dp,
+                    vertical = if (metrics.isExpanded) 8.dp else 6.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -579,7 +592,7 @@ private fun HomeStatCardShell(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(if (metrics.isExpanded) 32.dp else 28.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(headerIconBg),
                     contentAlignment = Alignment.Center
@@ -588,15 +601,15 @@ private fun HomeStatCardShell(
                         imageVector = headerIcon,
                         contentDescription = null,
                         tint = headerIconTint,
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(if (metrics.isExpanded) 14.dp else 12.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(4.dp))
                 KocKitSemiText(
                     text = title,
                     color = TextPrimary,
-                    fontSize = 9.sp,
-                    lineHeight = 12.sp,
+                    fontSize = metrics.statCardTitleSize,
+                    lineHeight = metrics.statCardTitleLineHeight,
                     modifier = Modifier.weight(1f),
                     maxLines = 2
                 )
@@ -604,7 +617,7 @@ private fun HomeStatCardShell(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = TextSecondary.copy(alpha = 0.6f),
-                    modifier = Modifier.size(12.dp)
+                    modifier = Modifier.size(if (metrics.isExpanded) 14.dp else 12.dp)
                 )
             }
             Box(
@@ -628,8 +641,8 @@ private fun HomeStatCardShell(
                     KocKitSemiText(
                         text = footerText,
                         color = footerTint,
-                        fontSize = 9.sp,
-                        lineHeight = 12.sp,
+                        fontSize = metrics.statCardFooterSize,
+                        lineHeight = metrics.statCardFooterLineHeight,
                         textAlign = TextAlign.Center,
                         maxLines = 3
                     )
@@ -641,6 +654,7 @@ private fun HomeStatCardShell(
 
 @Composable
 fun HomeProgressCard(modifier: Modifier = Modifier) {
+    val metrics = homeMetrics()
     HomeStatCardShell(
         modifier = modifier,
         headerIcon = Icons.Outlined.BarChart,
@@ -658,13 +672,18 @@ fun HomeProgressCard(modifier: Modifier = Modifier) {
             percentText = HomeFakeData.GENERAL_PROGRESS_PERCENT,
             label = "ilerleme",
             ringColor = LavenderAccent,
-            ringSize = 64.dp
+            ringSize = metrics.progressRingSize,
+            percentFontSize = metrics.progressPercentSize,
+            percentLineHeight = metrics.progressPercentLineHeight,
+            labelFontSize = metrics.statCardLabelSize,
+            labelLineHeight = metrics.statCardLabelLineHeight
         )
     }
 }
 
 @Composable
 fun HomePointsCard(modifier: Modifier = Modifier) {
+    val metrics = homeMetrics()
     HomeStatCardShell(
         modifier = modifier,
         headerIcon = Icons.Outlined.EmojiEvents,
@@ -681,14 +700,14 @@ fun HomePointsCard(modifier: Modifier = Modifier) {
             KocKitExtraBoldText(
                 text = HomeFakeData.TOTAL_POINTS,
                 color = TextPrimary,
-                fontSize = 22.sp,
-                lineHeight = 26.sp
+                fontSize = metrics.statCardValueSize,
+                lineHeight = metrics.statCardValueLineHeight
             )
             KocKitText(
                 text = "Toplam Puan",
                 color = TextSecondary,
-                fontSize = 10.sp,
-                lineHeight = 12.sp
+                fontSize = metrics.statCardLabelSize,
+                lineHeight = metrics.statCardLabelLineHeight
             )
         }
     }
@@ -696,6 +715,7 @@ fun HomePointsCard(modifier: Modifier = Modifier) {
 
 @Composable
 fun HomeExamAverageCard(modifier: Modifier = Modifier) {
+    val metrics = homeMetrics()
     HomeStatCardShell(
         modifier = modifier,
         headerIcon = Icons.Outlined.Description,
@@ -712,14 +732,14 @@ fun HomeExamAverageCard(modifier: Modifier = Modifier) {
             KocKitExtraBoldText(
                 text = HomeFakeData.EXAM_AVERAGE_NET,
                 color = TextPrimary,
-                fontSize = 20.sp,
-                lineHeight = 24.sp
+                fontSize = if (metrics.isExpanded) 26.sp else 20.sp,
+                lineHeight = if (metrics.isExpanded) 30.sp else 24.sp
             )
             KocKitText(
                 text = "TYT Ortalama",
                 color = TextSecondary,
-                fontSize = 10.sp,
-                lineHeight = 12.sp
+                fontSize = metrics.statCardLabelSize,
+                lineHeight = metrics.statCardLabelLineHeight
             )
         }
     }
@@ -731,7 +751,11 @@ private fun HomeCircularProgress(
     percentText: String,
     label: String,
     ringColor: Color,
-    ringSize: Dp = 120.dp
+    ringSize: Dp = 120.dp,
+    percentFontSize: TextUnit = 16.sp,
+    percentLineHeight: TextUnit = 20.sp,
+    labelFontSize: TextUnit = 10.sp,
+    labelLineHeight: TextUnit = 12.sp
 ) {
     Box(
         modifier = Modifier.size(ringSize),
@@ -742,21 +766,21 @@ private fun HomeCircularProgress(
             modifier = Modifier.fillMaxSize(),
             color = ringColor,
             trackColor = Color(0xFFE8E8E8),
-            strokeWidth = 4.dp,
+            strokeWidth = if (ringSize >= 80.dp) 5.dp else 4.dp,
             strokeCap = StrokeCap.Round
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             KocKitExtraBoldText(
                 text = percentText,
                 color = TextPrimary,
-                fontSize = 16.sp,
-                lineHeight = 20.sp
+                fontSize = percentFontSize,
+                lineHeight = percentLineHeight
             )
             KocKitText(
                 text = label,
                 color = TextSecondary,
-                fontSize = 10.sp,
-                lineHeight = 12.sp
+                fontSize = labelFontSize,
+                lineHeight = labelLineHeight
             )
         }
     }
@@ -767,13 +791,14 @@ fun HomePriorityCard(
     lessons: List<HomePriorityLesson>,
     modifier: Modifier = Modifier
 ) {
+    val metrics = homeMetrics()
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = CardShape,
         colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(HomeCardInnerPadding)) {
+        Column(modifier = Modifier.padding(metrics.cardInnerPadding)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -782,46 +807,46 @@ fun HomePriorityCard(
                     Icons.Filled.TrackChanges,
                     contentDescription = null,
                     tint = Color(0xFFE85D5D),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(if (metrics.isExpanded) 24.dp else 20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 KocKitBoldText(
                     text = "Bugünkü Önceliğin",
                     color = TextPrimary,
-                    fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                    lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
+                    fontSize = metrics.cardTitleSize,
+                    lineHeight = metrics.cardTitleLineHeight,
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedButton(
                     onClick = {},
                     shape = RoundedCornerShape(20.dp),
                     border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
-                    modifier = Modifier.height(34.dp),
+                    modifier = Modifier.height(if (metrics.isExpanded) 40.dp else 34.dp),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                        horizontal = 12.dp,
+                        horizontal = if (metrics.isExpanded) 14.dp else 12.dp,
                         vertical = 0.dp
                     )
                 ) {
                     KocKitSemiText(
-                        text = "Planını Gör >",
+                        text = "Planını Gör",
                         color = TextPrimary,
-                        fontSize = KocKitTextDefaults.fontSizeSmall,
-                        lineHeight = KocKitTextDefaults.lineHeightSmall
+                        fontSize = metrics.cardCaptionSize,
+                        lineHeight = metrics.cardCaptionLineHeight
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(HomeCardSectionSpacing))
+            Spacer(modifier = Modifier.height(metrics.cardSectionSpacing))
 
             lessons.forEachIndexed { index, lesson ->
-                HomePriorityLessonRow(lesson = lesson)
+                HomePriorityLessonRow(lesson = lesson, metrics = metrics)
                 if (index < lessons.lastIndex) {
-                    Spacer(modifier = Modifier.height(HomeCardSectionSpacing))
+                    Spacer(modifier = Modifier.height(metrics.cardSectionSpacing))
                     HorizontalDivider(
                         thickness = 1.dp,
                         color = Color(0xFFF0F0F0)
                     )
-                    Spacer(modifier = Modifier.height(HomeCardSectionSpacing))
+                    Spacer(modifier = Modifier.height(metrics.cardSectionSpacing))
                 }
             }
         }
@@ -829,14 +854,17 @@ fun HomePriorityCard(
 }
 
 @Composable
-private fun HomePriorityLessonRow(lesson: HomePriorityLesson) {
+private fun HomePriorityLessonRow(
+    lesson: HomePriorityLesson,
+    metrics: HomeLayoutMetrics
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(42.dp)
+                .size(metrics.priorityIconSize)
                 .clip(RoundedCornerShape(12.dp))
                 .background(lesson.accentColor.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center
@@ -844,24 +872,24 @@ private fun HomePriorityLessonRow(lesson: HomePriorityLesson) {
             KocKitBoldText(
                 text = lesson.iconEmoji,
                 color = lesson.accentColor,
-                fontSize = 18.sp,
-                lineHeight = 22.sp
+                fontSize = if (metrics.isExpanded) 22.sp else 18.sp,
+                lineHeight = if (metrics.isExpanded) 26.sp else 22.sp
             )
         }
         Spacer(modifier = Modifier.width(10.dp))
-        Column(modifier = Modifier.width(92.dp)) {
+        Column(modifier = Modifier.width(if (metrics.isExpanded) 108.dp else 92.dp)) {
             KocKitBoldText(
                 text = lesson.title,
                 color = TextPrimary,
-                fontSize = KocKitTextDefaults.fontSizeBody,
-                lineHeight = KocKitTextDefaults.lineHeightBody,
+                fontSize = metrics.cardBodySize,
+                lineHeight = metrics.cardBodyLineHeight,
                 maxLines = 1
             )
             KocKitText(
                 text = lesson.subtitle,
                 color = TextSecondary,
-                fontSize = KocKitTextDefaults.fontSizeSmall,
-                lineHeight = KocKitTextDefaults.lineHeightSmall,
+                fontSize = metrics.cardCaptionSize,
+                lineHeight = metrics.cardCaptionLineHeight,
                 maxLines = 1
             )
         }
@@ -873,8 +901,8 @@ private fun HomePriorityLessonRow(lesson: HomePriorityLesson) {
             KocKitText(
                 text = "${lesson.completedQuestions} / ${lesson.totalQuestions} soru",
                 color = TextSecondary,
-                fontSize = KocKitTextDefaults.fontSizeSmall,
-                lineHeight = KocKitTextDefaults.lineHeightSmall,
+                fontSize = metrics.cardCaptionSize,
+                lineHeight = metrics.cardCaptionLineHeight,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.End
             )
@@ -882,7 +910,8 @@ private fun HomePriorityLessonRow(lesson: HomePriorityLesson) {
             HomeLessonProgressBar(
                 completed = lesson.completedQuestions,
                 total = lesson.totalQuestions,
-                accentColor = lesson.accentColor
+                accentColor = lesson.accentColor,
+                barHeight = if (metrics.isExpanded) 6.dp else 5.dp
             )
         }
         Row(
@@ -893,20 +922,20 @@ private fun HomePriorityLessonRow(lesson: HomePriorityLesson) {
                 Icons.Filled.Schedule,
                 contentDescription = null,
                 tint = TextSecondary,
-                modifier = Modifier.size(14.dp)
+                modifier = Modifier.size(if (metrics.isExpanded) 16.dp else 14.dp)
             )
             Spacer(modifier = Modifier.width(3.dp))
             KocKitSemiText(
                 text = "${lesson.durationMinutes} dk",
                 color = TextSecondary,
-                fontSize = KocKitTextDefaults.fontSizeSmall,
-                lineHeight = KocKitTextDefaults.lineHeightSmall
+                fontSize = metrics.cardCaptionSize,
+                lineHeight = metrics.cardCaptionLineHeight
             )
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
                 tint = TextSecondary.copy(alpha = 0.7f),
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(if (metrics.isExpanded) 20.dp else 18.dp)
             )
         }
     }
@@ -917,6 +946,8 @@ fun HomePlacementReminderCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = homeMetrics()
+    val iconBoxSize = if (metrics.isExpanded) 60.dp else 52.dp
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -929,13 +960,16 @@ fun HomePlacementReminderCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 14.dp),
+                .padding(
+                    horizontal = if (metrics.isExpanded) 16.dp else 12.dp,
+                    vertical = if (metrics.isExpanded) 16.dp else 14.dp
+                ),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(modifier = Modifier.size(52.dp)) {
+            Box(modifier = Modifier.size(iconBoxSize)) {
                 Box(
                     modifier = Modifier
-                        .size(52.dp)
+                        .size(iconBoxSize)
                         .clip(CircleShape)
                         .background(White),
                     contentAlignment = Alignment.Center
@@ -944,14 +978,14 @@ fun HomePlacementReminderCard(
                         imageVector = Icons.Outlined.Description,
                         contentDescription = null,
                         tint = PlacementTestColors.orange,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(if (metrics.isExpanded) 28.dp else 24.dp)
                     )
                 }
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .offset(x = 2.dp, y = (-2).dp)
-                        .size(18.dp)
+                        .size(if (metrics.isExpanded) 20.dp else 18.dp)
                         .clip(CircleShape)
                         .background(PlacementTestColors.orange),
                     contentAlignment = Alignment.Center
@@ -960,7 +994,7 @@ fun HomePlacementReminderCard(
                         imageVector = Icons.Outlined.Notifications,
                         contentDescription = null,
                         tint = White,
-                        modifier = Modifier.size(10.dp)
+                        modifier = Modifier.size(if (metrics.isExpanded) 12.dp else 10.dp)
                     )
                 }
             }
@@ -969,16 +1003,16 @@ fun HomePlacementReminderCard(
                 KocKitBoldText(
                     text = "Seviye Testini Yapmayı Unutma...",
                     color = TextPrimary,
-                    fontSize = 12.sp,
-                    lineHeight = 15.sp,
+                    fontSize = metrics.placementTitleSize,
+                    lineHeight = metrics.placementTitleLineHeight,
                     maxLines = 2
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 KocKitText(
                     text = "Sana en uygun çalışma planını oluşturabilmemiz için seviye testini çözmelisin.",
                     color = TextSecondary,
-                    fontSize = 10.sp,
-                    lineHeight = 13.sp,
+                    fontSize = metrics.placementBodySize,
+                    lineHeight = metrics.placementBodyLineHeight,
                     maxLines = 3
                 )
             }
@@ -991,16 +1025,16 @@ fun HomePlacementReminderCard(
                     contentColor = White
                 ),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    horizontal = 10.dp,
-                    vertical = 8.dp
+                    horizontal = if (metrics.isExpanded) 14.dp else 10.dp,
+                    vertical = if (metrics.isExpanded) 10.dp else 8.dp
                 ),
-                modifier = Modifier.height(40.dp)
+                modifier = Modifier.height(if (metrics.isExpanded) 46.dp else 40.dp)
             ) {
                 KocKitSemiText(
                     text = "Teste Başla",
                     color = White,
-                    fontSize = 10.sp,
-                    lineHeight = 12.sp
+                    fontSize = if (metrics.isExpanded) 14.sp else 10.sp,
+                    lineHeight = if (metrics.isExpanded) 18.sp else 12.sp
                 )
             }
         }
@@ -1009,6 +1043,7 @@ fun HomePlacementReminderCard(
 
 @Composable
 fun HomeGoalBannerCard(modifier: Modifier = Modifier) {
+    val metrics = homeMetrics()
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = CardShape,
@@ -1020,14 +1055,14 @@ fun HomeGoalBannerCard(modifier: Modifier = Modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp),
+                .padding(if (metrics.isExpanded) 18.dp else 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
                 painter = painterResource(R.drawable.img_target),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(56.dp)
+                    .size(metrics.bannerImageSize)
                     .graphicsLayer {
                         compositingStrategy = CompositingStrategy.Offscreen
                     },
@@ -1038,12 +1073,14 @@ fun HomeGoalBannerCard(modifier: Modifier = Modifier) {
                 KocKitBoldText(
                     text = "Büyük hedefler,",
                     color = TextPrimary,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
+                    fontSize = metrics.cardBodySize,
+                    lineHeight = metrics.cardBodyLineHeight
                 )
                 KocKitBoldText(
                     text = "planlı adımlarla gerçekleşir!",
                     color = TextPrimary,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
+                    fontSize = metrics.cardBodySize,
+                    lineHeight = metrics.cardBodyLineHeight
                 )
             }
             OutlinedButton(
@@ -1055,8 +1092,8 @@ fun HomeGoalBannerCard(modifier: Modifier = Modifier) {
                 KocKitSemiText(
                     text = "Hedefini Güncelle >",
                     color = OrangeAccent,
-                    fontSize = 9.sp,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall
+                    fontSize = if (metrics.isExpanded) 12.sp else 9.sp,
+                    lineHeight = metrics.cardCaptionLineHeight
                 )
             }
         }

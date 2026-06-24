@@ -35,7 +35,9 @@ fun KocKitTextField(
     error: String? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     shape: Shape = TextFieldShape,
-    fieldHeight: androidx.compose.ui.unit.Dp = 56.dp
+    fieldHeight: androidx.compose.ui.unit.Dp = 56.dp,
+    textFontSize: androidx.compose.ui.unit.TextUnit = KocKitTextDefaults.fontSizeBodyLarge,
+    textLineHeight: androidx.compose.ui.unit.TextUnit = KocKitTextDefaults.lineHeightBodyLarge
 ) {
     val colors = KocKitTheme.extraColors
     Column(modifier = modifier.fillMaxWidth()) {
@@ -49,8 +51,8 @@ fun KocKitTextField(
                 KocKitSemiText(
                     text = placeholder,
                     color = colors.textSecondary,
-                    fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                    lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+                    fontSize = textFontSize,
+                    lineHeight = textLineHeight
                 )
             },
             leadingIcon = leadingIconVector?.let { vector ->
@@ -69,7 +71,9 @@ fun KocKitTextField(
             visualTransformation = visualTransformation,
             textStyle = MaterialTheme.typography.bodyLarge.copy(
                 fontFamily = KocKitFontFamily,
-                color = colors.textPrimary
+                color = colors.textPrimary,
+                fontSize = textFontSize,
+                lineHeight = textLineHeight
             ),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = colors.cardBackground,

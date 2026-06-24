@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,6 +52,8 @@ import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.component.KocKitTextField
 import com.techlife.kockit.core.designsystem.component.LoginFieldShape
+import com.techlife.kockit.core.designsystem.layout.AuthFormContainer
+import com.techlife.kockit.core.designsystem.layout.AuthFormMetrics
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
@@ -93,17 +96,16 @@ private fun ForgotPasswordContent(
     onNavigateToRegister: () -> Unit
 ) {
     KocKitBackground(useFormBackgroundImage = true) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
-                .padding(horizontal = 28.dp)
-        ) {
+        AuthFormContainer(
+            modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) { metrics ->
             when (uiState.currentStep) {
                 ForgotPasswordSteps.EMAIL -> ForgotPasswordEmailStep(
                     email = uiState.email,
                     emailError = uiState.emailError,
                     isLoading = uiState.isLoading,
+                    metrics = metrics,
                     onEmailChange = { onEvent(ForgotPasswordEvent.EmailChanged(it)) },
                     onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) },
                     onNavigateToLogin = onNavigateToLogin,
@@ -114,6 +116,7 @@ private fun ForgotPasswordContent(
                     codeError = uiState.codeError,
                     isLoading = uiState.isLoading,
                     resendSecondsRemaining = uiState.resendSecondsRemaining,
+                    metrics = metrics,
                     onCodeChange = { onEvent(ForgotPasswordEvent.CodeChanged(it)) },
                     onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) },
                     onBack = { onEvent(ForgotPasswordEvent.BackClicked) },
@@ -125,6 +128,7 @@ private fun ForgotPasswordContent(
                     newPasswordError = uiState.newPasswordError,
                     confirmPasswordError = uiState.confirmPasswordError,
                     isLoading = uiState.isLoading,
+                    metrics = metrics,
                     onNewPasswordChange = { onEvent(ForgotPasswordEvent.NewPasswordChanged(it)) },
                     onConfirmPasswordChange = { onEvent(ForgotPasswordEvent.ConfirmPasswordChanged(it)) },
                     onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) },
@@ -136,271 +140,297 @@ private fun ForgotPasswordContent(
 }
 
 @Composable
-private fun ForgotPasswordEmailStep(
+private fun ColumnScope.ForgotPasswordEmailStep(
     email: String,
     emailError: String?,
     isLoading: Boolean,
+    metrics: AuthFormMetrics,
     onEmailChange: (String) -> Unit,
     onContinue: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(56.dp))
+    Spacer(modifier = Modifier.height(metrics.topInset))
 
-        ForgotPasswordLogo()
+    ForgotPasswordLogo(
+        size = metrics.brandLogoSize,
+        imageSize = metrics.brandLogoImageSize
+    )
 
-        Spacer(modifier = Modifier.height(40.dp))
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 
-        KocKitBoldText(
-            text = "Lütfen e-posta adresinizi girin.",
-            color = TextPrimary,
-            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-            lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
+    KocKitBoldText(
+        text = "Lütfen e-posta adresinizi girin.",
+        color = TextPrimary,
+        fontSize = metrics.bodyFontSize,
+        lineHeight = metrics.bodyLineHeight,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
 
-        Spacer(modifier = Modifier.height(28.dp))
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 
-        KocKitTextField(
-            value = email,
-            onValueChange = onEmailChange,
-            placeholder = "example@gmail.com",
-            error = emailError,
-            shape = LoginFieldShape
-        )
+    KocKitTextField(
+        value = email,
+        onValueChange = onEmailChange,
+        placeholder = "example@gmail.com",
+        error = emailError,
+        shape = LoginFieldShape,
+        fieldHeight = metrics.fieldHeight,
+        textFontSize = metrics.fieldFontSize,
+        textLineHeight = metrics.fieldLineHeight
+    )
 
-        Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
 
-        KocKitSemiText(
-            text = "Giriş ekranına dönün",
-            color = TextSecondary,
-            fontSize = KocKitTextDefaults.fontSizeBody,
-            lineHeight = KocKitTextDefaults.lineHeightBody,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onNavigateToLogin)
-        )
+    KocKitSemiText(
+        text = "Giriş ekranına dönün",
+        color = TextSecondary,
+        fontSize = metrics.subheadFontSize,
+        lineHeight = metrics.subheadLineHeight,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onNavigateToLogin)
+    )
 
-        Spacer(modifier = Modifier.height(28.dp))
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 
-        KocKitPrimaryButton(
-            text = "Gönder",
-            onClick = onContinue,
-            enabled = email.isNotBlank(),
-            isLoading = isLoading,
-            containerColor = PastelGreen
-        )
+    KocKitPrimaryButton(
+        text = "Gönder",
+        onClick = onContinue,
+        enabled = email.isNotBlank(),
+        isLoading = isLoading,
+        containerColor = PastelGreen,
+        height = metrics.buttonHeight,
+        fontSize = metrics.buttonFontSize
+    )
 
+    if (metrics.isExpanded) {
+        Spacer(modifier = Modifier.height(metrics.sectionSpacing))
+    } else {
         Spacer(modifier = Modifier.weight(1f))
-
-        KocKitText(
-            text = "Hesabınız var mı?",
-            color = TextSecondary,
-            fontSize = KocKitTextDefaults.fontSizeBody,
-            lineHeight = KocKitTextDefaults.lineHeightBody,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        ForgotPasswordOutlinedButton(
-            text = "Kayıt Ol",
-            onClick = onNavigateToRegister
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
     }
+
+    KocKitText(
+        text = "Hesabınız var mı?",
+        color = TextSecondary,
+        fontSize = metrics.subheadFontSize,
+        lineHeight = metrics.subheadLineHeight,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
+
+    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+    ForgotPasswordOutlinedButton(
+        text = "Kayıt Ol",
+        onClick = onNavigateToRegister,
+        height = metrics.buttonHeight,
+        fontSize = metrics.buttonFontSize
+    )
+
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 }
 
 @Composable
-private fun ForgotPasswordCodeStep(
+private fun ColumnScope.ForgotPasswordCodeStep(
     code: String,
     codeError: String?,
     isLoading: Boolean,
     resendSecondsRemaining: Int,
+    metrics: AuthFormMetrics,
     onCodeChange: (String) -> Unit,
     onContinue: () -> Unit,
     onBack: () -> Unit,
     onResendCode: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(metrics.smallSpacing))
 
-        ForgotPasswordAuthTopBar(
-            title = "Doğrulama Kodu",
-            onBackClick = onBack
-        )
+    ForgotPasswordAuthTopBar(
+        title = "Doğrulama Kodu",
+        onBackClick = onBack,
+        titleFontSize = if (metrics.isExpanded) 20.sp else 18.sp
+    )
 
-        Spacer(modifier = Modifier.height(32.dp))
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 
-        ForgotPasswordLogo()
+    ForgotPasswordLogo(
+        size = metrics.brandLogoSize,
+        imageSize = metrics.brandLogoImageSize
+    )
 
-        Spacer(modifier = Modifier.height(32.dp))
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 
-        KocKitSemiText(
-            text = "Doğrulama Kodunu Giriniz",
-            color = TextPrimary,
-            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-            lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
+    KocKitSemiText(
+        text = "Doğrulama Kodunu Giriniz",
+        color = TextPrimary,
+        fontSize = metrics.bodyFontSize,
+        lineHeight = metrics.bodyLineHeight,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
 
-        Spacer(modifier = Modifier.height(6.dp))
+    Spacer(modifier = Modifier.height(metrics.smallSpacing))
 
-        KocKitText(
-            text = "E-posta adresinize gönderilen kodu girin",
-            color = TextSecondary,
-            fontSize = KocKitTextDefaults.fontSizeBody,
-            lineHeight = KocKitTextDefaults.lineHeightBody,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
+    KocKitText(
+        text = "E-posta adresinize gönderilen kodu girin",
+        color = TextSecondary,
+        fontSize = metrics.subheadFontSize,
+        lineHeight = metrics.subheadLineHeight,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
 
-        Spacer(modifier = Modifier.height(28.dp))
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 
-        KocKitOtpCodeField(
-            value = code,
-            onValueChange = onCodeChange,
-            error = codeError
-        )
+    KocKitOtpCodeField(
+        value = code,
+        onValueChange = onCodeChange,
+        error = codeError,
+        cellHeight = metrics.otpCellHeight,
+        digitFontSize = metrics.otpDigitFontSize,
+        digitLineHeight = metrics.otpDigitLineHeight
+    )
 
-        Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
 
-        val resendText = if (resendSecondsRemaining > 0) {
-            val minutes = resendSecondsRemaining / 60
-            val seconds = resendSecondsRemaining % 60
-            "Kodu yeniden gönder %d:%02d".format(minutes, seconds)
-        } else {
-            "Kodu yeniden gönder"
-        }
-
-        KocKitText(
-            text = resendText,
-            color = TextSecondary,
-            fontSize = KocKitTextDefaults.fontSizeBody,
-            lineHeight = KocKitTextDefaults.lineHeightBody,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(
-                    enabled = resendSecondsRemaining == 0,
-                    onClick = onResendCode
-                )
-        )
-
-        Spacer(modifier = Modifier.height(28.dp))
-
-        KocKitPrimaryButton(
-            text = "Gönder",
-            onClick = onContinue,
-            enabled = code.length == 6,
-            isLoading = isLoading,
-            containerColor = PastelGreen
-        )
+    val resendText = if (resendSecondsRemaining > 0) {
+        val minutes = resendSecondsRemaining / 60
+        val seconds = resendSecondsRemaining % 60
+        "Kodu yeniden gönder %d:%02d".format(minutes, seconds)
+    } else {
+        "Kodu yeniden gönder"
     }
+
+    KocKitText(
+        text = resendText,
+        color = TextSecondary,
+        fontSize = metrics.subheadFontSize,
+        lineHeight = metrics.subheadLineHeight,
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                enabled = resendSecondsRemaining == 0,
+                onClick = onResendCode
+            )
+    )
+
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
+
+    KocKitPrimaryButton(
+        text = "Gönder",
+        onClick = onContinue,
+        enabled = code.length == 6,
+        isLoading = isLoading,
+        containerColor = PastelGreen,
+        height = metrics.buttonHeight,
+        fontSize = metrics.buttonFontSize
+    )
 }
 
 @Composable
-private fun ForgotPasswordNewPasswordStep(
+private fun ColumnScope.ForgotPasswordNewPasswordStep(
     newPassword: String,
     confirmPassword: String,
     newPasswordError: String?,
     confirmPasswordError: String?,
     isLoading: Boolean,
+    metrics: AuthFormMetrics,
     onNewPasswordChange: (String) -> Unit,
     onConfirmPasswordChange: (String) -> Unit,
     onContinue: () -> Unit,
     onBack: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(metrics.smallSpacing))
 
-        ForgotPasswordAuthTopBar(
-            title = "Şifrenizi Yenileyin",
-            onBackClick = onBack
-        )
+    ForgotPasswordAuthTopBar(
+        title = "Şifrenizi Yenileyin",
+        onBackClick = onBack,
+        titleFontSize = if (metrics.isExpanded) 20.sp else 18.sp
+    )
 
-        Spacer(modifier = Modifier.height(40.dp))
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 
-        ForgotPasswordLabeledField(
-            label = "Yeni şifrenizi girin",
-            content = {
-                KocKitTextField(
-                    value = newPassword,
-                    onValueChange = onNewPasswordChange,
-                    placeholder = "",
-                    error = newPasswordError,
-                    shape = LoginFieldShape,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    visualTransformation = PasswordVisualTransformation()
-                )
-            }
-        )
+    ForgotPasswordLabeledField(
+        label = "Yeni şifrenizi girin",
+        metrics = metrics,
+        content = {
+            KocKitTextField(
+                value = newPassword,
+                onValueChange = onNewPasswordChange,
+                placeholder = "",
+                error = newPasswordError,
+                shape = LoginFieldShape,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                visualTransformation = PasswordVisualTransformation(),
+                fieldHeight = metrics.fieldHeight,
+                textFontSize = metrics.fieldFontSize,
+                textLineHeight = metrics.fieldLineHeight
+            )
+        }
+    )
 
-        Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
 
-        ForgotPasswordLabeledField(
-            label = "Şifrenizi tekrar girin",
-            content = {
-                KocKitTextField(
-                    value = confirmPassword,
-                    onValueChange = onConfirmPasswordChange,
-                    placeholder = "",
-                    error = confirmPasswordError,
-                    shape = LoginFieldShape,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    visualTransformation = PasswordVisualTransformation()
-                )
-            }
-        )
+    ForgotPasswordLabeledField(
+        label = "Şifrenizi tekrar girin",
+        metrics = metrics,
+        content = {
+            KocKitTextField(
+                value = confirmPassword,
+                onValueChange = onConfirmPasswordChange,
+                placeholder = "",
+                error = confirmPasswordError,
+                shape = LoginFieldShape,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                visualTransformation = PasswordVisualTransformation(),
+                fieldHeight = metrics.fieldHeight,
+                textFontSize = metrics.fieldFontSize,
+                textLineHeight = metrics.fieldLineHeight
+            )
+        }
+    )
 
-        Spacer(modifier = Modifier.height(28.dp))
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 
-        KocKitPrimaryButton(
-            text = "Gönder",
-            onClick = onContinue,
-            enabled = newPassword.isNotBlank() && confirmPassword.isNotBlank(),
-            isLoading = isLoading,
-            containerColor = PastelGreen
-        )
-    }
+    KocKitPrimaryButton(
+        text = "Gönder",
+        onClick = onContinue,
+        enabled = newPassword.isNotBlank() && confirmPassword.isNotBlank(),
+        isLoading = isLoading,
+        containerColor = PastelGreen,
+        height = metrics.buttonHeight,
+        fontSize = metrics.buttonFontSize
+    )
 }
 
 @Composable
 private fun ForgotPasswordLabeledField(
     label: String,
+    metrics: AuthFormMetrics,
     content: @Composable () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         KocKitText(
             text = label,
             color = TextPrimary,
-            fontSize = KocKitTextDefaults.fontSizeBody,
-            lineHeight = KocKitTextDefaults.lineHeightBody
+            fontSize = metrics.subheadFontSize,
+            lineHeight = metrics.subheadLineHeight
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(metrics.smallSpacing))
         content()
     }
 }
 
 @Composable
-private fun ForgotPasswordLogo() {
+private fun ForgotPasswordLogo(
+    size: androidx.compose.ui.unit.Dp = 96.dp,
+    imageSize: androidx.compose.ui.unit.Dp = 72.dp
+) {
     Surface(
-        modifier = Modifier.size(96.dp),
+        modifier = Modifier.size(size),
         shape = RoundedCornerShape(20.dp),
         color = White,
         shadowElevation = 0.dp
@@ -413,7 +443,7 @@ private fun ForgotPasswordLogo() {
                 painter = painterResource(R.drawable.img_splash),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(72.dp)
+                    .size(imageSize)
                     .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
@@ -424,7 +454,8 @@ private fun ForgotPasswordLogo() {
 @Composable
 private fun ForgotPasswordAuthTopBar(
     title: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    titleFontSize: androidx.compose.ui.unit.TextUnit = 18.sp
 ) {
     Box(
         modifier = Modifier
@@ -451,8 +482,8 @@ private fun ForgotPasswordAuthTopBar(
         KocKitBoldText(
             text = title,
             color = TextPrimary,
-            fontSize = 18.sp,
-            lineHeight = 22.sp,
+            fontSize = titleFontSize,
+            lineHeight = titleFontSize * 1.2f,
             modifier = Modifier.align(Alignment.Center)
         )
     }
@@ -461,13 +492,15 @@ private fun ForgotPasswordAuthTopBar(
 @Composable
 private fun ForgotPasswordOutlinedButton(
     text: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    height: androidx.compose.ui.unit.Dp = 52.dp,
+    fontSize: androidx.compose.ui.unit.TextUnit = KocKitTextDefaults.fontSizeButton
 ) {
     OutlinedButton(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp),
+            .height(height),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, PastelGreen),
         colors = ButtonDefaults.outlinedButtonColors(
@@ -478,8 +511,8 @@ private fun ForgotPasswordOutlinedButton(
         KocKitBoldText(
             text = text,
             color = PastelGreen,
-            fontSize = KocKitTextDefaults.fontSizeButton,
-            lineHeight = KocKitTextDefaults.lineHeightButton
+            fontSize = fontSize,
+            lineHeight = fontSize * 1.2f
         )
     }
 }

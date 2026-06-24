@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.R
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
@@ -31,14 +33,17 @@ fun KocKitSocialButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    iconPainter: Painter? = null
+    iconPainter: Painter? = null,
+    height: Dp = 52.dp,
+    fontSize: TextUnit = KocKitTextDefaults.fontSizeBodyLarge,
+    iconSize: Dp = 22.dp
 ) {
     val colors = KocKitTheme.extraColors
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp),
+            .height(height),
         shape = LoginSocialButtonShape,
         border = BorderStroke(1.dp, colors.borderLight),
         colors = ButtonDefaults.outlinedButtonColors(containerColor = colors.cardBackground)
@@ -52,14 +57,15 @@ fun KocKitSocialButton(
                 Icon(
                     painter = painter,
                     contentDescription = null,
-                    modifier = Modifier.size(22.dp),
+                    modifier = Modifier.size(iconSize),
                     tint = androidx.compose.ui.graphics.Color.Unspecified
                 )
                 Spacer(modifier = Modifier.width(12.dp))
             }
             KocKitBoldText(
                 text = text,
-                color = colors.textPrimary
+                color = colors.textPrimary,
+                fontSize = fontSize
             )
         }
     }

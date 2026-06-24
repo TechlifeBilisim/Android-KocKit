@@ -46,11 +46,12 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
-import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
+import com.techlife.kockit.core.designsystem.layout.LocalSearchLayoutMetrics
 import com.techlife.kockit.core.designsystem.theme.BorderLight
 import com.techlife.kockit.core.designsystem.theme.KocKitFontFamily
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
@@ -58,15 +59,8 @@ import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.core.designsystem.theme.White
 
-private object SearchScreenStyle {
-    val screenPadding = 20.dp
-    val sectionSpacing = 28.dp
-    val cardInnerPadding = 16.dp
-    val chipInnerPaddingH = 14.dp
-    val chipInnerPaddingV = 12.dp
-    val gridGap = 14.dp
-    val headerContentGap = 20.dp
-}
+@Composable
+private fun searchMetrics() = LocalSearchLayoutMetrics.current
 
 @Composable
 fun SearchTopBar(
@@ -75,13 +69,14 @@ fun SearchTopBar(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = searchMetrics()
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Surface(
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(metrics.backButtonSize),
             shape = CircleShape,
             color = White,
             shadowElevation = 2.dp
@@ -91,7 +86,7 @@ fun SearchTopBar(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Geri",
                     tint = TextPrimary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(metrics.backIconSize)
                 )
             }
         }
@@ -101,7 +96,7 @@ fun SearchTopBar(
             modifier = Modifier.weight(1f)
         )
         Surface(
-            modifier = Modifier.size(40.dp),
+            modifier = Modifier.size(metrics.backButtonSize),
             shape = CircleShape,
             color = White,
             shadowElevation = 2.dp
@@ -111,7 +106,7 @@ fun SearchTopBar(
                     imageVector = Icons.Filled.Mic,
                     contentDescription = "Sesli arama",
                     tint = TextPrimary,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(metrics.actionIconSize)
                 )
             }
         }
@@ -124,8 +119,9 @@ private fun SearchInputField(
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = searchMetrics()
     Surface(
-        modifier = modifier.height(44.dp),
+        modifier = modifier.height(metrics.searchFieldHeight),
         shape = RoundedCornerShape(12.dp),
         color = White,
         border = BorderStroke(1.dp, BorderLight)
@@ -140,7 +136,7 @@ private fun SearchInputField(
                 imageVector = Icons.Filled.Search,
                 contentDescription = null,
                 tint = TextSecondary,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(metrics.searchIconSize)
             )
             Spacer(modifier = Modifier.width(8.dp))
             BasicTextField(
@@ -150,8 +146,8 @@ private fun SearchInputField(
                 singleLine = true,
                 textStyle = androidx.compose.ui.text.TextStyle(
                     fontFamily = KocKitFontFamily,
-                    fontSize = KocKitTextDefaults.fontSizeBody,
-                    lineHeight = KocKitTextDefaults.lineHeightBody,
+                    fontSize = metrics.searchTextSize,
+                    lineHeight = metrics.searchTextLineHeight,
                     color = TextPrimary
                 ),
                 cursorBrush = SolidColor(PastelGreen),
@@ -162,8 +158,8 @@ private fun SearchInputField(
                             KocKitText(
                                 text = "Ders, konu, test veya deneme ara...",
                                 color = TextSecondary,
-                                fontSize = 13.sp,
-                                lineHeight = 16.sp,
+                                fontSize = metrics.placeholderSize,
+                                lineHeight = metrics.placeholderLineHeight,
                                 maxLines = 1
                             )
                         }
@@ -182,6 +178,7 @@ fun SearchRecentSection(
     onRemoveItem: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = searchMetrics()
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -191,8 +188,8 @@ fun SearchRecentSection(
             KocKitBoldText(
                 text = "Son Aramalar",
                 color = TextPrimary,
-                fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+                fontSize = metrics.sectionTitleSize,
+                lineHeight = metrics.sectionTitleLineHeight
             )
             if (items.isNotEmpty()) {
                 Row(
@@ -204,22 +201,22 @@ fun SearchRecentSection(
                         imageVector = Icons.Outlined.DeleteOutline,
                         contentDescription = null,
                         tint = PastelGreen,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(if (metrics.isExpanded) 18.dp else 16.dp)
                     )
                     KocKitSemiText(
                         text = "Temizle",
                         color = PastelGreen,
-                        fontSize = KocKitTextDefaults.fontSizeSmall,
-                        lineHeight = KocKitTextDefaults.lineHeightSmall
+                        fontSize = metrics.linkTextSize,
+                        lineHeight = metrics.linkTextLineHeight
                     )
                 }
             }
         }
         if (items.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(SearchScreenStyle.headerContentGap))
+            Spacer(modifier = Modifier.height(metrics.headerContentGap))
             SearchWrapRow(
-                horizontalSpacing = 10.dp,
-                verticalSpacing = 10.dp
+                horizontalSpacing = if (metrics.isExpanded) 12.dp else 10.dp,
+                verticalSpacing = if (metrics.isExpanded) 12.dp else 10.dp
             ) {
                 items.forEach { item ->
                     SearchRecentChip(
@@ -282,6 +279,7 @@ private fun SearchRecentChip(
     text: String,
     onRemove: () -> Unit
 ) {
+    val metrics = searchMetrics()
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = White,
@@ -289,8 +287,8 @@ private fun SearchRecentChip(
     ) {
         Row(
             modifier = Modifier.padding(
-                horizontal = SearchScreenStyle.chipInnerPaddingH,
-                vertical = SearchScreenStyle.chipInnerPaddingV
+                horizontal = metrics.chipPaddingH,
+                vertical = metrics.chipPaddingV
             ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -299,20 +297,20 @@ private fun SearchRecentChip(
                 imageVector = Icons.Filled.Schedule,
                 contentDescription = null,
                 tint = TextSecondary.copy(alpha = 0.7f),
-                modifier = Modifier.size(14.dp)
+                modifier = Modifier.size(metrics.chipIconSize)
             )
             KocKitText(
                 text = text,
                 color = TextPrimary,
-                fontSize = 12.sp,
-                lineHeight = 14.sp
+                fontSize = metrics.chipTextSize,
+                lineHeight = metrics.chipTextLineHeight
             )
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = "Kaldır",
                 tint = TextSecondary,
                 modifier = Modifier
-                    .size(14.dp)
+                    .size(metrics.chipIconSize)
                     .clickable(onClick = onRemove)
             )
         }
@@ -324,9 +322,10 @@ fun SearchPopularTopicsSection(
     topics: List<SearchPopularTopic>,
     modifier: Modifier = Modifier
 ) {
+    val metrics = searchMetrics()
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(SearchScreenStyle.headerContentGap)
+        verticalArrangement = Arrangement.spacedBy(metrics.headerContentGap)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -336,8 +335,8 @@ fun SearchPopularTopicsSection(
             KocKitBoldText(
                 text = "Popüler Konular",
                 color = TextPrimary,
-                fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+                fontSize = metrics.sectionTitleSize,
+                lineHeight = metrics.sectionTitleLineHeight
             )
             Row(
                 modifier = Modifier.clickable { },
@@ -346,14 +345,14 @@ fun SearchPopularTopicsSection(
                 KocKitSemiText(
                     text = "Tümünü Gör",
                     color = PastelGreen,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall
+                    fontSize = metrics.linkTextSize,
+                    lineHeight = metrics.linkTextLineHeight
                 )
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = PastelGreen,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(if (metrics.isExpanded) 18.dp else 16.dp)
                 )
             }
         }
@@ -363,7 +362,7 @@ fun SearchPopularTopicsSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(IntrinsicSize.Max),
-                horizontalArrangement = Arrangement.spacedBy(SearchScreenStyle.gridGap)
+                horizontalArrangement = Arrangement.spacedBy(metrics.gridGap)
             ) {
                 rowTopics.forEach { topic ->
                     SearchPopularTopicCard(
@@ -386,6 +385,7 @@ private fun SearchPopularTopicCard(
     topic: SearchPopularTopic,
     modifier: Modifier = Modifier
 ) {
+    val metrics = searchMetrics()
     Card(
         modifier = modifier.clickable { },
         shape = RoundedCornerShape(16.dp),
@@ -397,12 +397,12 @@ private fun SearchPopularTopicCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .padding(SearchScreenStyle.cardInnerPadding),
+                .padding(metrics.cardInnerPadding),
             verticalAlignment = Alignment.Top
         ) {
             Box(
                 modifier = Modifier
-                    .size(30.dp)
+                    .size(metrics.topicIconBoxSize)
                     .clip(RoundedCornerShape(8.dp))
                     .background(topic.iconBg),
                 contentAlignment = Alignment.Center
@@ -411,15 +411,15 @@ private fun SearchPopularTopicCard(
                     KocKitExtraBoldText(
                         text = "√",
                         color = topic.iconTint,
-                        fontSize = 14.sp,
-                        lineHeight = 16.sp
+                        fontSize = metrics.topicIconTextSize,
+                        lineHeight = metrics.topicIconTextSize * 1.15f
                     )
                 } else {
                     Icon(
                         imageVector = topic.icon,
                         contentDescription = null,
                         tint = topic.iconTint,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(metrics.topicIconGraphicSize)
                     )
                 }
             }
@@ -432,16 +432,16 @@ private fun SearchPopularTopicCard(
                 KocKitBoldText(
                     text = topic.title,
                     color = TextPrimary,
-                    fontSize = 12.sp,
-                    lineHeight = 14.sp,
+                    fontSize = metrics.topicTitleSize,
+                    lineHeight = metrics.topicTitleLineHeight,
                     maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 KocKitText(
                     text = topic.subtitle,
                     color = TextSecondary,
-                    fontSize = 9.sp,
-                    lineHeight = 10.sp,
+                    fontSize = metrics.topicSubtitleSize,
+                    lineHeight = metrics.topicSubtitleLineHeight,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -452,7 +452,7 @@ private fun SearchPopularTopicCard(
                 tint = TextSecondary.copy(alpha = 0.5f),
                 modifier = Modifier
                     .padding(top = 2.dp)
-                    .size(14.dp)
+                    .size(metrics.topicArrowSize)
             )
         }
     }

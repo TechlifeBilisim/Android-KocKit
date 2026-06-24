@@ -59,6 +59,7 @@ import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitNumberPickerField
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
+import com.techlife.kockit.core.designsystem.layout.LocalStudyPlanLayoutMetrics
 import com.techlife.kockit.core.designsystem.theme.CoralAccent
 import com.techlife.kockit.core.designsystem.theme.ErrorAccent
 import com.techlife.kockit.core.designsystem.theme.LavenderAccent
@@ -88,6 +89,9 @@ private object StudyPlanStyle {
     val dropdownBg = Color(0xFFF3F4F6)
 }
 
+@Composable
+private fun studyPlanMetrics() = LocalStudyPlanLayoutMetrics.current
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudyPlanHeader(
@@ -96,6 +100,7 @@ fun StudyPlanHeader(
     description: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     Column(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -104,7 +109,7 @@ fun StudyPlanHeader(
         ) {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(metrics.backButtonSize)
                     .clip(CircleShape)
                     .clickable(onClick = onBackClick),
                 contentAlignment = Alignment.Center
@@ -112,7 +117,7 @@ fun StudyPlanHeader(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Geri",
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(metrics.backIconSize),
                     tint = TextPrimary
                 )
             }
@@ -121,15 +126,15 @@ fun StudyPlanHeader(
         KocKitBoldText(
             text = "Çalışma Planı",
             color = TextPrimary,
-            fontSize = 24.sp,
-            lineHeight = 28.sp
+            fontSize = metrics.headerTitleSize,
+            lineHeight = metrics.headerTitleLineHeight
         )
         Spacer(modifier = Modifier.height(8.dp))
         KocKitText(
             text = description,
             color = TextSecondary,
-            fontSize = 13.sp,
-            lineHeight = 18.sp,
+            fontSize = metrics.headerSubtitleSize,
+            lineHeight = metrics.headerSubtitleLineHeight,
             maxLines = 2
         )
     }
@@ -140,6 +145,7 @@ private fun StudyPlanBorderedCard(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val metrics = studyPlanMetrics()
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(StudyPlanStyle.cardRadius),
@@ -150,7 +156,7 @@ private fun StudyPlanBorderedCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(metrics.cardInnerPadding)
         ) {
             content()
         }
@@ -164,6 +170,7 @@ fun StudyPlanDaysSection(
     onHoursChange: (Int, Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     StudyPlanBorderedCard(modifier = modifier) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -173,14 +180,14 @@ fun StudyPlanDaysSection(
                 imageVector = Icons.Filled.CalendarToday,
                 contentDescription = null,
                 tint = StudyPlanStyle.emerald,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(if (metrics.isExpanded) 22.dp else 18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             KocKitSemiText(
                 text = "Günlere Göre Dağılım",
                 color = TextPrimary,
-                fontSize = 15.sp,
-                lineHeight = 18.sp,
+                fontSize = metrics.sectionTitleSize,
+                lineHeight = metrics.sectionTitleLineHeight,
                 modifier = Modifier.weight(1f)
             )
             Surface(
@@ -190,8 +197,8 @@ fun StudyPlanDaysSection(
                 KocKitSemiText(
                     text = "Toplam $totalHours Saat",
                     color = StudyPlanStyle.emerald,
-                    fontSize = 11.sp,
-                    lineHeight = 13.sp,
+                    fontSize = metrics.badgeTextSize,
+                    lineHeight = metrics.badgeTextLineHeight,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                 )
             }
@@ -200,7 +207,7 @@ fun StudyPlanDaysSection(
         days.chunked(4).forEachIndexed { rowIndex, rowDays ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(if (metrics.isExpanded) 10.dp else 8.dp)
             ) {
                 rowDays.forEachIndexed { colIndex, day ->
                     val dayIndex = rowIndex * 4 + colIndex
@@ -227,6 +234,7 @@ fun StudyPlanDayCard(
     onHoursChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -245,8 +253,8 @@ fun StudyPlanDayCard(
                 KocKitSemiText(
                     text = day.name,
                     color = TextSecondary,
-                    fontSize = 9.sp,
-                    lineHeight = 13.sp,
+                    fontSize = metrics.microCaptionSize,
+                    lineHeight = metrics.microCaptionLineHeight,
                     maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -257,16 +265,16 @@ fun StudyPlanDayCard(
                         range = 0..12,
                         pickerTitle = "${day.name} - Saat",
                         showContainer = false,
-                        centerFontSize = 22.sp,
-                        centerLineHeight = 24.sp,
-                        modifier = Modifier.width(40.dp)
+                        centerFontSize = metrics.dayHourPickerSize,
+                        centerLineHeight = metrics.dayHourPickerLineHeight,
+                        modifier = Modifier.width(metrics.dayPickerWidth)
                     )
                 }
                 KocKitText(
                     text = "Saat",
                     color = TextSecondary,
-                    fontSize = 10.sp,
-                    lineHeight = 12.sp
+                    fontSize = metrics.smallCaptionSize,
+                    lineHeight = metrics.smallCaptionLineHeight
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 StudyPlanDayStepper(
@@ -312,8 +320,9 @@ private fun StudyPlanDayStepButton(
     enabled: Boolean,
     onClick: () -> Unit
 ) {
+    val metrics = studyPlanMetrics()
     Surface(
-        modifier = Modifier.size(22.dp),
+        modifier = Modifier.size(metrics.dayStepButtonSize),
         shape = CircleShape,
         color = if (enabled) StudyPlanStyle.dayStepperBtnBg else StudyPlanStyle.dayStepperBtnBg.copy(alpha = 0.5f),
         shadowElevation = if (enabled) 1.dp else 0.dp,
@@ -324,8 +333,8 @@ private fun StudyPlanDayStepButton(
             KocKitBoldText(
                 text = text,
                 color = if (enabled) StudyPlanStyle.emerald else StudyPlanStyle.emerald.copy(alpha = 0.35f),
-                fontSize = 14.sp,
-                lineHeight = 14.sp
+                fontSize = if (metrics.isExpanded) 16.sp else 14.sp,
+                lineHeight = if (metrics.isExpanded) 16.sp else 14.sp
             )
         }
     }
@@ -340,6 +349,7 @@ fun StudyPlanParameterStepper(
     suffix: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -357,9 +367,9 @@ fun StudyPlanParameterStepper(
             pickerTitle = pickerTitle,
             suffix = suffix,
             showContainer = false,
-            centerFontSize = 12.sp,
-            centerLineHeight = 14.sp,
-            modifier = Modifier.width(52.dp)
+            centerFontSize = metrics.parameterPickerSize,
+            centerLineHeight = metrics.parameterPickerLineHeight,
+            modifier = Modifier.width(if (metrics.isExpanded) 60.dp else 52.dp)
         )
         StudyPlanParameterStepButton(
             text = "+",
@@ -376,8 +386,9 @@ private fun StudyPlanParameterStepButton(
     enabled: Boolean,
     onClick: () -> Unit
 ) {
+    val metrics = studyPlanMetrics()
     Surface(
-        modifier = Modifier.size(28.dp),
+        modifier = Modifier.size(metrics.paramStepButtonSize),
         shape = CircleShape,
         color = White,
         border = BorderStroke(1.dp, StudyPlanStyle.cardBorder),
@@ -389,8 +400,8 @@ private fun StudyPlanParameterStepButton(
             KocKitBoldText(
                 text = text,
                 color = if (enabled) TextPrimary else TextSecondary.copy(alpha = 0.35f),
-                fontSize = 15.sp,
-                lineHeight = 15.sp
+                fontSize = if (metrics.isExpanded) 17.sp else 15.sp,
+                lineHeight = if (metrics.isExpanded) 17.sp else 15.sp
             )
         }
     }
@@ -409,6 +420,7 @@ fun StudyPlanParametersSection(
     revisionOptions: List<String>,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     StudyPlanBorderedCard(modifier = modifier) {
         StudyPlanParameterRow(
             icon = Icons.Outlined.Schedule,
@@ -423,7 +435,7 @@ fun StudyPlanParametersSection(
                     range = 15..180,
                     pickerTitle = "Oturum Süresi (dk)",
                     suffix = "dk",
-                    modifier = Modifier.width(118.dp)
+                    modifier = Modifier.width(metrics.parameterStepperWidth)
                 )
             }
         )
@@ -441,7 +453,7 @@ fun StudyPlanParametersSection(
                     range = 0..120,
                     pickerTitle = "Günlük Paragraf Süresi (dk)",
                     suffix = "dk",
-                    modifier = Modifier.width(118.dp)
+                    modifier = Modifier.width(metrics.parameterStepperWidth)
                 )
             }
         )
@@ -459,7 +471,7 @@ fun StudyPlanParametersSection(
                     range = 0..120,
                     pickerTitle = "Günlük Problem Süresi (dk)",
                     suffix = "dk",
-                    modifier = Modifier.width(118.dp)
+                    modifier = Modifier.width(metrics.parameterStepperWidth)
                 )
             }
         )
@@ -475,7 +487,7 @@ fun StudyPlanParametersSection(
                     selected = revisionDay,
                     options = revisionOptions,
                     onSelected = onRevisionDayChange,
-                    modifier = Modifier.width(88.dp)
+                    modifier = Modifier.width(metrics.dropdownWidth)
                 )
             }
         )
@@ -491,6 +503,7 @@ private fun StudyPlanParameterRow(
     subtitle: String,
     trailing: @Composable () -> Unit
 ) {
+    val metrics = studyPlanMetrics()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -503,15 +516,15 @@ private fun StudyPlanParameterRow(
             KocKitSemiText(
                 text = title,
                 color = TextPrimary,
-                fontSize = 13.sp,
-                lineHeight = 16.sp
+                fontSize = metrics.rowTitleSize,
+                lineHeight = metrics.rowTitleLineHeight
             )
             Spacer(modifier = Modifier.height(2.dp))
             KocKitText(
                 text = subtitle,
                 color = TextSecondary,
-                fontSize = 11.sp,
-                lineHeight = 14.sp,
+                fontSize = metrics.rowSubtitleSize,
+                lineHeight = metrics.rowSubtitleLineHeight,
                 maxLines = 2
             )
         }
@@ -533,6 +546,7 @@ fun StudyPlanCompactDropdown(
     onSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     var expanded by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     Surface(
@@ -549,8 +563,8 @@ fun StudyPlanCompactDropdown(
             KocKitSemiText(
                 text = selected.orEmpty(),
                 color = TextPrimary,
-                fontSize = 12.sp,
-                lineHeight = 14.sp,
+                fontSize = metrics.parameterPickerSize,
+                lineHeight = metrics.parameterPickerLineHeight,
                 modifier = Modifier.weight(1f),
                 maxLines = 1
             )
@@ -558,7 +572,7 @@ fun StudyPlanCompactDropdown(
                 imageVector = Icons.Filled.KeyboardArrowDown,
                 contentDescription = null,
                 tint = TextSecondary,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(if (metrics.isExpanded) 18.dp else 16.dp)
             )
         }
     }
@@ -617,28 +631,29 @@ fun StudyPlanUnavailableSection(
     onAddSpecialDateClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     StudyPlanBorderedCard(modifier = modifier) {
         Row(verticalAlignment = Alignment.Top) {
             Icon(
                 imageVector = Icons.Outlined.Block,
                 contentDescription = null,
                 tint = ErrorAccent,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(if (metrics.isExpanded) 22.dp else 18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Column {
                 KocKitSemiText(
                     text = "Çalışamayacağım Günler",
                     color = TextPrimary,
-                    fontSize = 15.sp,
-                    lineHeight = 18.sp
+                    fontSize = metrics.sectionTitleSize,
+                    lineHeight = metrics.sectionTitleLineHeight
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 KocKitText(
                     text = "Bu günlerde çalışma programı oluşturulmayacaktır.",
                     color = TextSecondary,
-                    fontSize = 11.sp,
-                    lineHeight = 15.sp,
+                    fontSize = metrics.rowSubtitleSize,
+                    lineHeight = metrics.rowSubtitleLineHeight,
                     maxLines = 2
                 )
             }
@@ -690,6 +705,7 @@ private fun StudyPlanNumberedSubsection(
     title: String,
     subtitle: String
 ) {
+    val metrics = studyPlanMetrics()
     Row(verticalAlignment = Alignment.Top) {
         StudyPlanIconChip(icon = icon, tint = iconTint, background = iconBg)
         Spacer(modifier = Modifier.width(10.dp))
@@ -697,15 +713,15 @@ private fun StudyPlanNumberedSubsection(
             KocKitSemiText(
                 text = "$number $title",
                 color = TextPrimary,
-                fontSize = 13.sp,
-                lineHeight = 16.sp
+                fontSize = metrics.rowTitleSize,
+                lineHeight = metrics.rowTitleLineHeight
             )
             Spacer(modifier = Modifier.height(2.dp))
             KocKitText(
                 text = subtitle,
                 color = TextSecondary,
-                fontSize = 11.sp,
-                lineHeight = 14.sp,
+                fontSize = metrics.rowSubtitleSize,
+                lineHeight = metrics.rowSubtitleLineHeight,
                 maxLines = 2
             )
         }
@@ -719,9 +735,10 @@ fun StudyPlanUnavailableDaySelector(
     onDayToggle: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(if (metrics.isExpanded) 8.dp else 6.dp)
     ) {
         options.forEach { option ->
             val selected = option.shortName in selectedShortNames
@@ -731,7 +748,7 @@ fun StudyPlanUnavailableDaySelector(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(44.dp)
+                    .height(metrics.unavailableDayHeight)
                     .clip(RoundedCornerShape(10.dp))
                     .background(bg)
                     .border(1.dp, borderColor, RoundedCornerShape(10.dp))
@@ -759,8 +776,8 @@ fun StudyPlanUnavailableDaySelector(
                 KocKitSemiText(
                     text = option.shortName,
                     color = textColor,
-                    fontSize = 11.sp,
-                    lineHeight = 13.sp
+                    fontSize = metrics.smallCaptionSize,
+                    lineHeight = metrics.smallCaptionLineHeight
                 )
             }
         }
@@ -773,6 +790,7 @@ fun StudyPlanSpecialDateItem(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -789,8 +807,8 @@ fun StudyPlanSpecialDateItem(
                 KocKitSemiText(
                     text = item.title,
                     color = TextPrimary,
-                    fontSize = 12.sp,
-                    lineHeight = 14.sp,
+                    fontSize = metrics.parameterPickerSize,
+                    lineHeight = metrics.parameterPickerLineHeight,
                     maxLines = 2
                 )
                 if (item.subtitle.isNotBlank()) {
@@ -798,18 +816,21 @@ fun StudyPlanSpecialDateItem(
                     KocKitText(
                         text = item.subtitle,
                         color = TextSecondary,
-                        fontSize = 10.sp,
-                        lineHeight = 12.sp,
+                        fontSize = metrics.smallCaptionSize,
+                        lineHeight = metrics.smallCaptionLineHeight,
                         maxLines = 1
                     )
                 }
             }
-            IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
+            IconButton(
+                onClick = onRemove,
+                modifier = Modifier.size(if (metrics.isExpanded) 32.dp else 28.dp)
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
                     contentDescription = "Kaldır",
                     tint = TextSecondary.copy(alpha = 0.6f),
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(if (metrics.isExpanded) 16.dp else 14.dp)
                 )
             }
         }
@@ -821,6 +842,7 @@ fun StudyPlanAddDateButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -832,14 +854,14 @@ fun StudyPlanAddDateButton(
             imageVector = Icons.Filled.Add,
             contentDescription = null,
             tint = LogoBlue,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(if (metrics.isExpanded) 18.dp else 16.dp)
         )
         Spacer(modifier = Modifier.width(6.dp))
         KocKitSemiText(
             text = "Tarih veya Tarih Aralığı Ekle",
             color = LogoBlue,
-            fontSize = 12.sp,
-            lineHeight = 14.sp
+            fontSize = metrics.parameterPickerSize,
+            lineHeight = metrics.parameterPickerLineHeight
         )
     }
 }
@@ -849,11 +871,12 @@ fun StudyPlanSaveButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     Button(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp),
+            .height(metrics.saveButtonHeight),
         shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = StudyPlanStyle.emerald,
@@ -863,14 +886,14 @@ fun StudyPlanSaveButton(
         Icon(
             imageVector = Icons.Filled.Save,
             contentDescription = null,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(if (metrics.isExpanded) 20.dp else 18.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
         KocKitBoldText(
             text = "Kaydet",
             color = White,
-            fontSize = 16.sp,
-            lineHeight = 18.sp
+            fontSize = metrics.saveButtonTextSize,
+            lineHeight = metrics.saveButtonTextLineHeight
         )
     }
 }
@@ -880,6 +903,7 @@ fun StudyPlanInfoNote(
     text: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = studyPlanMetrics()
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -892,14 +916,14 @@ fun StudyPlanInfoNote(
             imageVector = Icons.Filled.Lightbulb,
             contentDescription = null,
             tint = StudyPlanStyle.emerald,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(if (metrics.isExpanded) 18.dp else 16.dp)
         )
         Spacer(modifier = Modifier.width(10.dp))
         KocKitText(
             text = text,
             color = TextSecondary,
-            fontSize = 11.sp,
-            lineHeight = 15.sp,
+            fontSize = metrics.rowSubtitleSize,
+            lineHeight = metrics.rowSubtitleLineHeight,
             maxLines = 3
         )
     }
@@ -911,9 +935,10 @@ private fun StudyPlanIconChip(
     tint: Color,
     background: Color
 ) {
+    val metrics = studyPlanMetrics()
     Box(
         modifier = Modifier
-            .size(32.dp)
+            .size(metrics.iconChipSize)
             .clip(RoundedCornerShape(8.dp))
             .background(background),
         contentAlignment = Alignment.Center
@@ -922,7 +947,7 @@ private fun StudyPlanIconChip(
             imageVector = icon,
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(metrics.iconChipIconSize)
         )
     }
 }

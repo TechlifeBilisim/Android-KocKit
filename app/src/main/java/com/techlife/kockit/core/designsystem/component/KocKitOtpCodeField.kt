@@ -34,7 +34,10 @@ fun KocKitOtpCodeField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     length: Int = 6,
-    error: String? = null
+    error: String? = null,
+    cellHeight: androidx.compose.ui.unit.Dp = 56.dp,
+    digitFontSize: androidx.compose.ui.unit.TextUnit = KocKitTextDefaults.fontSizeTitle,
+    digitLineHeight: androidx.compose.ui.unit.TextUnit = KocKitTextDefaults.lineHeightTitle
 ) {
     val colors = KocKitTheme.extraColors
     val focusRequester = remember { FocusRequester() }
@@ -69,7 +72,7 @@ fun KocKitOtpCodeField(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(56.dp)
+                                .height(cellHeight)
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(colors.cardBackground)
                                 .border(
@@ -86,8 +89,8 @@ fun KocKitOtpCodeField(
                             KocKitExtraBoldText(
                                 text = char,
                                 color = colors.textPrimary,
-                                fontSize = KocKitTextDefaults.fontSizeTitle,
-                                lineHeight = KocKitTextDefaults.lineHeightTitle
+                                fontSize = digitFontSize,
+                                lineHeight = digitLineHeight
                             )
                         }
                     }

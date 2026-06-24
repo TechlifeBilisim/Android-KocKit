@@ -14,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
@@ -29,7 +31,9 @@ fun KocKitPrimaryButton(
     enabled: Boolean = true,
     isLoading: Boolean = false,
     showTrailingArrow: Boolean = false,
-    containerColor: Color? = null
+    containerColor: Color? = null,
+    height: Dp = 56.dp,
+    fontSize: TextUnit = 18.sp
 ) {
     val colors = KocKitTheme.extraColors
     val buttonColor = containerColor ?: colors.primaryTeal
@@ -37,7 +41,7 @@ fun KocKitPrimaryButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp),
+            .height(height),
         enabled = enabled && !isLoading,
         shape = LoginButtonShape,
         colors = ButtonDefaults.buttonColors(
@@ -58,7 +62,7 @@ fun KocKitPrimaryButton(
             KocKitBoldText(
                 text = text,
                 color = Color.White,
-                fontSize = 18.sp
+                fontSize = fontSize
             )
         }
     }

@@ -14,6 +14,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 
 @Composable
@@ -26,7 +28,10 @@ fun KocKitPasswordField(
     modifier: Modifier = Modifier,
     error: String? = null,
     shape: Shape = LoginFieldShape,
-    showTrailingIcon: Boolean = true
+    showTrailingIcon: Boolean = true,
+    fieldHeight: androidx.compose.ui.unit.Dp = 56.dp,
+    textFontSize: androidx.compose.ui.unit.TextUnit = KocKitTextDefaults.fontSizeBodyLarge,
+    textLineHeight: androidx.compose.ui.unit.TextUnit = KocKitTextDefaults.lineHeightBodyLarge
 ) {
     val colors = KocKitTheme.extraColors
     KocKitTextField(
@@ -53,7 +58,10 @@ fun KocKitPasswordField(
                     )
                 }
             }
-        } else null
+        } else null,
+        fieldHeight = fieldHeight,
+        textFontSize = textFontSize,
+        textLineHeight = textLineHeight
     )
 }
 

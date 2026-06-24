@@ -49,6 +49,8 @@ import com.techlife.kockit.core.designsystem.component.KocKitCheckbox
 import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
 import com.techlife.kockit.core.designsystem.component.KocKitTextField
 import com.techlife.kockit.core.designsystem.component.KocKitTopBar
+import com.techlife.kockit.core.designsystem.layout.AuthFormContainer
+import com.techlife.kockit.core.designsystem.layout.AuthFormMetrics
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.KocKitFontFamily
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
@@ -139,83 +141,108 @@ private fun RegisterScreenContent(
                 .verticalScroll(rememberScrollState())
         ) {
             KocKitTopBar(onBackClick = { onEvent(RegisterEvent.BackClicked) })
-            Column(
-                modifier = Modifier.padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                KocKitExtraBoldText(
-                    text = "Kayıt Ol",
-                    fontSize = KocKitTextDefaults.fontSizeHeadline,
-                    lineHeight = KocKitTextDefaults.lineHeightHeadline,
-                    color = Color.Black
+            AuthFormContainer(fillHeight = false) { metrics ->
+                RegisterFormBody(
+                    uiState = uiState,
+                    metrics = metrics,
+                    continueEnabled = continueEnabled,
+                    onEvent = onEvent,
+                    onGoogleClicked = onGoogleClicked
                 )
-                KocKitSemiText(
-                    text = when (uiState.currentStep) {
-                        1 -> "Hesabını oluştur ve hedeflerine ulaş."
-                        2 -> "Hesabını doğrula."
-                        else -> "Kaydını tamamla."
-                    },
-                    style = MaterialTheme.typography.bodyLarge
-                )
-
-                when (uiState.currentStep) {
-                    1 -> RegisterStep1Content(uiState, onEvent)
-                    2 -> RegisterStepPlaceholderContent(
-                        title = "Doğrula",
-                        description = "Doğrulama adımı tasarımı yakında eklenecek."
-                    )
-                    3 -> RegisterStepPlaceholderContent(
-                        title = "Tamamla",
-                        description = "Tamamlama adımı tasarımı yakında eklenecek."
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                KocKitPrimaryButton(
-                    text = "Devam Et",
-                    onClick = { onEvent(RegisterEvent.ContinueClicked) },
-                    enabled = continueEnabled,
-                    isLoading = uiState.isLoading,
-                    showTrailingArrow = true,
-                    containerColor = PastelGreen
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Surface(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clickable { onGoogleClicked() }
-                            .clip(CircleShape),
-                        shape = CircleShape,
-                        color = Color.White,
-                        shadowElevation = 6.dp
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_google),
-                                contentDescription = null,
-                                tint = Color.Unspecified,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
             }
         }
     }
 }
 
 @Composable
+private fun RegisterFormBody(
+    uiState: RegisterUiState,
+    metrics: AuthFormMetrics,
+    continueEnabled: Boolean,
+    onEvent: (RegisterEvent) -> Unit,
+    onGoogleClicked: () -> Unit
+) {
+    if (metrics.isExpanded) {
+        Spacer(modifier = Modifier.height(40.dp))
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(metrics.fieldSpacing)) {
+        KocKitExtraBoldText(
+            text = "Kayıt Ol",
+            fontSize = metrics.headlineFontSize,
+            lineHeight = metrics.headlineLineHeight,
+            color = Color.Black
+        )
+        KocKitSemiText(
+            text = when (uiState.currentStep) {
+                1 -> "Hesabını oluştur ve hedeflerine ulaş."
+                2 -> "Hesabını doğrula."
+                else -> "Kaydını tamamla."
+            },
+            fontSize = metrics.bodyFontSize,
+            lineHeight = metrics.bodyLineHeight
+        )
+
+        when (uiState.currentStep) {
+            1 -> RegisterStep1Content(uiState, metrics, onEvent)
+            2 -> RegisterStepPlaceholderContent(
+                title = "Doğrula",
+                description = "Doğrulama adımı tasarımı yakında eklenecek.",
+                metrics = metrics
+            )
+            3 -> RegisterStepPlaceholderContent(
+                title = "Tamamla",
+                description = "Tamamlama adımı tasarımı yakında eklenecek.",
+                metrics = metrics
+            )
+        }
+
+        Spacer(modifier = Modifier.height(metrics.smallSpacing))
+
+        KocKitPrimaryButton(
+            text = "Devam Et",
+            onClick = { onEvent(RegisterEvent.ContinueClicked) },
+            enabled = continueEnabled,
+            isLoading = uiState.isLoading,
+            showTrailingArrow = true,
+            containerColor = PastelGreen,
+            height = metrics.buttonHeight,
+            fontSize = metrics.buttonFontSize
+        )
+
+        Spacer(modifier = Modifier.height(metrics.sectionSpacing))
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                modifier = Modifier
+                    .size(if (metrics.isExpanded) 56.dp else 52.dp)
+                    .clickable { onGoogleClicked() }
+                    .clip(CircleShape),
+                shape = CircleShape,
+                color = Color.White,
+                shadowElevation = 6.dp
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_google),
+                        contentDescription = null,
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(if (metrics.isExpanded) 24.dp else 22.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(metrics.sectionSpacing))
+    }
+}
+
+@Composable
 private fun RegisterStep1Content(
     uiState: RegisterUiState,
+    metrics: AuthFormMetrics,
     onEvent: (RegisterEvent) -> Unit
 ) {
     val colors = KocKitTheme.extraColors
@@ -234,106 +261,129 @@ private fun RegisterStep1Content(
         append("nı okudum ve kabul ediyorum.")
     }
 
-    KocKitTextField(
-        uiState.fullName,
-        { onEvent(RegisterEvent.FullNameChanged(it)) },
-        "Ad Soyad",
-        error = uiState.fullNameError,
-        leadingIconVector = Icons.Filled.Person
-    )
-    KocKitTextField(
-        uiState.email,
-        { onEvent(RegisterEvent.EmailChanged(it)) },
-        "E-posta adresi",
-        error = uiState.emailError,
-        leadingIconVector = Icons.Filled.Email
-    )
-    KocKitTextField(
-        uiState.nickname,
-        { onEvent(RegisterEvent.NicknameChanged(it)) },
-        "Nickname",
-        error = uiState.nicknameError,
-        leadingIconVector = Icons.Filled.Tag
-    )
-    KocKitPasswordField(
-        uiState.password,
-        { onEvent(RegisterEvent.PasswordChanged(it)) },
-        "Şifre",
-        uiState.isPasswordVisible,
-        { onEvent(RegisterEvent.PasswordVisibilityChanged) },
-        error = uiState.passwordError,
-        showTrailingIcon = false
-    )
-    KocKitPasswordField(
-        uiState.confirmPassword,
-        { onEvent(RegisterEvent.ConfirmPasswordChanged(it)) },
-        "Şifren Tekrar",
-        uiState.isConfirmPasswordVisible,
-        { onEvent(RegisterEvent.ConfirmPasswordVisibilityChanged) },
-        error = uiState.confirmPasswordError,
-        showTrailingIcon = false
-    )
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            // Checkbox sol kenarı input sol kenarıyla hizalı
-            .padding(top = 2.dp, bottom = 2.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        KocKitCheckbox(
-            checked = uiState.isTermsAccepted,
-            onCheckedChange = { onEvent(RegisterEvent.TermsCheckedChanged(it)) }
+    Column(verticalArrangement = Arrangement.spacedBy(metrics.fieldSpacing)) {
+        KocKitTextField(
+            uiState.fullName,
+            { onEvent(RegisterEvent.FullNameChanged(it)) },
+            "Ad Soyad",
+            error = uiState.fullNameError,
+            leadingIconVector = Icons.Filled.Person,
+            fieldHeight = metrics.fieldHeight,
+            textFontSize = metrics.fieldFontSize,
+            textLineHeight = metrics.fieldLineHeight
         )
-        Spacer(modifier = Modifier.size(10.dp))
-        androidx.compose.foundation.text.ClickableText(
-            text = usageAnnotatedText,
-            modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontFamily = KocKitFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 14.sp
-            ),
-            overflow = TextOverflow.Clip,
-            maxLines = 2,
-            onClick = { offset ->
-                val annotation = usageAnnotatedText.getStringAnnotations(
-                    tag = "terms",
-                    start = offset,
-                    end = offset
-                ).firstOrNull()
-                if (annotation != null) showTermsDialog = true
-            }
+        KocKitTextField(
+            uiState.email,
+            { onEvent(RegisterEvent.EmailChanged(it)) },
+            "E-posta adresi",
+            error = uiState.emailError,
+            leadingIconVector = Icons.Filled.Email,
+            fieldHeight = metrics.fieldHeight,
+            textFontSize = metrics.fieldFontSize,
+            textLineHeight = metrics.fieldLineHeight
         )
-    }
+        KocKitTextField(
+            uiState.nickname,
+            { onEvent(RegisterEvent.NicknameChanged(it)) },
+            "Nickname",
+            error = uiState.nicknameError,
+            leadingIconVector = Icons.Filled.Tag,
+            fieldHeight = metrics.fieldHeight,
+            textFontSize = metrics.fieldFontSize,
+            textLineHeight = metrics.fieldLineHeight
+        )
+        KocKitPasswordField(
+            uiState.password,
+            { onEvent(RegisterEvent.PasswordChanged(it)) },
+            "Şifre",
+            uiState.isPasswordVisible,
+            { onEvent(RegisterEvent.PasswordVisibilityChanged) },
+            error = uiState.passwordError,
+            showTrailingIcon = false,
+            fieldHeight = metrics.fieldHeight,
+            textFontSize = metrics.fieldFontSize,
+            textLineHeight = metrics.fieldLineHeight
+        )
+        KocKitPasswordField(
+            uiState.confirmPassword,
+            { onEvent(RegisterEvent.ConfirmPasswordChanged(it)) },
+            "Şifren Tekrar",
+            uiState.isConfirmPasswordVisible,
+            { onEvent(RegisterEvent.ConfirmPasswordVisibilityChanged) },
+            error = uiState.confirmPasswordError,
+            showTrailingIcon = false,
+            fieldHeight = metrics.fieldHeight,
+            textFontSize = metrics.fieldFontSize,
+            textLineHeight = metrics.fieldLineHeight
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 2.dp, bottom = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            KocKitCheckbox(
+                checked = uiState.isTermsAccepted,
+                onCheckedChange = { onEvent(RegisterEvent.TermsCheckedChanged(it)) }
+            )
+            Spacer(modifier = Modifier.size(10.dp))
+            androidx.compose.foundation.text.ClickableText(
+                text = usageAnnotatedText,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontFamily = KocKitFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = if (metrics.isExpanded) 16.sp else 14.sp
+                ),
+                overflow = TextOverflow.Clip,
+                maxLines = 2,
+                onClick = { offset ->
+                    val annotation = usageAnnotatedText.getStringAnnotations(
+                        tag = "terms",
+                        start = offset,
+                        end = offset
+                    ).firstOrNull()
+                    if (annotation != null) showTermsDialog = true
+                }
+            )
+        }
 
-    if (showTermsDialog) {
-        AlertDialog(
-            onDismissRequest = { showTermsDialog = false },
-            text = { Spacer(modifier = Modifier.height(1.dp)) },
-            confirmButton = {
-                KocKitPrimaryButton(
-                    text = "Tamam",
-                    onClick = { showTermsDialog = false },
-                    containerColor = colors.pastelGreen
-                )
-            }
-        )
+        if (showTermsDialog) {
+            AlertDialog(
+                onDismissRequest = { showTermsDialog = false },
+                text = { Spacer(modifier = Modifier.height(1.dp)) },
+                confirmButton = {
+                    KocKitPrimaryButton(
+                        text = "Tamam",
+                        onClick = { showTermsDialog = false },
+                        containerColor = colors.pastelGreen,
+                        height = metrics.buttonHeight,
+                        fontSize = metrics.buttonFontSize
+                    )
+                }
+            )
+        }
+        uiState.termsError?.let { KocKitText(text = it, color = colors.coralAccent) }
     }
-    uiState.termsError?.let { KocKitText(text = it, color = colors.coralAccent) }
 }
 
 @Composable
 private fun RegisterStepPlaceholderContent(
     title: String,
-    description: String
+    description: String,
+    metrics: AuthFormMetrics
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(metrics.smallSpacing)) {
         KocKitSemiText(
             text = title,
-            fontSize = KocKitTextDefaults.fontSizeTitle,
-            lineHeight = KocKitTextDefaults.lineHeightTitle
+            fontSize = metrics.subheadFontSize,
+            lineHeight = metrics.subheadLineHeight
         )
-        KocKitText(description, style = MaterialTheme.typography.bodyMedium)
+        KocKitText(
+            description,
+            fontSize = metrics.bodyFontSize,
+            lineHeight = metrics.bodyLineHeight
+        )
     }
 }
 

@@ -24,7 +24,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.AccountBalance
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.Description
@@ -60,7 +59,8 @@ import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
-import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
+import com.techlife.kockit.core.designsystem.layout.LocalProfileLayoutMetrics
+import com.techlife.kockit.core.designsystem.layout.ProfileLayoutMetrics
 import com.techlife.kockit.core.designsystem.theme.CardShape
 import com.techlife.kockit.core.designsystem.theme.LavenderAccent
 import com.techlife.kockit.core.designsystem.theme.OrangeAccent
@@ -70,14 +70,6 @@ import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.core.designsystem.theme.White
 
 private object ProfileCardStyle {
-    val innerPadding = 14.dp
-    val sectionSpacing = 12.dp
-    val gridGap = 10.dp
-    val iconChipSize = 28.dp
-    val iconChipRadius = 8.dp
-    val progressHeight = 5.dp
-    val thickProgressHeight = 6.dp
-    val profileAvatarSize = 72.dp
     val levelBadgeGreen = Color(0xFF4DB6AC)
     val levelBadgeBg = Color(0xFFE8F6F3)
     val orangeLight = Color(0xFFFFF0E6)
@@ -89,10 +81,14 @@ private object ProfileCardStyle {
 }
 
 @Composable
+private fun profileMetrics() = LocalProfileLayoutMetrics.current
+
+@Composable
 fun ProfileTopBar(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = profileMetrics()
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -100,7 +96,7 @@ fun ProfileTopBar(
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(metrics.backButtonSize)
                 .clip(CircleShape)
                 .clickable(onClick = onBackClick),
             contentAlignment = Alignment.Center
@@ -108,7 +104,7 @@ fun ProfileTopBar(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = "Geri",
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(metrics.backIconSize),
                 tint = TextPrimary
             )
         }
@@ -117,19 +113,20 @@ fun ProfileTopBar(
 
 @Composable
 fun ProfileHeaderSection(modifier: Modifier = Modifier) {
+    val metrics = profileMetrics()
     Column(modifier = modifier.fillMaxWidth()) {
         KocKitExtraBoldText(
             text = "Profilim",
             color = TextPrimary,
-            fontSize = 26.sp,
-            lineHeight = 32.sp
+            fontSize = metrics.headerTitleSize,
+            lineHeight = metrics.headerTitleLineHeight
         )
         Spacer(modifier = Modifier.height(4.dp))
         KocKitText(
             text = "Hedeflerine ulaşmak için bilgilerini güncel tut.",
             color = TextSecondary,
-            fontSize = KocKitTextDefaults.fontSizeBody,
-            lineHeight = KocKitTextDefaults.lineHeightBody
+            fontSize = metrics.headerSubtitleSize,
+            lineHeight = metrics.headerSubtitleLineHeight
         )
     }
 }
@@ -144,6 +141,7 @@ fun ProfileSummaryCard(
     levelLabel: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = profileMetrics()
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = CardShape,
@@ -154,13 +152,13 @@ fun ProfileSummaryCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(ProfileCardStyle.innerPadding),
+                    .padding(metrics.cardInnerPadding),
                 verticalAlignment = Alignment.Top
             ) {
                 Box {
                     Box(
                         modifier = Modifier
-                            .size(ProfileCardStyle.profileAvatarSize)
+                            .size(metrics.profileAvatarSize)
                             .clip(CircleShape)
                             .background(Color(0xFFE8F0FE)),
                         contentAlignment = Alignment.Center
@@ -169,14 +167,14 @@ fun ProfileSummaryCard(
                             imageVector = Icons.Outlined.Person,
                             contentDescription = null,
                             tint = Color(0xFF90A4C8),
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(metrics.profileAvatarIconSize)
                         )
                     }
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .offset(x = 2.dp, y = 2.dp)
-                            .size(24.dp)
+                            .size(metrics.cameraBadgeSize)
                             .clip(CircleShape)
                             .background(PastelGreen),
                         contentAlignment = Alignment.Center
@@ -185,7 +183,7 @@ fun ProfileSummaryCard(
                             imageVector = Icons.Outlined.CameraAlt,
                             contentDescription = "Fotoğraf düzenle",
                             tint = White,
-                            modifier = Modifier.size(12.dp)
+                            modifier = Modifier.size(metrics.cameraBadgeIconSize)
                         )
                     }
                 }
@@ -193,22 +191,22 @@ fun ProfileSummaryCard(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .padding(end = 72.dp)
+                        .padding(end = if (metrics.isExpanded) 88.dp else 72.dp)
                 ) {
                     KocKitBoldText(
                         text = fullName,
                         color = TextPrimary,
-                        fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                        lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+                        fontSize = metrics.cardTitleSize,
+                        lineHeight = metrics.cardTitleLineHeight
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    ProfileSummaryInfoRow(Icons.Outlined.School, grade)
+                    ProfileSummaryInfoRow(Icons.Outlined.School, grade, metrics)
                     Spacer(modifier = Modifier.height(4.dp))
-                    ProfileSummaryInfoRow(Icons.Outlined.Description, examType)
+                    ProfileSummaryInfoRow(Icons.Outlined.Description, examType, metrics)
                     Spacer(modifier = Modifier.height(4.dp))
-                    ProfileSummaryInfoRow(Icons.Outlined.LocationOn, location)
+                    ProfileSummaryInfoRow(Icons.Outlined.LocationOn, location, metrics)
                     Spacer(modifier = Modifier.height(4.dp))
-                    ProfileSummaryInfoRow(Icons.Outlined.AccountBalance, school)
+                    ProfileSummaryInfoRow(Icons.Outlined.AccountBalance, school, metrics)
                 }
             }
             ProfileLevelBadge(
@@ -216,8 +214,8 @@ fun ProfileSummaryCard(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(
-                        top = ProfileCardStyle.innerPadding,
-                        end = ProfileCardStyle.innerPadding
+                        top = metrics.cardInnerPadding,
+                        end = metrics.cardInnerPadding
                     )
             )
         }
@@ -229,6 +227,7 @@ private fun ProfileLevelBadge(
     levelLabel: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = profileMetrics()
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
@@ -243,8 +242,8 @@ private fun ProfileLevelBadge(
             KocKitText(
                 text = "Düzey",
                 color = TextSecondary,
-                fontSize = 9.sp,
-                lineHeight = 11.sp
+                fontSize = metrics.microCaptionSize,
+                lineHeight = metrics.microCaptionLineHeight
             )
             Spacer(modifier = Modifier.height(4.dp))
             Surface(
@@ -260,13 +259,13 @@ private fun ProfileLevelBadge(
                         imageVector = Icons.Outlined.Verified,
                         contentDescription = null,
                         tint = ProfileCardStyle.levelBadgeGreen,
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(metrics.infoIconSize)
                     )
                     KocKitSemiText(
                         text = levelLabel,
                         color = ProfileCardStyle.levelBadgeGreen,
-                        fontSize = 10.sp,
-                        lineHeight = 12.sp
+                        fontSize = metrics.smallCaptionSize,
+                        lineHeight = metrics.smallCaptionLineHeight
                     )
                 }
             }
@@ -275,20 +274,24 @@ private fun ProfileLevelBadge(
 }
 
 @Composable
-private fun ProfileSummaryInfoRow(icon: ImageVector, text: String) {
+private fun ProfileSummaryInfoRow(
+    icon: ImageVector,
+    text: String,
+    metrics: ProfileLayoutMetrics
+) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = TextSecondary.copy(alpha = 0.7f),
-            modifier = Modifier.size(12.dp)
+            modifier = Modifier.size(metrics.infoIconSize)
         )
         Spacer(modifier = Modifier.width(6.dp))
         KocKitText(
             text = text,
             color = TextSecondary,
-            fontSize = 11.sp,
-            lineHeight = 14.sp,
+            fontSize = metrics.smallCaptionSize,
+            lineHeight = metrics.smallCaptionLineHeight,
             maxLines = 2
         )
     }
@@ -304,9 +307,10 @@ fun ProfileGoalsSection(
     pointsPeriod: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = profileMetrics()
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(ProfileCardStyle.sectionSpacing)
+        verticalArrangement = Arrangement.spacedBy(metrics.cardSectionSpacing)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -316,8 +320,8 @@ fun ProfileGoalsSection(
             KocKitBoldText(
                 text = "Hedeflerim",
                 color = TextPrimary,
-                fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+                fontSize = metrics.cardTitleSize,
+                lineHeight = metrics.cardTitleLineHeight
             )
             Row(
                 modifier = Modifier.clickable { },
@@ -326,14 +330,14 @@ fun ProfileGoalsSection(
                 KocKitSemiText(
                     text = "Tümünü Gör",
                     color = PastelGreen,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall
+                    fontSize = metrics.cardCaptionSize,
+                    lineHeight = metrics.cardCaptionLineHeight
                 )
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = null,
                     tint = PastelGreen,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(if (metrics.isExpanded) 18.dp else 16.dp)
                 )
             }
         }
@@ -341,7 +345,7 @@ fun ProfileGoalsSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Max),
-            horizontalArrangement = Arrangement.spacedBy(ProfileCardStyle.gridGap)
+            horizontalArrangement = Arrangement.spacedBy(metrics.gridGap)
         ) {
             ProfileTargetGoalCard(
                 targetRank = targetRank,
@@ -371,6 +375,7 @@ private fun ProfileTargetGoalCard(
     progressText: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = profileMetrics()
     ProfileGoalCardShell(
         modifier = modifier,
         icon = Icons.Outlined.TrackChanges,
@@ -381,28 +386,28 @@ private fun ProfileTargetGoalCard(
         KocKitText(
             text = "Mevcut Durum",
             color = TextSecondary,
-            fontSize = 10.sp,
-            lineHeight = 12.sp
+            fontSize = metrics.smallCaptionSize,
+            lineHeight = metrics.smallCaptionLineHeight
         )
         Spacer(modifier = Modifier.height(2.dp))
         KocKitExtraBoldText(
             text = currentRank,
             color = TextPrimary,
-            fontSize = 22.sp,
-            lineHeight = 26.sp
+            fontSize = metrics.statValueSize,
+            lineHeight = metrics.statValueLineHeight
         )
         Spacer(modifier = Modifier.height(8.dp))
         ProfileLinearProgressBar(
             progress = progress,
             color = OrangeAccent,
-            height = ProfileCardStyle.progressHeight
+            height = metrics.progressHeight
         )
         Spacer(modifier = Modifier.height(4.dp))
         KocKitSemiText(
             text = progressText,
             color = OrangeAccent,
-            fontSize = 10.sp,
-            lineHeight = 12.sp
+            fontSize = metrics.smallCaptionSize,
+            lineHeight = metrics.smallCaptionLineHeight
         )
     }
 }
@@ -413,6 +418,7 @@ private fun ProfilePointsGoalCard(
     period: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = profileMetrics()
     ProfileGoalCardShell(
         modifier = modifier,
         icon = Icons.Outlined.EmojiEvents,
@@ -424,15 +430,15 @@ private fun ProfilePointsGoalCard(
         KocKitExtraBoldText(
             text = totalPoints,
             color = TextPrimary,
-            fontSize = 28.sp,
-            lineHeight = 32.sp
+            fontSize = metrics.largeStatValueSize,
+            lineHeight = metrics.largeStatValueLineHeight
         )
         Spacer(modifier = Modifier.weight(1f))
         KocKitSemiText(
             text = period,
             color = TextSecondary,
-            fontSize = 14.sp,
-            lineHeight = 12.sp
+            fontSize = metrics.cardBodySize,
+            lineHeight = metrics.cardBodyLineHeight
         )
     }
 }
@@ -446,6 +452,7 @@ private fun ProfileGoalCardShell(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val metrics = profileMetrics()
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
@@ -455,13 +462,13 @@ private fun ProfileGoalCardShell(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp)
+                .padding(if (metrics.isExpanded) 14.dp else 12.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
-                        .size(ProfileCardStyle.iconChipSize)
-                        .clip(RoundedCornerShape(ProfileCardStyle.iconChipRadius))
+                        .size(metrics.iconChipSize)
+                        .clip(RoundedCornerShape(8.dp))
                         .background(iconBg),
                     contentAlignment = Alignment.Center
                 ) {
@@ -469,15 +476,15 @@ private fun ProfileGoalCardShell(
                         imageVector = icon,
                         contentDescription = null,
                         tint = iconTint,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(metrics.iconChipIconSize)
                     )
                 }
                 Spacer(modifier = Modifier.width(6.dp))
                 KocKitSemiText(
                     text = title,
                     color = TextPrimary,
-                    fontSize = 11.sp,
-                    lineHeight = 14.sp,
+                    fontSize = metrics.smallCaptionSize,
+                    lineHeight = metrics.smallCaptionLineHeight,
                     maxLines = 2
                 )
             }
@@ -495,6 +502,7 @@ fun ProfileStudyProgramCard(
     details: List<ProfileStudyDetail>,
     modifier: Modifier = Modifier
 ) {
+    val metrics = profileMetrics()
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -504,7 +512,7 @@ fun ProfileStudyProgramCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(ProfileCardStyle.innerPadding)
+                .padding(metrics.cardInnerPadding)
         ) {
             ProfileCardTitle(
                 icon = Icons.Outlined.Schedule,
@@ -516,8 +524,8 @@ fun ProfileStudyProgramCard(
             KocKitText(
                 text = "Haftalık Çalışma Süresi",
                 color = TextSecondary,
-                fontSize = 10.sp,
-                lineHeight = 12.sp
+                fontSize = metrics.smallCaptionSize,
+                lineHeight = metrics.smallCaptionLineHeight
             )
             Spacer(modifier = Modifier.height(4.dp))
             Row(
@@ -528,22 +536,18 @@ fun ProfileStudyProgramCard(
                 KocKitExtraBoldText(
                     text = weeklyHours,
                     color = TextPrimary,
-                    fontSize = 18.sp,
-                    lineHeight = 22.sp
+                    fontSize = if (metrics.isExpanded) 22.sp else 18.sp,
+                    lineHeight = if (metrics.isExpanded) 26.sp else 22.sp
                 )
                 KocKitSemiText(
                     text = weeklyPercent,
                     color = LavenderAccent,
-                    fontSize = 12.sp,
-                    lineHeight = 14.sp
+                    fontSize = metrics.cardCaptionSize,
+                    lineHeight = metrics.cardCaptionLineHeight
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
-            ProfileGradientProgressBar(
-                progress = weeklyProgress,
-                startColor = ProfileCardStyle.purpleGradientStart,
-                endColor = ProfileCardStyle.purpleGradientEnd
-            )
+            ProfileGradientProgressBar(progress = weeklyProgress)
             Spacer(modifier = Modifier.height(10.dp))
             ProfileStudyDetailsGrid(details = details)
         }
@@ -552,6 +556,7 @@ fun ProfileStudyProgramCard(
 
 @Composable
 private fun ProfileStudyDetailsGrid(details: List<ProfileStudyDetail>) {
+    val metrics = profileMetrics()
     val icons = listOf(
         Icons.Outlined.Schedule,
         Icons.Filled.CalendarToday,
@@ -573,7 +578,7 @@ private fun ProfileStudyDetailsGrid(details: List<ProfileStudyDetail>) {
             )
             VerticalDivider(
                 modifier = Modifier
-                    .height(56.dp)
+                    .height(metrics.studyDetailCellHeight)
                     .align(Alignment.CenterVertically),
                 thickness = 1.dp,
                 color = ProfileCardStyle.dividerColor
@@ -595,7 +600,7 @@ private fun ProfileStudyDetailsGrid(details: List<ProfileStudyDetail>) {
             )
             VerticalDivider(
                 modifier = Modifier
-                    .height(56.dp)
+                    .height(metrics.studyDetailCellHeight)
                     .align(Alignment.CenterVertically),
                 thickness = 1.dp,
                 color = ProfileCardStyle.dividerColor
@@ -617,6 +622,7 @@ private fun ProfileStudyDetailCell(
     value: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = profileMetrics()
     Column(
         modifier = modifier.padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -625,14 +631,14 @@ private fun ProfileStudyDetailCell(
             imageVector = icon,
             contentDescription = null,
             tint = TextSecondary.copy(alpha = 0.6f),
-            modifier = Modifier.size(14.dp)
+            modifier = Modifier.size(metrics.infoIconSize)
         )
         Spacer(modifier = Modifier.height(4.dp))
         KocKitText(
             text = title,
             color = TextSecondary,
-            fontSize = 8.sp,
-            lineHeight = 10.sp,
+            fontSize = metrics.microCaptionSize,
+            lineHeight = metrics.microCaptionLineHeight,
             textAlign = TextAlign.Center,
             maxLines = 2
         )
@@ -640,8 +646,8 @@ private fun ProfileStudyDetailCell(
         KocKitSemiText(
             text = value,
             color = TextPrimary,
-            fontSize = 11.sp,
-            lineHeight = 13.sp,
+            fontSize = metrics.smallCaptionSize,
+            lineHeight = metrics.smallCaptionLineHeight,
             textAlign = TextAlign.Center
         )
     }
@@ -655,6 +661,7 @@ fun ProfilePrepTimelineCard(
     progressText: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = profileMetrics()
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
@@ -664,7 +671,7 @@ fun ProfilePrepTimelineCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(ProfileCardStyle.innerPadding)
+                .padding(metrics.cardInnerPadding)
         ) {
             ProfileCardTitle(
                 icon = Icons.Filled.CalendarToday,
@@ -681,22 +688,22 @@ fun ProfilePrepTimelineCard(
                     KocKitText(
                         text = "Mevcut Evre",
                         color = TextSecondary,
-                        fontSize = 10.sp,
-                        lineHeight = 12.sp
+                        fontSize = metrics.smallCaptionSize,
+                        lineHeight = metrics.smallCaptionLineHeight
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     KocKitExtraBoldText(
                         text = phase,
                         color = OrangeAccent,
-                        fontSize = 20.sp,
-                        lineHeight = 24.sp
+                        fontSize = if (metrics.isExpanded) 24.sp else 20.sp,
+                        lineHeight = if (metrics.isExpanded) 28.sp else 24.sp
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     KocKitText(
                         text = phaseSubtitle,
                         color = TextSecondary,
-                        fontSize = 9.sp,
-                        lineHeight = 11.sp,
+                        fontSize = metrics.microCaptionSize,
+                        lineHeight = metrics.microCaptionLineHeight,
                         maxLines = 2
                     )
                 }
@@ -717,6 +724,7 @@ fun ProfileUnavailableDaysCard(
     note: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = profileMetrics()
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
@@ -726,7 +734,7 @@ fun ProfileUnavailableDaysCard(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(ProfileCardStyle.innerPadding)
+                .padding(metrics.cardInnerPadding)
         ) {
             ProfileCardTitle(
                 icon = Icons.Outlined.EventBusy,
@@ -743,8 +751,8 @@ fun ProfileUnavailableDaysCard(
             KocKitText(
                 text = note,
                 color = TextSecondary.copy(alpha = 0.7f),
-                fontSize = 8.sp,
-                lineHeight = 10.sp,
+                fontSize = metrics.microCaptionSize,
+                lineHeight = metrics.microCaptionLineHeight,
                 maxLines = 3
             )
         }
@@ -753,6 +761,7 @@ fun ProfileUnavailableDaysCard(
 
 @Composable
 private fun ProfileUnavailableDayChip(day: String) {
+    val metrics = profileMetrics()
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10.dp),
@@ -766,14 +775,14 @@ private fun ProfileUnavailableDayChip(day: String) {
                 imageVector = Icons.Filled.CalendarToday,
                 contentDescription = null,
                 tint = OrangeAccent,
-                modifier = Modifier.size(14.dp)
+                modifier = Modifier.size(metrics.infoIconSize)
             )
             Spacer(modifier = Modifier.width(8.dp))
             KocKitSemiText(
                 text = day,
                 color = TextPrimary,
-                fontSize = 11.sp,
-                lineHeight = 13.sp
+                fontSize = metrics.smallCaptionSize,
+                lineHeight = metrics.smallCaptionLineHeight
             )
         }
     }
@@ -786,11 +795,12 @@ private fun ProfileCardTitle(
     iconTint: Color,
     title: String
 ) {
+    val metrics = profileMetrics()
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
-                .size(ProfileCardStyle.iconChipSize)
-                .clip(RoundedCornerShape(ProfileCardStyle.iconChipRadius))
+                .size(metrics.iconChipSize)
+                .clip(RoundedCornerShape(8.dp))
                 .background(iconBg),
             contentAlignment = Alignment.Center
         ) {
@@ -798,15 +808,15 @@ private fun ProfileCardTitle(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconTint,
-                modifier = Modifier.size(14.dp)
+                modifier = Modifier.size(metrics.iconChipIconSize)
             )
         }
         Spacer(modifier = Modifier.width(8.dp))
         KocKitSemiText(
             text = title,
             color = TextPrimary,
-            fontSize = 10.sp,
-            lineHeight = 15.sp,
+            fontSize = metrics.smallCaptionSize,
+            lineHeight = metrics.smallCaptionLineHeight,
             maxLines = 2
         )
     }
@@ -839,11 +849,10 @@ private fun ProfileLinearProgressBar(
 @Composable
 private fun ProfileGradientProgressBar(
     progress: Float,
-    startColor: Color,
-    endColor: Color,
     modifier: Modifier = Modifier
 ) {
-    val height = ProfileCardStyle.thickProgressHeight
+    val metrics = profileMetrics()
+    val height = metrics.thickProgressHeight
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -858,7 +867,10 @@ private fun ProfileGradientProgressBar(
                 .clip(RoundedCornerShape(height / 2))
                 .background(
                     Brush.horizontalGradient(
-                        colors = listOf(startColor, endColor)
+                        colors = listOf(
+                            ProfileCardStyle.purpleGradientStart,
+                            ProfileCardStyle.purpleGradientEnd
+                        )
                     )
                 )
         )
@@ -873,12 +885,13 @@ private fun ProfileCircularProgressWithIcon(
     icon: ImageVector,
     modifier: Modifier = Modifier
 ) {
+    val metrics = profileMetrics()
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
-            modifier = Modifier.size(64.dp),
+            modifier = Modifier.size(metrics.progressRingSize),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(
@@ -886,22 +899,22 @@ private fun ProfileCircularProgressWithIcon(
                 modifier = Modifier.fillMaxSize(),
                 color = ringColor,
                 trackColor = Color(0xFFE8E8E8),
-                strokeWidth = 4.dp,
+                strokeWidth = if (metrics.isExpanded) 5.dp else 4.dp,
                 strokeCap = StrokeCap.Round
             )
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = ringColor,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(metrics.progressRingIconSize)
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
         KocKitSemiText(
             text = progressText,
             color = ringColor,
-            fontSize = 9.sp,
-            lineHeight = 11.sp,
+            fontSize = metrics.microCaptionSize,
+            lineHeight = metrics.microCaptionLineHeight,
             textAlign = TextAlign.Center,
             maxLines = 2
         )

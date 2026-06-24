@@ -2,7 +2,7 @@ package com.techlife.kockit.feature.auth.login
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,6 +42,8 @@ import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitSocialButton
 import com.techlife.kockit.core.designsystem.component.KocKitTextField
 import com.techlife.kockit.core.designsystem.component.LoginFieldShape
+import com.techlife.kockit.core.designsystem.layout.AuthFormContainer
+import com.techlife.kockit.core.designsystem.layout.AuthFormMetrics
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import kotlinx.coroutines.flow.collectLatest
@@ -110,108 +111,147 @@ private fun LoginContent(
     onGoogleLoginClick: () -> Unit,
     onRegisterClick: () -> Unit,
 ) {
-    val colors = KocKitTheme.extraColors
-    val loginEnabled = uiState.email.isNotBlank() && uiState.password.isNotBlank()
-
     KocKitBackground(useFormBackgroundImage = true) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.Top
-        ) {
-            Spacer(modifier = Modifier.height(48.dp))
-
-            KocKitLogo()
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            KocKitBoldText(
-                text = "Giriş Yap",
-                fontSize = KocKitTextDefaults.fontSizeHeadline,
-                lineHeight = KocKitTextDefaults.lineHeightHeadline,
-                color = colors.textPrimary
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            KocKitText(
-                text = "Hesabına giriş yap ve \nçalışmalarına devam et.",
-                fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
-                color = colors.textPrimary
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            KocKitTextField(
-                value = uiState.email,
-                onValueChange = onEmailChanged,
-                placeholder = "E-posta adresin",
-                leadingIconVector = Icons.Filled.Email,
-                error = uiState.emailError,
-                shape = LoginFieldShape
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            KocKitPasswordField(
-                value = uiState.password,
-                onValueChange = onPasswordChanged,
-                placeholder = "Şifren",
-                isPasswordVisible = uiState.isPasswordVisible,
+        AuthFormContainer(
+            modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars)
+        ) { metrics ->
+            LoginFormBody(
+                uiState = uiState,
+                metrics = metrics,
+                onEmailChanged = onEmailChanged,
+                onPasswordChanged = onPasswordChanged,
                 onPasswordVisibilityToggle = onPasswordVisibilityToggle,
-                error = uiState.passwordError,
-                shape = LoginFieldShape
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            KocKitBoldText(
-                text = "Şifremi unuttum?",
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .clickable { onForgotPasswordClick() },
-                color = colors.textPrimary
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            KocKitPrimaryButton(
-                text = "Giriş Yap",
-                onClick = onLoginClick,
-                enabled = loginEnabled,
-                isLoading = uiState.isLoading,
-                containerColor = PastelGreen
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            LoginOrDivider()
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            KocKitSocialButton(
-                text = "Google ile giriş yap",
-                onClick = onGoogleLoginClick,
-                iconPainter = painterResource(R.drawable.ic_google)
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            LoginRegisterFooter(
-                onRegisterClick = onRegisterClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                onForgotPasswordClick = onForgotPasswordClick,
+                onLoginClick = onLoginClick,
+                onGoogleLoginClick = onGoogleLoginClick,
+                onRegisterClick = onRegisterClick
             )
         }
     }
 }
 
 @Composable
-private fun LoginOrDivider() {
+private fun ColumnScope.LoginFormBody(
+    uiState: LoginUiState,
+    metrics: AuthFormMetrics,
+    onEmailChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onPasswordVisibilityToggle: () -> Unit,
+    onForgotPasswordClick: () -> Unit,
+    onLoginClick: () -> Unit,
+    onGoogleLoginClick: () -> Unit,
+    onRegisterClick: () -> Unit
+) {
+    val colors = KocKitTheme.extraColors
+    val loginEnabled = uiState.email.isNotBlank() && uiState.password.isNotBlank()
+
+    Spacer(modifier = Modifier.height(metrics.topInset))
+
+    KocKitLogo(
+        fontSize = metrics.logoFontSize,
+        lineHeight = metrics.logoLineHeight,
+        dotSize = metrics.logoDotSize
+    )
+
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
+
+    KocKitBoldText(
+        text = "Giriş Yap",
+        fontSize = metrics.headlineFontSize,
+        lineHeight = metrics.headlineLineHeight,
+        color = colors.textPrimary
+    )
+
+    Spacer(modifier = Modifier.height(metrics.smallSpacing))
+
+    KocKitText(
+        text = "Hesabına giriş yap ve \nçalışmalarına devam et.",
+        fontSize = metrics.bodyFontSize,
+        lineHeight = metrics.bodyLineHeight,
+        color = colors.textPrimary
+    )
+
+    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
+
+    KocKitTextField(
+        value = uiState.email,
+        onValueChange = onEmailChanged,
+        placeholder = "E-posta adresin",
+        leadingIconVector = Icons.Filled.Email,
+        error = uiState.emailError,
+        shape = LoginFieldShape,
+        fieldHeight = metrics.fieldHeight,
+        textFontSize = metrics.fieldFontSize,
+        textLineHeight = metrics.fieldLineHeight
+    )
+
+    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+    KocKitPasswordField(
+        value = uiState.password,
+        onValueChange = onPasswordChanged,
+        placeholder = "Şifren",
+        isPasswordVisible = uiState.isPasswordVisible,
+        onPasswordVisibilityToggle = onPasswordVisibilityToggle,
+        error = uiState.passwordError,
+        shape = LoginFieldShape,
+        fieldHeight = metrics.fieldHeight,
+        textFontSize = metrics.fieldFontSize,
+        textLineHeight = metrics.fieldLineHeight
+    )
+
+    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+    KocKitBoldText(
+        text = "Şifremi unuttum?",
+        fontSize = metrics.bodyFontSize,
+        lineHeight = metrics.bodyLineHeight,
+        modifier = Modifier
+            .align(Alignment.End)
+            .clickable { onForgotPasswordClick() },
+        color = colors.textPrimary
+    )
+
+    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+    KocKitPrimaryButton(
+        text = "Giriş Yap",
+        onClick = onLoginClick,
+        enabled = loginEnabled,
+        isLoading = uiState.isLoading,
+        containerColor = PastelGreen,
+        height = metrics.buttonHeight,
+        fontSize = metrics.buttonFontSize
+    )
+
+    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+    LoginOrDivider(metrics = metrics)
+
+    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+    KocKitSocialButton(
+        text = "Google ile giriş yap",
+        onClick = onGoogleLoginClick,
+        iconPainter = painterResource(R.drawable.ic_google),
+        height = metrics.socialButtonHeight,
+        fontSize = metrics.bodyFontSize,
+        iconSize = if (metrics.isExpanded) 26.dp else 22.dp
+    )
+
+    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+    LoginRegisterFooter(
+        metrics = metrics,
+        onRegisterClick = onRegisterClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp)
+    )
+}
+
+@Composable
+private fun LoginOrDivider(metrics: AuthFormMetrics) {
     val colors = KocKitTheme.extraColors
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -225,7 +265,8 @@ private fun LoginOrDivider() {
         KocKitSemiText(
             text = "veya",
             modifier = Modifier.padding(horizontal = 16.dp),
-            style = MaterialTheme.typography.bodyMedium,
+            fontSize = metrics.subheadFontSize,
+            lineHeight = metrics.subheadLineHeight,
             color = colors.textSecondary
         )
         HorizontalDivider(
@@ -238,6 +279,7 @@ private fun LoginOrDivider() {
 
 @Composable
 private fun LoginRegisterFooter(
+    metrics: AuthFormMetrics,
     onRegisterClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -249,16 +291,33 @@ private fun LoginRegisterFooter(
     ) {
         KocKitSemiText(
             text = "Hesabın yok mu? ",
-            fontSize = KocKitTextDefaults.fontSizeSubhead,
-            lineHeight = KocKitTextDefaults.lineHeightSubhead,
+            fontSize = metrics.subheadFontSize,
+            lineHeight = metrics.subheadLineHeight,
             color = colors.textPrimary
         )
         KocKitBoldText(
             text = "Kayıt Ol",
             modifier = Modifier.clickable(onClick = onRegisterClick),
-            fontSize = KocKitTextDefaults.fontSizeSubhead,
-            lineHeight = KocKitTextDefaults.lineHeightSubhead,
+            fontSize = metrics.subheadFontSize,
+            lineHeight = metrics.subheadLineHeight,
             color = colors.primaryTeal
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 840, heightDp = 1200, name = "Tablet")
+@Composable
+private fun LoginScreenTabletPreview() {
+    KocKitTheme {
+        LoginContent(
+            uiState = LoginUiState(),
+            onEmailChanged = {},
+            onPasswordChanged = {},
+            onPasswordVisibilityToggle = {},
+            onForgotPasswordClick = {},
+            onLoginClick = {},
+            onGoogleLoginClick = {},
+            onRegisterClick = {}
         )
     }
 }
