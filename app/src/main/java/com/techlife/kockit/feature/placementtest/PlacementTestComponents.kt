@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,10 +18,10 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -55,6 +56,8 @@ import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
+import com.techlife.kockit.core.designsystem.layout.LocalPlacementTestLayoutMetrics
+import com.techlife.kockit.core.designsystem.layout.rememberPlacementTestLayoutMetrics
 import com.techlife.kockit.core.designsystem.theme.CreamBackground
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
@@ -62,11 +65,15 @@ import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.core.designsystem.theme.White
 
 @Composable
+private fun placementTestMetrics() = LocalPlacementTestLayoutMetrics.current
+
+@Composable
 fun PlacementTestDecorBackground(
     accentSoftColor: Color,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val metrics = rememberPlacementTestLayoutMetrics()
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -74,7 +81,7 @@ fun PlacementTestDecorBackground(
     ) {
         Box(
             modifier = Modifier
-                .size(220.dp)
+                .size(metrics.decorBlobLarge)
                 .align(Alignment.TopEnd)
                 .offset(x = 60.dp, y = (-40).dp)
                 .clip(CircleShape)
@@ -82,7 +89,7 @@ fun PlacementTestDecorBackground(
         )
         Box(
             modifier = Modifier
-                .size(180.dp)
+                .size(metrics.decorBlobSmall)
                 .align(Alignment.BottomEnd)
                 .offset(x = 40.dp, y = 80.dp)
                 .clip(CircleShape)
@@ -97,10 +104,11 @@ fun PlacementTestInfoBackHeader(
     title: String,
     onBackClick: () -> Unit
 ) {
+    val metrics = placementTestMetrics()
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(metrics.backButtonSize)
                 .clip(CircleShape)
                 .background(White)
                 .clickable(onClick = onBackClick),
@@ -109,15 +117,16 @@ fun PlacementTestInfoBackHeader(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = null,
-                tint = TextPrimary
+                tint = TextPrimary,
+                modifier = Modifier.size(metrics.backIconSize)
             )
         }
         Spacer(modifier = Modifier.height(12.dp))
         KocKitExtraBoldText(
             text = title,
             color = TextPrimary,
-            fontSize = KocKitTextDefaults.fontSizeTitle,
-            lineHeight = KocKitTextDefaults.lineHeightTitle
+            fontSize = metrics.screenTitleSize,
+            lineHeight = metrics.screenTitleLineHeight
         )
     }
 }
@@ -158,17 +167,18 @@ fun PlacementSegmentedProgress(
     accentColor: Color,
     modifier: Modifier = Modifier
 ) {
+    val metrics = placementTestMetrics()
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(metrics.progressSegmentGap)
     ) {
         repeat(totalQuestions.coerceAtLeast(1)) { index ->
             val isActive = index <= currentIndex
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp))
+                    .height(metrics.progressHeight)
+                    .clip(RoundedCornerShape(metrics.progressHeight / 2))
                     .background(if (isActive) accentColor else Color(0xFFE8E8E8))
             )
         }
@@ -180,6 +190,7 @@ fun PlacementTimerBadge(
     timerText: String,
     accentColor: Color
 ) {
+    val metrics = placementTestMetrics()
     Row(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -192,13 +203,13 @@ fun PlacementTimerBadge(
             imageVector = Icons.Filled.Schedule,
             contentDescription = null,
             tint = accentColor,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(metrics.timerIconSize)
         )
         KocKitSemiText(
             text = timerText,
             color = accentColor,
-            fontSize = KocKitTextDefaults.fontSizeBody,
-            lineHeight = KocKitTextDefaults.lineHeightBody
+            fontSize = metrics.bodySize,
+            lineHeight = metrics.bodyLineHeight
         )
     }
 }
@@ -208,6 +219,7 @@ fun PlacementSubjectChip(
     subject: String,
     accentColor: Color
 ) {
+    val metrics = placementTestMetrics()
     Surface(
         shape = RoundedCornerShape(20.dp),
         color = accentColor.copy(alpha = 0.15f)
@@ -215,9 +227,12 @@ fun PlacementSubjectChip(
         KocKitSemiText(
             text = subject,
             color = accentColor,
-            fontSize = KocKitTextDefaults.fontSizeSmall,
-            lineHeight = KocKitTextDefaults.lineHeightSmall,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+            fontSize = metrics.smallSize,
+            lineHeight = metrics.smallLineHeight,
+            modifier = Modifier.padding(
+                horizontal = metrics.chipPaddingH,
+                vertical = metrics.chipPaddingV
+            )
         )
     }
 }
@@ -227,18 +242,17 @@ fun PlacementResultSummaryCard(
     section: PlacementTestSection,
     modifier: Modifier = Modifier
 ) {
+    val metrics = placementTestMetrics()
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .fillMaxHeight(),
-        shape = RoundedCornerShape(20.dp),
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(metrics.cardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+                .fillMaxWidth()
+                .padding(metrics.cardInnerPadding)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -248,14 +262,14 @@ fun PlacementResultSummaryCard(
                     imageVector = Icons.Outlined.MenuBook,
                     contentDescription = null,
                     tint = PlacementTestColors.green,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(metrics.resultCardIconSize)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 KocKitBoldText(
                     text = "Sınav Sonuçları",
                     color = TextPrimary,
-                    fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                    lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
+                    fontSize = metrics.bodyLargeSize,
+                    lineHeight = metrics.bodyLargeLineHeight,
                     modifier = Modifier.weight(1f)
                 )
                 Surface(
@@ -271,13 +285,13 @@ fun PlacementResultSummaryCard(
                             imageVector = Icons.Filled.Check,
                             contentDescription = null,
                             tint = PlacementTestColors.green,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(metrics.resultBadgeIconSize)
                         )
                         KocKitSemiText(
                             text = "Tamamlandı",
                             color = PlacementTestColors.green,
-                            fontSize = KocKitTextDefaults.fontSizeSmall,
-                            lineHeight = KocKitTextDefaults.lineHeightSmall
+                            fontSize = metrics.smallSize,
+                            lineHeight = metrics.smallLineHeight
                         )
                     }
                 }
@@ -285,32 +299,27 @@ fun PlacementResultSummaryCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.SpaceEvenly
-            ) {
-                PlacementResultRow(
-                    label = "Doğru",
-                    value = section.correctCount,
-                    valueColor = PlacementTestColors.green,
-                    leadingEmoji = "✓"
-                )
-                PlacementResultRow(
-                    label = "Yanlış",
-                    value = section.wrongCount,
-                    valueColor = PlacementTestColors.wrongRed,
-                    leadingEmoji = "✕"
-                )
-                PlacementResultRow(
-                    label = "Boş",
-                    value = section.emptyCount,
-                    valueColor = PlacementTestColors.emptyGray,
-                    leadingEmoji = "○"
-                )
-            }
+            PlacementResultRow(
+                label = "Doğru",
+                value = section.correctCount,
+                valueColor = PlacementTestColors.green,
+                leadingEmoji = "✓"
+            )
+            PlacementResultRow(
+                label = "Yanlış",
+                value = section.wrongCount,
+                valueColor = PlacementTestColors.wrongRed,
+                leadingEmoji = "✕"
+            )
+            PlacementResultRow(
+                label = "Boş",
+                value = section.emptyCount,
+                valueColor = PlacementTestColors.emptyGray,
+                leadingEmoji = "○"
+            )
 
             HorizontalDivider(
-                modifier = Modifier.padding(vertical = 12.dp),
+                modifier = Modifier.padding(vertical = metrics.resultDividerSpacingV),
                 color = Color(0xFFE8E8E8)
             )
 
@@ -322,21 +331,21 @@ fun PlacementResultSummaryCard(
                     imageVector = Icons.Outlined.MenuBook,
                     contentDescription = null,
                     tint = PlacementTestColors.purple,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(metrics.resultCardIconSize - 2.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 KocKitSemiText(
                     text = "Toplam Soru",
                     color = TextSecondary,
-                    fontSize = KocKitTextDefaults.fontSizeBody,
-                    lineHeight = KocKitTextDefaults.lineHeightBody,
+                    fontSize = metrics.bodySize,
+                    lineHeight = metrics.bodyLineHeight,
                     modifier = Modifier.weight(1f)
                 )
                 KocKitBoldText(
                     text = section.totalQuestionCount,
                     color = TextPrimary,
-                    fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                    lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+                    fontSize = metrics.bodyLargeSize,
+                    lineHeight = metrics.bodyLargeLineHeight
                 )
             }
         }
@@ -350,31 +359,32 @@ private fun PlacementResultRow(
     valueColor: Color,
     leadingEmoji: String
 ) {
+    val metrics = placementTestMetrics()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
+            .padding(vertical = metrics.resultRowPaddingV),
         verticalAlignment = Alignment.CenterVertically
     ) {
         KocKitBoldText(
             text = leadingEmoji,
             color = valueColor,
-            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-            lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
+            fontSize = metrics.bodyLargeSize,
+            lineHeight = metrics.bodyLargeLineHeight,
             modifier = Modifier.width(24.dp)
         )
         KocKitSemiText(
             text = label,
             color = TextSecondary,
-            fontSize = KocKitTextDefaults.fontSizeBody,
-            lineHeight = KocKitTextDefaults.lineHeightBody,
+            fontSize = metrics.bodySize,
+            lineHeight = metrics.bodyLineHeight,
             modifier = Modifier.weight(1f)
         )
         KocKitBoldText(
             text = value,
             color = valueColor,
-            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-            lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+            fontSize = metrics.bodyLargeSize,
+            lineHeight = metrics.bodyLargeLineHeight
         )
     }
 }
@@ -385,23 +395,22 @@ fun PlacementCompletionTimeCard(
     averageTime: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = placementTestMetrics()
     Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .fillMaxHeight(),
-        shape = RoundedCornerShape(20.dp),
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(metrics.cardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+                .fillMaxWidth()
+                .padding(metrics.cardInnerPadding),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(metrics.completionIconBoxSize)
                     .clip(CircleShape)
                     .background(PlacementTestColors.greenSoft),
                 contentAlignment = Alignment.Center
@@ -410,7 +419,7 @@ fun PlacementCompletionTimeCard(
                     imageVector = Icons.Filled.Schedule,
                     contentDescription = null,
                     tint = PlacementTestColors.green,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(metrics.completionIconSize)
                 )
             }
             Spacer(modifier = Modifier.width(12.dp))
@@ -418,20 +427,20 @@ fun PlacementCompletionTimeCard(
                 KocKitText(
                     text = "Tamamlanma Süresi",
                     color = TextSecondary,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall
+                    fontSize = metrics.smallSize,
+                    lineHeight = metrics.smallLineHeight
                 )
                 KocKitBoldText(
                     text = completionTime,
                     color = PlacementTestColors.green,
-                    fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                    lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+                    fontSize = metrics.bodyLargeSize,
+                    lineHeight = metrics.bodyLargeLineHeight
                 )
                 KocKitText(
                     text = averageTime,
                     color = TextSecondary,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall
+                    fontSize = metrics.smallSize,
+                    lineHeight = metrics.smallLineHeight
                 )
             }
         }
@@ -444,25 +453,30 @@ fun PlacementResultAreasGrid(
     weakAreas: List<PlacementResultAreaItem>,
     modifier: Modifier = Modifier
 ) {
+    val metrics = placementTestMetrics()
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+            .height(IntrinsicSize.Max),
+        horizontalArrangement = Arrangement.spacedBy(metrics.gridGap)
     ) {
         PlacementResultAreaColumn(
             title = "Güçlü Olduğun Alanlar",
             items = strongAreas,
             backgroundColor = PlacementTestColors.greenSoft,
             accentColor = PlacementTestColors.green,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
         )
         PlacementResultAreaColumn(
             title = "Geliştirebileceğin Alanlar",
             items = weakAreas,
             backgroundColor = PlacementTestColors.orangeSoft,
             accentColor = PlacementTestColors.orange,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
         )
     }
 }
@@ -475,60 +489,58 @@ private fun PlacementResultAreaColumn(
     accentColor: Color,
     modifier: Modifier = Modifier
 ) {
+    val metrics = placementTestMetrics()
     Card(
-        modifier = modifier.fillMaxHeight(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .fillMaxWidth()
+                .padding(metrics.resultAreaPadding)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Filled.Star,
                     contentDescription = null,
                     tint = accentColor,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(metrics.areaColumnIconSize)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 KocKitSemiText(
                     text = title,
                     color = accentColor,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall,
+                    fontSize = metrics.smallSize,
+                    lineHeight = metrics.smallLineHeight,
                     maxLines = 2
                 )
             }
+            Spacer(modifier = Modifier.height(metrics.resultAreaItemSpacing))
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(metrics.resultAreaItemSpacing)
             ) {
                 items.forEach { item ->
-                Row(
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    KocKitText(
-                        text = item.emoji,
-                        fontSize = KocKitTextDefaults.fontSizeBody,
-                        lineHeight = KocKitTextDefaults.lineHeightBody
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    KocKitSemiText(
-                        text = item.label,
-                        color = TextPrimary,
-                        fontSize = KocKitTextDefaults.fontSizeSmall,
-                        lineHeight = KocKitTextDefaults.lineHeightSmall,
-                        maxLines = 2
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        KocKitText(
+                            text = item.emoji,
+                            fontSize = metrics.bodySize,
+                            lineHeight = metrics.bodyLineHeight
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        KocKitSemiText(
+                            text = item.label,
+                            color = TextPrimary,
+                            fontSize = metrics.smallSize,
+                            lineHeight = metrics.smallLineHeight,
+                            maxLines = 2
+                        )
+                    }
                 }
-            }
             }
         }
     }
@@ -541,17 +553,18 @@ fun PlacementResultActionButtons(
     onGoToHome: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = placementTestMetrics()
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(metrics.gridGap)
     ) {
         if (nextExamButtonText != null) {
             OutlinedButton(
                 onClick = onGoToNextExam,
                 modifier = Modifier
                     .weight(1f)
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
+                    .height(metrics.primaryButtonHeight),
+                shape = RoundedCornerShape(metrics.answerOptionCornerRadius),
                 border = BorderStroke(1.dp, PlacementTestColors.purple),
                 colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
                     containerColor = White
@@ -561,14 +574,14 @@ fun PlacementResultActionButtons(
                     imageVector = Icons.Filled.Public,
                     contentDescription = null,
                     tint = PlacementTestColors.purple,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(metrics.actionIconSize)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 KocKitSemiText(
                     text = nextExamButtonText,
                     color = PlacementTestColors.purple,
-                    fontSize = KocKitTextDefaults.fontSizeSmall,
-                    lineHeight = KocKitTextDefaults.lineHeightSmall,
+                    fontSize = metrics.smallSize,
+                    lineHeight = metrics.smallLineHeight,
                     maxLines = 2,
                     textAlign = TextAlign.Center
                 )
@@ -578,8 +591,8 @@ fun PlacementResultActionButtons(
             onClick = onGoToHome,
             modifier = Modifier
                 .weight(1f)
-                .height(52.dp),
-            shape = RoundedCornerShape(14.dp),
+                .height(metrics.primaryButtonHeight),
+            shape = RoundedCornerShape(metrics.answerOptionCornerRadius),
             colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                 containerColor = PlacementTestColors.green
             )
@@ -588,14 +601,14 @@ fun PlacementResultActionButtons(
                 imageVector = Icons.Filled.Home,
                 contentDescription = null,
                 tint = White,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(metrics.actionIconSize)
             )
             Spacer(modifier = Modifier.width(4.dp))
             KocKitSemiText(
                 text = "Ana Sayfaya Git",
                 color = White,
-                fontSize = KocKitTextDefaults.fontSizeSmall,
-                lineHeight = KocKitTextDefaults.lineHeightSmall,
+                fontSize = metrics.smallSize,
+                lineHeight = metrics.smallLineHeight,
                 maxLines = 2,
                 textAlign = TextAlign.Center
             )
@@ -608,26 +621,31 @@ fun PlacementTestExamHeader(
     title: String,
     onBackClick: () -> Unit
 ) {
+    val metrics = placementTestMetrics()
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onBackClick) {
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier.size(metrics.backButtonSize)
+        ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                 contentDescription = null,
-                tint = TextPrimary
+                tint = TextPrimary,
+                modifier = Modifier.size(metrics.backIconSize)
             )
         }
         KocKitBoldText(
             text = title,
             color = TextPrimary,
-            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-            lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
+            fontSize = metrics.examTitleSize,
+            lineHeight = metrics.examTitleLineHeight,
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.size(48.dp))
+        Spacer(modifier = Modifier.size(metrics.backButtonSize))
     }
 }
 
@@ -636,6 +654,7 @@ fun PlacementHeroIcon(
     iconRes: Int,
     accentSoftColor: Color
 ) {
+    val metrics = placementTestMetrics()
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -644,15 +663,15 @@ fun PlacementHeroIcon(
     ) {
         Box(
             modifier = Modifier
-                .size(120.dp)
-                .clip(RoundedCornerShape(36.dp))
+                .size(metrics.heroBoxSize)
+                .clip(RoundedCornerShape(metrics.heroCornerRadius))
                 .background(accentSoftColor),
             contentAlignment = Alignment.Center
         ) {
             Image(
                 painter = painterResource(iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(88.dp),
+                modifier = Modifier.size(metrics.heroImageSize),
                 contentScale = ContentScale.Fit
             )
         }
@@ -665,6 +684,7 @@ fun PlacementStatCard(
     value: String,
     modifier: Modifier = Modifier
 ) {
+    val metrics = placementTestMetrics()
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
@@ -674,22 +694,22 @@ fun PlacementStatCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 14.dp, horizontal = 8.dp),
+                .padding(vertical = metrics.statCardPaddingV, horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             KocKitText(
                 text = label,
                 color = TextSecondary,
-                fontSize = KocKitTextDefaults.fontSizeSmall,
-                lineHeight = KocKitTextDefaults.lineHeightSmall,
+                fontSize = metrics.smallSize,
+                lineHeight = metrics.smallLineHeight,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(4.dp))
             KocKitBoldText(
                 text = value,
                 color = TextPrimary,
-                fontSize = KocKitTextDefaults.fontSizeTitle,
-                lineHeight = KocKitTextDefaults.lineHeightTitle
+                fontSize = metrics.statValueSize,
+                lineHeight = metrics.statValueLineHeight
             )
         }
     }
@@ -697,6 +717,7 @@ fun PlacementStatCard(
 
 @Composable
 fun PlacementScopeItem(text: String) {
+    val metrics = placementTestMetrics()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -706,7 +727,7 @@ fun PlacementScopeItem(text: String) {
     ) {
         Box(
             modifier = Modifier
-                .size(22.dp)
+                .size(metrics.scopeIconBoxSize)
                 .clip(CircleShape)
                 .background(PastelGreen),
             contentAlignment = Alignment.Center
@@ -714,15 +735,15 @@ fun PlacementScopeItem(text: String) {
             Icon(
                 imageVector = Icons.Filled.Check,
                 contentDescription = null,
-                modifier = Modifier.size(14.dp),
+                modifier = Modifier.size(metrics.scopeIconSize),
                 tint = White
             )
         }
         KocKitSemiText(
             text = text,
             color = TextPrimary,
-            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-            lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+            fontSize = metrics.bodyLargeSize,
+            lineHeight = metrics.bodyLargeLineHeight
         )
     }
 }
@@ -809,40 +830,44 @@ fun PlacementAnswerOption(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val metrics = placementTestMetrics()
     val backgroundColor = if (isSelected) accentColor.copy(alpha = 0.1f) else Color.White
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(metrics.answerOptionCornerRadius))
             .background(backgroundColor)
             .border(
                 width = 1.dp,
                 color = if (isSelected) accentColor else Color(0xFFE8E8E8),
-                shape = RoundedCornerShape(14.dp)
+                shape = RoundedCornerShape(metrics.answerOptionCornerRadius)
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(
+                horizontal = metrics.answerOptionPaddingH,
+                vertical = metrics.answerOptionPaddingV
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         KocKitBoldText(
             text = label,
             color = if (isSelected) accentColor else TextSecondary,
-            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-            lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+            fontSize = metrics.bodyLargeSize,
+            lineHeight = metrics.bodyLargeLineHeight
         )
         Spacer(modifier = Modifier.width(12.dp))
         KocKitSemiText(
             text = text,
             color = TextPrimary,
-            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-            lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
+            fontSize = metrics.bodyLargeSize,
+            lineHeight = metrics.bodyLargeLineHeight,
             modifier = Modifier.weight(1f)
         )
         if (isSelected) {
             Box(
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(metrics.answerSelectedIndicatorSize)
                     .clip(CircleShape)
                     .background(accentColor),
                 contentAlignment = Alignment.Center
@@ -850,7 +875,7 @@ fun PlacementAnswerOption(
                 Icon(
                     imageVector = Icons.Filled.Check,
                     contentDescription = null,
-                    modifier = Modifier.size(14.dp),
+                    modifier = Modifier.size(metrics.answerSelectedCheckSize),
                     tint = White
                 )
             }
