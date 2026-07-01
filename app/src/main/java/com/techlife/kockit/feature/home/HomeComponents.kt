@@ -1031,7 +1031,7 @@ fun HomePlacementReminderCard(
                 modifier = Modifier.height(if (metrics.isExpanded) 46.dp else 40.dp)
             ) {
                 KocKitSemiText(
-                    text = "Teste Başla",
+                    text = "Teste Gir",
                     color = White,
                     fontSize = if (metrics.isExpanded) 14.sp else 10.sp,
                     lineHeight = if (metrics.isExpanded) 18.sp else 12.sp

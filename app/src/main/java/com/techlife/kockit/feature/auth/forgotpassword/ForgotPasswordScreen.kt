@@ -54,6 +54,7 @@ import com.techlife.kockit.core.designsystem.component.KocKitTextField
 import com.techlife.kockit.core.designsystem.component.LoginFieldShape
 import com.techlife.kockit.core.designsystem.layout.AuthFormContainer
 import com.techlife.kockit.core.designsystem.layout.AuthFormMetrics
+import com.techlife.kockit.core.designsystem.layout.rememberAuthFormMetrics
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
@@ -66,15 +67,24 @@ fun ForgotPasswordScreen(
     onNavigateBack: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onShowMessage: (String) -> Unit
+    onShowMessage: (String) -> Unit,
+    profileFlow: Boolean = false,
+    onCompleted: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(profileFlow) {
+        if (profileFlow) {
+            viewModel.startProfileFlow()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
                 ForgotPasswordEffect.NavigateBack -> onNavigateBack()
                 ForgotPasswordEffect.NavigateToLogin -> onNavigateToLogin()
+                ForgotPasswordEffect.Completed -> onCompleted()
                 is ForgotPasswordEffect.ShowMessage -> onShowMessage(effect.message)
             }
         }
@@ -95,45 +105,74 @@ private fun ForgotPasswordContent(
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
+    val metrics = rememberAuthFormMetrics()
+    val showTopBar = uiState.currentStep != ForgotPasswordSteps.EMAIL
+    val topBarTitle = when (uiState.currentStep) {
+        ForgotPasswordSteps.CODE -> "Doğrulama Kodu"
+        ForgotPasswordSteps.NEW_PASSWORD -> "Şifrenizi Yenileyin"
+        else -> ""
+    }
+
     KocKitBackground(useFormBackgroundImage = true) {
-        AuthFormContainer(
-            modifier = Modifier.windowInsetsPadding(WindowInsets.systemBars),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) { metrics ->
-            when (uiState.currentStep) {
-                ForgotPasswordSteps.EMAIL -> ForgotPasswordEmailStep(
-                    email = uiState.email,
-                    emailError = uiState.emailError,
-                    isLoading = uiState.isLoading,
-                    metrics = metrics,
-                    onEmailChange = { onEvent(ForgotPasswordEvent.EmailChanged(it)) },
-                    onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) },
-                    onNavigateToLogin = onNavigateToLogin,
-                    onNavigateToRegister = onNavigateToRegister
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars)
+        ) {
+            if (showTopBar) {
+                ForgotPasswordAuthTopBar(
+                    title = topBarTitle,
+                    onBackClick = { onEvent(ForgotPasswordEvent.BackClicked) },
+                    titleFontSize = if (metrics.isExpanded) 20.sp else 18.sp,
+                    metrics = metrics
                 )
-                ForgotPasswordSteps.CODE -> ForgotPasswordCodeStep(
-                    code = uiState.code,
-                    codeError = uiState.codeError,
-                    isLoading = uiState.isLoading,
-                    resendSecondsRemaining = uiState.resendSecondsRemaining,
+            }
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = if (metrics.isExpanded) Alignment.Center else Alignment.TopCenter
+            ) {
+                AuthFormContainer(
+                    fillHeight = !metrics.isExpanded,
                     metrics = metrics,
-                    onCodeChange = { onEvent(ForgotPasswordEvent.CodeChanged(it)) },
-                    onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) },
-                    onBack = { onEvent(ForgotPasswordEvent.BackClicked) },
-                    onResendCode = { onEvent(ForgotPasswordEvent.ResendCodeClicked) }
-                )
-                ForgotPasswordSteps.NEW_PASSWORD -> ForgotPasswordNewPasswordStep(
-                    newPassword = uiState.newPassword,
-                    confirmPassword = uiState.confirmPassword,
-                    newPasswordError = uiState.newPasswordError,
-                    confirmPasswordError = uiState.confirmPasswordError,
-                    isLoading = uiState.isLoading,
-                    metrics = metrics,
-                    onNewPasswordChange = { onEvent(ForgotPasswordEvent.NewPasswordChanged(it)) },
-                    onConfirmPasswordChange = { onEvent(ForgotPasswordEvent.ConfirmPasswordChanged(it)) },
-                    onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) },
-                    onBack = { onEvent(ForgotPasswordEvent.BackClicked) }
-                )
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) { formMetrics ->
+                    when (uiState.currentStep) {
+                        ForgotPasswordSteps.EMAIL -> ForgotPasswordEmailStep(
+                            email = uiState.email,
+                            emailError = uiState.emailError,
+                            isLoading = uiState.isLoading,
+                            metrics = formMetrics,
+                            onEmailChange = { onEvent(ForgotPasswordEvent.EmailChanged(it)) },
+                            onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) },
+                            onNavigateToLogin = onNavigateToLogin,
+                            onNavigateToRegister = onNavigateToRegister
+                        )
+                        ForgotPasswordSteps.CODE -> ForgotPasswordCodeStep(
+                            code = uiState.code,
+                            codeError = uiState.codeError,
+                            isLoading = uiState.isLoading,
+                            resendSecondsRemaining = uiState.resendSecondsRemaining,
+                            metrics = formMetrics,
+                            onCodeChange = { onEvent(ForgotPasswordEvent.CodeChanged(it)) },
+                            onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) },
+                            onResendCode = { onEvent(ForgotPasswordEvent.ResendCodeClicked) }
+                        )
+                        ForgotPasswordSteps.NEW_PASSWORD -> ForgotPasswordNewPasswordStep(
+                            newPassword = uiState.newPassword,
+                            confirmPassword = uiState.confirmPassword,
+                            newPasswordError = uiState.newPasswordError,
+                            confirmPasswordError = uiState.confirmPasswordError,
+                            isLoading = uiState.isLoading,
+                            metrics = formMetrics,
+                            onNewPasswordChange = { onEvent(ForgotPasswordEvent.NewPasswordChanged(it)) },
+                            onConfirmPasswordChange = { onEvent(ForgotPasswordEvent.ConfirmPasswordChanged(it)) },
+                            onContinue = { onEvent(ForgotPasswordEvent.ContinueClicked) }
+                        )
+                    }
+                }
             }
         }
     }
@@ -150,7 +189,9 @@ private fun ColumnScope.ForgotPasswordEmailStep(
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
-    Spacer(modifier = Modifier.height(metrics.topInset))
+    if (!metrics.isExpanded) {
+        Spacer(modifier = Modifier.height(metrics.topInset))
+    }
 
     ForgotPasswordLogo(
         size = metrics.brandLogoSize,
@@ -206,9 +247,7 @@ private fun ColumnScope.ForgotPasswordEmailStep(
         fontSize = metrics.buttonFontSize
     )
 
-    if (metrics.isExpanded) {
-        Spacer(modifier = Modifier.height(metrics.sectionSpacing))
-    } else {
+    if (!metrics.isExpanded) {
         Spacer(modifier = Modifier.weight(1f))
     }
 
@@ -242,19 +281,8 @@ private fun ColumnScope.ForgotPasswordCodeStep(
     metrics: AuthFormMetrics,
     onCodeChange: (String) -> Unit,
     onContinue: () -> Unit,
-    onBack: () -> Unit,
     onResendCode: () -> Unit
 ) {
-    Spacer(modifier = Modifier.height(metrics.smallSpacing))
-
-    ForgotPasswordAuthTopBar(
-        title = "Doğrulama Kodu",
-        onBackClick = onBack,
-        titleFontSize = if (metrics.isExpanded) 20.sp else 18.sp
-    )
-
-    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
-
     ForgotPasswordLogo(
         size = metrics.brandLogoSize,
         imageSize = metrics.brandLogoImageSize
@@ -340,19 +368,8 @@ private fun ColumnScope.ForgotPasswordNewPasswordStep(
     metrics: AuthFormMetrics,
     onNewPasswordChange: (String) -> Unit,
     onConfirmPasswordChange: (String) -> Unit,
-    onContinue: () -> Unit,
-    onBack: () -> Unit
+    onContinue: () -> Unit
 ) {
-    Spacer(modifier = Modifier.height(metrics.smallSpacing))
-
-    ForgotPasswordAuthTopBar(
-        title = "Şifrenizi Yenileyin",
-        onBackClick = onBack,
-        titleFontSize = if (metrics.isExpanded) 20.sp else 18.sp
-    )
-
-    Spacer(modifier = Modifier.height(metrics.sectionSpacing))
-
     ForgotPasswordLabeledField(
         label = "Yeni şifrenizi girin",
         metrics = metrics,
@@ -455,12 +472,14 @@ private fun ForgotPasswordLogo(
 private fun ForgotPasswordAuthTopBar(
     title: String,
     onBackClick: () -> Unit,
-    titleFontSize: androidx.compose.ui.unit.TextUnit = 18.sp
+    titleFontSize: androidx.compose.ui.unit.TextUnit = 18.sp,
+    metrics: AuthFormMetrics
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
+            .padding(horizontal = metrics.horizontalPadding)
+            .height(if (metrics.isExpanded) 56.dp else 48.dp)
     ) {
         Surface(
             modifier = Modifier
@@ -546,6 +565,45 @@ fun ForgotPasswordCodeStepPreview() {
 @Preview(showBackground = true)
 @Composable
 fun ForgotPasswordNewPasswordStepPreview() {
+    KocKitTheme {
+        ForgotPasswordContent(
+            uiState = ForgotPasswordUiState(currentStep = ForgotPasswordSteps.NEW_PASSWORD),
+            onEvent = {},
+            onNavigateToLogin = {},
+            onNavigateToRegister = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 840, heightDp = 1200, name = "Tablet Email")
+@Composable
+fun ForgotPasswordEmailTabletPreview() {
+    KocKitTheme {
+        ForgotPasswordContent(
+            uiState = ForgotPasswordUiState(currentStep = ForgotPasswordSteps.EMAIL),
+            onEvent = {},
+            onNavigateToLogin = {},
+            onNavigateToRegister = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 840, heightDp = 1200, name = "Tablet Code")
+@Composable
+fun ForgotPasswordCodeTabletPreview() {
+    KocKitTheme {
+        ForgotPasswordContent(
+            uiState = ForgotPasswordUiState(currentStep = ForgotPasswordSteps.CODE),
+            onEvent = {},
+            onNavigateToLogin = {},
+            onNavigateToRegister = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 840, heightDp = 1200, name = "Tablet New Password")
+@Composable
+fun ForgotPasswordNewPasswordTabletPreview() {
     KocKitTheme {
         ForgotPasswordContent(
             uiState = ForgotPasswordUiState(currentStep = ForgotPasswordSteps.NEW_PASSWORD),

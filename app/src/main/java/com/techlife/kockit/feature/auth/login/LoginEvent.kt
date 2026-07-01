@@ -1,7 +1,9 @@
 package com.techlife.kockit.feature.auth.login
 
 sealed interface LoginEvent {
-    data class EmailChanged(val email: String) : LoginEvent
+    data class LoginMethodChanged(val method: LoginMethod) : LoginEvent
+    data class NicknameChanged(val nickname: String) : LoginEvent
+    data class PhoneChanged(val phone: String) : LoginEvent
     data class PasswordChanged(val password: String) : LoginEvent
     data object PasswordVisibilityChanged : LoginEvent
     data object LoginClicked : LoginEvent

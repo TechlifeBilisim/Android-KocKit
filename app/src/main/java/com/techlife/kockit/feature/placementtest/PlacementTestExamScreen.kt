@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
@@ -64,7 +66,6 @@ fun PlacementTestExamContent(
         (examState.questions.size - 1).coerceAtLeast(0)
     )
     val question = examState.questions.getOrNull(questionIndex)
-    val optionLabels = listOf("A", "B", "C", "D", "E")
     val isLastQuestion = examState.currentQuestionIndex >= examState.totalQuestions - 1
 
     PlacementTestDecorBackground(accentSoftColor = section.accentSoftColor) {
@@ -110,8 +111,15 @@ fun PlacementTestExamContent(
                         totalQuestions = examState.totalQuestions,
                         accentColor = PlacementTestColors.green
                     )
+                }
 
-                    question?.let { current ->
+                question?.let { current ->
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
+                    ) {
                         Spacer(modifier = Modifier.height(14.dp))
 
                         PlacementSubjectChip(
@@ -119,7 +127,7 @@ fun PlacementTestExamContent(
                             accentColor = section.accentColor
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         if (current.prompt.isNotBlank()) {
                             KocKitBoldText(
@@ -128,62 +136,57 @@ fun PlacementTestExamContent(
                                 fontSize = metrics.bodyLargeSize,
                                 lineHeight = metrics.bodyLargeLineHeight
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
+
                         if (current.detail.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(12.dp))
                             KocKitSemiText(
                                 text = current.detail,
                                 color = TextPrimary,
-                                fontSize = metrics.bodyLargeSize,
-                                lineHeight = metrics.bodyLargeLineHeight
+                                fontSize = metrics.bodySize,
+                                lineHeight = metrics.bodyLineHeight
                             )
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
-                    }
-                }
 
-                question?.let { current ->
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        current.options.forEachIndexed { index, optionText ->
-                            PlacementAnswerOption(
-                                label = optionLabels.getOrElse(index) { "" },
-                                text = optionText,
-                                isSelected = examState.selectedOptionIndex == index,
-                                accentColor = PlacementTestColors.green,
-                                onClick = { onSelectOption(index) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
+                        PlacementQuestionImage(imageResId = current.imageResId)
                     }
                 } ?: Spacer(modifier = Modifier.weight(1f))
 
-                Box(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = metrics.bottomInset),
-                    contentAlignment = Alignment.CenterEnd
+                        .padding(top = 12.dp, bottom = metrics.bottomInset)
                 ) {
-                    Button(
-                        onClick = {
-                            if (isLastQuestion) onFinishExam()
-                            else onNextClick()
-                        },
-                        enabled = examState.selectedOptionIndex != null,
-                        modifier = Modifier.height(metrics.primaryButtonHeight),
-                        shape = RoundedCornerShape(metrics.answerOptionCornerRadius),
-                        colors = ButtonDefaults.buttonColors(containerColor = PlacementTestColors.green)
+                    PlacementAnswerRadioRow(
+                        selectedIndex = examState.selectedOptionIndex,
+                        onOptionSelected = onSelectOption,
+                        accentColor = PlacementTestColors.green
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.CenterEnd
                     ) {
-                        KocKitSemiText(
-                            text = if (isLastQuestion) "Bitir" else "Sonraki",
-                            color = White,
-                            fontSize = metrics.primaryButtonTextSize,
-                            lineHeight = metrics.bodyLargeLineHeight
-                        )
+                        Button(
+                            onClick = {
+                                if (isLastQuestion) onFinishExam()
+                                else onNextClick()
+                            },
+                            enabled = examState.selectedOptionIndex != null,
+                            modifier = Modifier.height(metrics.primaryButtonHeight),
+                            shape = RoundedCornerShape(metrics.answerOptionCornerRadius),
+                            colors = ButtonDefaults.buttonColors(containerColor = PlacementTestColors.green)
+                        ) {
+                            KocKitSemiText(
+                                text = if (isLastQuestion) "Bitir" else "Sonraki",
+                                color = White,
+                                fontSize = metrics.primaryButtonTextSize,
+                                lineHeight = metrics.bodyLargeLineHeight
+                            )
+                        }
                     }
                 }
             }
@@ -203,9 +206,8 @@ fun PlacementTestExamScreenPreview() {
                 selectedOptionIndex = 1,
                 questions = listOf(
                     PlacementQuestion(
-                        prompt = "1. x > 2 olmak üzere,",
-                        detail = "f(x) = (x² - 4) / (x - 2) fonksiyonunun lim(x→2) f(x) değeri kaçtır?",
-                        options = listOf("0", "2", "4", "-2", "1"),
+                        prompt = "Soru 1",
+                        detail = "Grafikte verilen fonksiyon için doğru seçeneği işaretleyin.",
                         subject = "Matematik"
                     )
                 )
@@ -227,12 +229,11 @@ fun PlacementTestExamScreenTabletPreview() {
             examState = PlacementExamUiState(
                 currentQuestionIndex = 0,
                 timerText = "03:45",
-                selectedOptionIndex = 1,
+                selectedOptionIndex = 2,
                 questions = listOf(
                     PlacementQuestion(
-                        prompt = "1. x > 2 olmak üzere,",
-                        detail = "f(x) = (x² - 4) / (x - 2) fonksiyonunun lim(x→2) f(x) değeri kaçtır?",
-                        options = listOf("0", "2", "4", "-2", "1"),
+                        prompt = "Soru 1",
+                        detail = "Grafikte verilen fonksiyon için doğru seçeneği işaretleyin.",
                         subject = "Matematik"
                     )
                 )

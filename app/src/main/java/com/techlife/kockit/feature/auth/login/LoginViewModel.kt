@@ -24,9 +24,29 @@ class LoginViewModel @Inject constructor() : ViewModel() {
 
     fun onEvent(event: LoginEvent) {
         when (event) {
-            is LoginEvent.EmailChanged -> _uiState.update { it.copy(email = event.email, emailError = null) }
-            is LoginEvent.PasswordChanged -> _uiState.update { it.copy(password = event.password, passwordError = null) }
-            LoginEvent.PasswordVisibilityChanged -> _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
+            is LoginEvent.LoginMethodChanged -> _uiState.update {
+                it.copy(
+                    loginMethod = event.method,
+                    nicknameError = null,
+                    phoneError = null,
+                    passwordError = null
+                )
+            }
+            is LoginEvent.NicknameChanged -> _uiState.update {
+                it.copy(nickname = event.nickname, nicknameError = null)
+            }
+            is LoginEvent.PhoneChanged -> _uiState.update {
+                it.copy(
+                    phone = event.phone.filter(Char::isDigit).take(11),
+                    phoneError = null
+                )
+            }
+            is LoginEvent.PasswordChanged -> _uiState.update {
+                it.copy(password = event.password, passwordError = null)
+            }
+            LoginEvent.PasswordVisibilityChanged -> _uiState.update {
+                it.copy(isPasswordVisible = !it.isPasswordVisible)
+            }
             LoginEvent.LoginClicked -> emit(LoginEffect.NavigateToGoalSetup)
             LoginEvent.RegisterClicked -> emit(LoginEffect.NavigateToRegister)
             LoginEvent.ForgotPasswordClicked -> emit(LoginEffect.NavigateToForgotPassword)

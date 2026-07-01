@@ -148,7 +148,6 @@ private fun GoalSetupExamStep(
     val examIcons = mapOf(
         "tyt" to Icons.Outlined.Assignment,
         "ayt" to Icons.Filled.MenuBook,
-        "yks" to Icons.Filled.Badge
     )
     uiState.examGoals.forEachIndexed { index, goal ->
         val cardColor = if (goal.id == "tyt") {
@@ -188,6 +187,11 @@ private fun GoalSetupExamStep(
         fontSize = KocKitTextDefaults.fontSizeTitle,
         lineHeight = KocKitTextDefaults.lineHeightTitle
     )
+    GoalSetupUniversityTypeSwitch(
+        selectedType = uiState.selectedUniversityType,
+        onTypeSelected = { onEvent(GoalSetupEvent.UniversityTypeSelected(it)) }
+    )
+    uiState.universityTypeError?.let { KocKitText(text = it, color = colors.coralAccent) }
     KocKitDropdownField(
         label = "Bölge",
         options = uiState.availableRegions,
@@ -206,17 +210,7 @@ private fun GoalSetupExamStep(
         searchable = true,
         searchPlaceholder = "İl ara..."
     )
-    KocKitSemiText(
-        text = "Üniversite Türü",
-        color = colors.textPrimary,
-        fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-        lineHeight = KocKitTextDefaults.lineHeightBodyLarge
-    )
-    GoalSetupUniversityTypeSwitch(
-        selectedType = uiState.selectedUniversityType,
-        onTypeSelected = { onEvent(GoalSetupEvent.UniversityTypeSelected(it)) }
-    )
-    uiState.universityTypeError?.let { KocKitText(text = it, color = colors.coralAccent) }
+
     KocKitDropdownField(
         label = "Üniversite",
         options = uiState.universities.map { it.name },
@@ -438,7 +432,6 @@ private fun GoalSetupScreenPreview() {
                 examGoals = listOf(
                     ExamGoal("tyt", "TYT", "Temel Yeterlilik Testi", "tyt"),
                     ExamGoal("ayt", "AYT", "Alan Yeterlilik Testi", "ayt"),
-                    ExamGoal("yks", "YKS", "Yükseköğretim Kurumları Sınavı", "yks")
                 ),
                 universities = listOf(
                     University("u001", "Boğaziçi Üniversitesi", "İstanbul", "Marmara", UniversityType.DEVLET),

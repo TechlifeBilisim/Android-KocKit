@@ -164,10 +164,37 @@ private fun StudyPlanBorderedCard(
 }
 
 @Composable
+private fun StudyPlanSectionEditAction(
+    isEditing: Boolean,
+    onEditClick: () -> Unit,
+    onSaveClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val metrics = studyPlanMetrics()
+    val label = if (isEditing) "Kaydet" else "Düzenle"
+    val textColor = if (isEditing) StudyPlanStyle.emerald else LogoBlue
+    val onClick = if (isEditing) onSaveClick else onEditClick
+
+    KocKitSemiText(
+        text = label,
+        color = textColor,
+        fontSize = metrics.badgeTextSize,
+        lineHeight = metrics.badgeTextLineHeight,
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 4.dp, vertical = 2.dp)
+    )
+}
+
+@Composable
 fun StudyPlanDaysSection(
     days: List<StudyPlanDay>,
     totalHours: Int,
     onHoursChange: (Int, Int) -> Unit,
+    isEditing: Boolean,
+    onEditClick: () -> Unit,
+    onSaveClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val metrics = studyPlanMetrics()
@@ -202,6 +229,12 @@ fun StudyPlanDaysSection(
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            StudyPlanSectionEditAction(
+                isEditing = isEditing,
+                onEditClick = onEditClick,
+                onSaveClick = onSaveClick
+            )
         }
         Spacer(modifier = Modifier.height(14.dp))
         days.chunked(4).forEachIndexed { rowIndex, rowDays ->
@@ -213,6 +246,7 @@ fun StudyPlanDaysSection(
                     val dayIndex = rowIndex * 4 + colIndex
                     StudyPlanDayCard(
                         day = day,
+                        enabled = isEditing,
                         onHoursChange = { onHoursChange(dayIndex, it) },
                         modifier = Modifier.weight(1f)
                     )
@@ -232,11 +266,14 @@ fun StudyPlanDaysSection(
 fun StudyPlanDayCard(
     day: StudyPlanDay,
     onHoursChange: (Int) -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val metrics = studyPlanMetrics()
     Surface(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (!enabled) Modifier else Modifier),
         shape = RoundedCornerShape(12.dp),
         color = White,
         border = BorderStroke(1.dp, StudyPlanStyle.dayCardBorder)
@@ -259,16 +296,25 @@ fun StudyPlanDayCard(
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Box(contentAlignment = Alignment.Center) {
-                    KocKitNumberPickerField(
-                        value = day.hours,
-                        onValueChange = onHoursChange,
-                        range = 0..12,
-                        pickerTitle = "${day.name} - Saat",
-                        showContainer = false,
-                        centerFontSize = metrics.dayHourPickerSize,
-                        centerLineHeight = metrics.dayHourPickerLineHeight,
-                        modifier = Modifier.width(metrics.dayPickerWidth)
-                    )
+                    if (enabled) {
+                        KocKitNumberPickerField(
+                            value = day.hours,
+                            onValueChange = onHoursChange,
+                            range = 0..12,
+                            pickerTitle = "${day.name} - Saat",
+                            showContainer = false,
+                            centerFontSize = metrics.dayHourPickerSize,
+                            centerLineHeight = metrics.dayHourPickerLineHeight,
+                            modifier = Modifier.width(metrics.dayPickerWidth)
+                        )
+                    } else {
+                        KocKitBoldText(
+                            text = day.hours.toString(),
+                            color = TextPrimary,
+                            fontSize = metrics.dayHourPickerSize,
+                            lineHeight = metrics.dayHourPickerLineHeight
+                        )
+                    }
                 }
                 KocKitText(
                     text = "Saat",
@@ -276,13 +322,15 @@ fun StudyPlanDayCard(
                     fontSize = metrics.smallCaptionSize,
                     lineHeight = metrics.smallCaptionLineHeight
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                StudyPlanDayStepper(
-                    value = day.hours,
-                    onValueChange = onHoursChange,
-                    range = 0..12,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                if (enabled) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    StudyPlanDayStepper(
+                        value = day.hours,
+                        onValueChange = onHoursChange,
+                        range = 0..12,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }
@@ -347,9 +395,20 @@ fun StudyPlanParameterStepper(
     range: IntRange,
     pickerTitle: String,
     suffix: String,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val metrics = studyPlanMetrics()
+    if (!enabled) {
+        KocKitSemiText(
+            text = if (suffix.isBlank()) value.toString() else "$value $suffix",
+            color = TextPrimary,
+            fontSize = metrics.parameterPickerSize,
+            lineHeight = metrics.parameterPickerLineHeight,
+            modifier = modifier
+        )
+        return
+    }
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -418,10 +477,31 @@ fun StudyPlanParametersSection(
     revisionDay: String?,
     onRevisionDayChange: (String) -> Unit,
     revisionOptions: List<String>,
+    isEditing: Boolean,
+    onEditClick: () -> Unit,
+    onSaveClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val metrics = studyPlanMetrics()
     StudyPlanBorderedCard(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            KocKitSemiText(
+                text = "Çalışma Parametreleri",
+                color = TextPrimary,
+                fontSize = metrics.sectionTitleSize,
+                lineHeight = metrics.sectionTitleLineHeight,
+                modifier = Modifier.weight(1f)
+            )
+            StudyPlanSectionEditAction(
+                isEditing = isEditing,
+                onEditClick = onEditClick,
+                onSaveClick = onSaveClick
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
         StudyPlanParameterRow(
             icon = Icons.Outlined.Schedule,
             iconTint = LavenderAccent,
@@ -435,6 +515,7 @@ fun StudyPlanParametersSection(
                     range = 15..180,
                     pickerTitle = "Oturum Süresi (dk)",
                     suffix = "dk",
+                    enabled = isEditing,
                     modifier = Modifier.width(metrics.parameterStepperWidth)
                 )
             }
@@ -453,6 +534,7 @@ fun StudyPlanParametersSection(
                     range = 0..120,
                     pickerTitle = "Günlük Paragraf Süresi (dk)",
                     suffix = "dk",
+                    enabled = isEditing,
                     modifier = Modifier.width(metrics.parameterStepperWidth)
                 )
             }
@@ -471,6 +553,7 @@ fun StudyPlanParametersSection(
                     range = 0..120,
                     pickerTitle = "Günlük Problem Süresi (dk)",
                     suffix = "dk",
+                    enabled = isEditing,
                     modifier = Modifier.width(metrics.parameterStepperWidth)
                 )
             }
@@ -487,6 +570,7 @@ fun StudyPlanParametersSection(
                     selected = revisionDay,
                     options = revisionOptions,
                     onSelected = onRevisionDayChange,
+                    enabled = isEditing,
                     modifier = Modifier.width(metrics.dropdownWidth)
                 )
             }
@@ -544,11 +628,23 @@ fun StudyPlanCompactDropdown(
     selected: String?,
     options: List<String>,
     onSelected: (String) -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val metrics = studyPlanMetrics()
     var expanded by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    if (!enabled) {
+        KocKitSemiText(
+            text = selected.orEmpty(),
+            color = TextPrimary,
+            fontSize = metrics.parameterPickerSize,
+            lineHeight = metrics.parameterPickerLineHeight,
+            modifier = modifier,
+            maxLines = 1
+        )
+        return
+    }
     Surface(
         onClick = { expanded = true },
         modifier = modifier,
@@ -629,11 +725,17 @@ fun StudyPlanUnavailableSection(
     onUnavailableDayToggle: (String) -> Unit,
     onRemoveSpecialDate: (String) -> Unit,
     onAddSpecialDateClick: () -> Unit,
+    isEditing: Boolean,
+    onEditClick: () -> Unit,
+    onSaveClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val metrics = studyPlanMetrics()
     StudyPlanBorderedCard(modifier = modifier) {
-        Row(verticalAlignment = Alignment.Top) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Icon(
                 imageVector = Icons.Outlined.Block,
                 contentDescription = null,
@@ -641,23 +743,27 @@ fun StudyPlanUnavailableSection(
                 modifier = Modifier.size(if (metrics.isExpanded) 22.dp else 18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                KocKitSemiText(
-                    text = "Çalışamayacağım Günler",
-                    color = TextPrimary,
-                    fontSize = metrics.sectionTitleSize,
-                    lineHeight = metrics.sectionTitleLineHeight
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                KocKitText(
-                    text = "Bu günlerde çalışma programı oluşturulmayacaktır.",
-                    color = TextSecondary,
-                    fontSize = metrics.rowSubtitleSize,
-                    lineHeight = metrics.rowSubtitleLineHeight,
-                    maxLines = 2
-                )
-            }
+            KocKitSemiText(
+                text = "Çalışamayacağım Günler",
+                color = TextPrimary,
+                fontSize = metrics.sectionTitleSize,
+                lineHeight = metrics.sectionTitleLineHeight,
+                modifier = Modifier.weight(1f)
+            )
+            StudyPlanSectionEditAction(
+                isEditing = isEditing,
+                onEditClick = onEditClick,
+                onSaveClick = onSaveClick
+            )
         }
+        Spacer(modifier = Modifier.height(4.dp))
+        KocKitText(
+            text = "Bu günlerde çalışma programı oluşturulmayacaktır.",
+            color = TextSecondary,
+            fontSize = metrics.rowSubtitleSize,
+            lineHeight = metrics.rowSubtitleLineHeight,
+            maxLines = 2
+        )
         Spacer(modifier = Modifier.height(16.dp))
         StudyPlanNumberedSubsection(
             number = "1.",
@@ -671,7 +777,8 @@ fun StudyPlanUnavailableSection(
         StudyPlanUnavailableDaySelector(
             options = weekDayOptions,
             selectedShortNames = selectedUnavailableDays,
-            onDayToggle = onUnavailableDayToggle
+            onDayToggle = onUnavailableDayToggle,
+            enabled = isEditing
         )
         Spacer(modifier = Modifier.height(16.dp))
         StudyPlanRowDivider()
@@ -688,11 +795,14 @@ fun StudyPlanUnavailableSection(
         specialDates.forEach { date ->
             StudyPlanSpecialDateItem(
                 item = date,
-                onRemove = { onRemoveSpecialDate(date.id) }
+                onRemove = { onRemoveSpecialDate(date.id) },
+                canRemove = isEditing
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
-        StudyPlanAddDateButton(onClick = onAddSpecialDateClick)
+        if (isEditing) {
+            StudyPlanAddDateButton(onClick = onAddSpecialDateClick)
+        }
     }
 }
 
@@ -733,6 +843,7 @@ fun StudyPlanUnavailableDaySelector(
     options: List<StudyPlanWeekDayOption>,
     selectedShortNames: Set<String>,
     onDayToggle: (String) -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val metrics = studyPlanMetrics()
@@ -752,7 +863,13 @@ fun StudyPlanUnavailableDaySelector(
                     .clip(RoundedCornerShape(10.dp))
                     .background(bg)
                     .border(1.dp, borderColor, RoundedCornerShape(10.dp))
-                    .clickable { onDayToggle(option.shortName) },
+                    .then(
+                        if (enabled) {
+                            Modifier.clickable { onDayToggle(option.shortName) }
+                        } else {
+                            Modifier
+                        }
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 if (selected) {
@@ -788,6 +905,7 @@ fun StudyPlanUnavailableDaySelector(
 fun StudyPlanSpecialDateItem(
     item: StudyPlanSpecialDate,
     onRemove: () -> Unit,
+    canRemove: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val metrics = studyPlanMetrics()
@@ -822,16 +940,18 @@ fun StudyPlanSpecialDateItem(
                     )
                 }
             }
-            IconButton(
-                onClick = onRemove,
-                modifier = Modifier.size(if (metrics.isExpanded) 32.dp else 28.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = "Kaldır",
-                    tint = TextSecondary.copy(alpha = 0.6f),
-                    modifier = Modifier.size(if (metrics.isExpanded) 16.dp else 14.dp)
-                )
+            if (canRemove) {
+                IconButton(
+                    onClick = onRemove,
+                    modifier = Modifier.size(if (metrics.isExpanded) 32.dp else 28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Kaldır",
+                        tint = TextSecondary.copy(alpha = 0.6f),
+                        modifier = Modifier.size(if (metrics.isExpanded) 16.dp else 14.dp)
+                    )
+                }
             }
         }
     }

@@ -138,9 +138,22 @@ fun AuthFormContainer(
     content: @Composable ColumnScope.(AuthFormMetrics) -> Unit
 ) {
     val useFullHeight = fillHeight && !metrics.isExpanded
+    val centerOnTablet = metrics.isExpanded && fillHeight
+    val centerWrappedContent = metrics.isExpanded && !fillHeight
     Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter
+        modifier = modifier
+            .fillMaxWidth()
+            .then(
+                if (useFullHeight || centerOnTablet) {
+                    Modifier.fillMaxSize()
+                } else {
+                    Modifier
+                }
+            ),
+        contentAlignment = when {
+            centerOnTablet || centerWrappedContent -> Alignment.Center
+            else -> Alignment.TopCenter
+        }
     ) {
         Column(
             modifier = Modifier

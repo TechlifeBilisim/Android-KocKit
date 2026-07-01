@@ -30,6 +30,8 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.EmojiEvents
 import androidx.compose.material.icons.outlined.EventBusy
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Psychology
@@ -62,6 +64,7 @@ import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.layout.LocalProfileLayoutMetrics
 import com.techlife.kockit.core.designsystem.layout.ProfileLayoutMetrics
 import com.techlife.kockit.core.designsystem.theme.CardShape
+import com.techlife.kockit.core.designsystem.theme.ErrorAccent
 import com.techlife.kockit.core.designsystem.theme.LavenderAccent
 import com.techlife.kockit.core.designsystem.theme.OrangeAccent
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
@@ -651,6 +654,110 @@ private fun ProfileStudyDetailCell(
             textAlign = TextAlign.Center
         )
     }
+}
+
+@Composable
+fun ProfileAccountSettingsCard(
+    onPersonalInfoClick: () -> Unit,
+    onChangePasswordClick: () -> Unit,
+    onGoalsClick: () -> Unit,
+    onLogoutClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val metrics = profileMetrics()
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = CardShape,
+        colors = CardDefaults.cardColors(containerColor = White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(metrics.cardInnerPadding)
+        ) {
+            KocKitBoldText(
+                text = "Hesap Ayarları",
+                color = TextPrimary,
+                fontSize = metrics.cardTitleSize,
+                lineHeight = metrics.cardTitleLineHeight
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            ProfileAccountSettingRow(
+                label = "Kişisel Bilgiler",
+                icon = Icons.Outlined.Person,
+                onClick = onPersonalInfoClick
+            )
+            ProfileAccountSettingDivider()
+            ProfileAccountSettingRow(
+                label = "Şifre Değiştir",
+                icon = Icons.Outlined.Lock,
+                onClick = onChangePasswordClick
+            )
+            ProfileAccountSettingDivider()
+            ProfileAccountSettingRow(
+                label = "Hedefler",
+                icon = Icons.Outlined.TrackChanges,
+                onClick = onGoalsClick
+            )
+            ProfileAccountSettingDivider()
+            ProfileAccountSettingRow(
+                label = "Çıkış Yap",
+                icon = Icons.Outlined.Logout,
+                onClick = onLogoutClick,
+                isDestructive = true
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProfileAccountSettingRow(
+    label: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    isDestructive: Boolean = false
+) {
+    val metrics = profileMetrics()
+    val contentColor = if (isDestructive) ErrorAccent else TextPrimary
+    val iconTint = if (isDestructive) ErrorAccent else TextSecondary.copy(alpha = 0.75f)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconTint,
+            modifier = Modifier.size(metrics.infoIconSize + 2.dp)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        KocKitSemiText(
+            text = label,
+            color = contentColor,
+            fontSize = metrics.cardBodySize,
+            lineHeight = metrics.cardBodyLineHeight,
+            modifier = Modifier.weight(1f)
+        )
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = if (isDestructive) ErrorAccent else PastelGreen,
+            modifier = Modifier.size(if (metrics.isExpanded) 22.dp else 20.dp)
+        )
+    }
+}
+
+@Composable
+private fun ProfileAccountSettingDivider() {
+    HorizontalDivider(
+        thickness = 1.dp,
+        color = ProfileCardStyle.dividerColor
+    )
 }
 
 @Composable

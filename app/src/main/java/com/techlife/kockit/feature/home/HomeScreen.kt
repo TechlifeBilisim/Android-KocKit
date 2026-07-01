@@ -71,6 +71,7 @@ fun HomeScreen(
         }
     ) {
         val metrics = rememberHomeLayoutMetrics()
+        val placementPending = uiState.showPlacementReminderCard
 
         HomeContentContainer(metrics = metrics) {
             LazyColumn(
@@ -87,52 +88,56 @@ fun HomeScreen(
                         onSearchClick = onSearchClick
                     )
                 }
-                item(key = "greeting") {
-                    HomeGreetingSection(
-                        userName = uiState.fullName.ifBlank { HomeFakeData.USER_NAME }
-                    )
+                if (!placementPending) {
+                    item(key = "greeting") {
+                        HomeGreetingSection(
+                            userName = uiState.fullName.ifBlank { HomeFakeData.USER_NAME }
+                        )
+                    }
+                    item(key = "daily_goal") {
+                        HomeDailyGoalCard(
+                            completedNet = HomeFakeData.DAILY_GOAL_COMPLETED,
+                            totalNet = HomeFakeData.DAILY_GOAL_TOTAL,
+                            remainingNet = HomeFakeData.DAILY_GOAL_REMAINING
+                        )
+                    }
                 }
-                item(key = "daily_goal") {
-                    HomeDailyGoalCard(
-                        completedNet = HomeFakeData.DAILY_GOAL_COMPLETED,
-                        totalNet = HomeFakeData.DAILY_GOAL_TOTAL,
-                        remainingNet = HomeFakeData.DAILY_GOAL_REMAINING
-                    )
-                }
-                if (uiState.showPlacementReminderCard) {
+                if (placementPending) {
                     item(key = "placement_reminder") {
                         HomePlacementReminderCard(
                             onClick = viewModel::onPlacementReminderClick
                         )
                     }
                 }
-                item(key = "stats_carousel") {
-                    HomeStatsCarousel()
-                }
-                if (metrics.useTwoColumnInsights) {
-                    item(key = "priority_performance") {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(metrics.sectionSpacing)
-                        ) {
-                            HomePriorityCard(
-                                lessons = HomeFakeData.priorityLessons,
-                                modifier = Modifier.weight(1f)
-                            )
-                            HomePerformanceCard(modifier = Modifier.weight(1f))
+                if (!placementPending) {
+                    item(key = "stats_carousel") {
+                        HomeStatsCarousel()
+                    }
+                    if (metrics.useTwoColumnInsights) {
+                        item(key = "priority_performance") {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(metrics.sectionSpacing)
+                            ) {
+                                HomePriorityCard(
+                                    lessons = HomeFakeData.priorityLessons,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                HomePerformanceCard(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    } else {
+                        item(key = "priority") {
+                            HomePriorityCard(lessons = HomeFakeData.priorityLessons)
+                        }
+                        item(key = "performance") {
+                            HomePerformanceCard()
                         }
                     }
-                } else {
-                    item(key = "priority") {
-                        HomePriorityCard(lessons = HomeFakeData.priorityLessons)
+                    item(key = "goal_banner") {
+                        HomeGoalBannerCard()
+                        Spacer(modifier = Modifier.height(metrics.topInset))
                     }
-                    item(key = "performance") {
-                        HomePerformanceCard()
-                    }
-                }
-                item(key = "goal_banner") {
-                    HomeGoalBannerCard()
-                    Spacer(modifier = Modifier.height(metrics.topInset))
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.techlife.kockit.feature.auth.register
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,14 +12,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Tag
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -40,8 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.techlife.kockit.R
 import com.techlife.kockit.core.designsystem.background.KocKitBackground
-import com.techlife.kockit.core.designsystem.component.KocKitBoldText
-import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.component.KocKitPasswordField
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
@@ -51,9 +53,12 @@ import com.techlife.kockit.core.designsystem.component.KocKitTextField
 import com.techlife.kockit.core.designsystem.component.KocKitTopBar
 import com.techlife.kockit.core.designsystem.layout.AuthFormContainer
 import com.techlife.kockit.core.designsystem.layout.AuthFormMetrics
+import com.techlife.kockit.core.designsystem.layout.rememberAuthFormMetrics
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.KocKitFontFamily
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
+import com.techlife.kockit.core.designsystem.theme.TextPrimary
+import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -63,8 +68,17 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
+import com.techlife.kockit.core.designsystem.component.KocKitOtpCodeField
+import com.techlife.kockit.core.designsystem.component.LoginFieldShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
+import com.techlife.kockit.feature.auth.common.AuthMethodTabs
+import com.techlife.kockit.feature.auth.common.AuthPhoneNumberField
+import com.techlife.kockit.feature.auth.common.KVKK_AGREEMENT_TEXT
+import com.techlife.kockit.feature.auth.common.LegalAgreementDialog
+import com.techlife.kockit.feature.auth.common.TERMS_AGREEMENT_TEXT
 import com.techlife.kockit.core.auth.GoogleSignInHelper
 import kotlinx.coroutines.flow.collectLatest
 
@@ -121,34 +135,51 @@ private fun RegisterScreenContent(
     onEvent: (RegisterEvent) -> Unit,
     onGoogleClicked: () -> Unit
 ) {
-    val isStep1Filled =
-        uiState.fullName.isNotBlank() &&
-            uiState.email.isNotBlank() &&
-            uiState.nickname.isNotBlank() &&
-            uiState.password.isNotBlank() &&
-            uiState.confirmPassword.isNotBlank() &&
-            uiState.isTermsAccepted
-
-    val continueEnabled = when (uiState.currentStep) {
-        1 -> isStep1Filled
-        else -> true
+    val continueButtonText = when (uiState.currentStep) {
+        RegisterSteps.ACCOUNT -> "Devam Et"
+        RegisterSteps.VERIFICATION -> "Kod Gönder"
+        RegisterSteps.OTP -> "Doğrula"
+        else -> "Devam Et"
     }
+
+    val metrics = rememberAuthFormMetrics()
 
     KocKitBackground(useFormBackgroundImage = true) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .then(
+                    if (!metrics.isExpanded) {
+                        Modifier.verticalScroll(rememberScrollState())
+                    } else {
+                        Modifier
+                    }
+                )
         ) {
             KocKitTopBar(onBackClick = { onEvent(RegisterEvent.BackClicked) })
-            AuthFormContainer(fillHeight = false) { metrics ->
-                RegisterFormBody(
-                    uiState = uiState,
-                    metrics = metrics,
-                    continueEnabled = continueEnabled,
-                    onEvent = onEvent,
-                    onGoogleClicked = onGoogleClicked
-                )
+            Box(
+                modifier = if (metrics.isExpanded) {
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                } else {
+                    Modifier.fillMaxWidth()
+                },
+                contentAlignment = if (metrics.isExpanded) Alignment.Center else Alignment.TopCenter
+            ) {
+                AuthFormContainer(
+                    fillHeight = false,
+                    metrics = metrics
+                ) {
+                    RegisterFormBody(
+                        uiState = uiState,
+                        metrics = metrics,
+                        continueButtonText = continueButtonText,
+                        onEvent = onEvent,
+                        onGoogleClicked = onGoogleClicked
+                    )
+                }
             }
         }
     }
@@ -158,24 +189,33 @@ private fun RegisterScreenContent(
 private fun RegisterFormBody(
     uiState: RegisterUiState,
     metrics: AuthFormMetrics,
-    continueEnabled: Boolean,
+    continueButtonText: String,
     onEvent: (RegisterEvent) -> Unit,
     onGoogleClicked: () -> Unit
 ) {
-    if (metrics.isExpanded) {
-        Spacer(modifier = Modifier.height(40.dp))
+    val stepTitle = when (uiState.currentStep) {
+        RegisterSteps.ACCOUNT -> "Kayıt Ol"
+        RegisterSteps.VERIFICATION -> "Hesabını Doğrula"
+        RegisterSteps.OTP -> "Doğrulama Kodu"
+        else -> "Kayıt Ol"
     }
+
+    if (!metrics.isExpanded) {
+        Spacer(modifier = Modifier.height(metrics.topInset))
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(metrics.fieldSpacing)) {
         KocKitExtraBoldText(
-            text = "Kayıt Ol",
+            text = stepTitle,
             fontSize = metrics.headlineFontSize,
             lineHeight = metrics.headlineLineHeight,
             color = Color.Black
         )
         KocKitSemiText(
             text = when (uiState.currentStep) {
-                1 -> "Hesabını oluştur ve hedeflerine ulaş."
-                2 -> "Hesabını doğrula."
+                RegisterSteps.ACCOUNT -> "Hesabını oluştur ve hedeflerine ulaş."
+                RegisterSteps.VERIFICATION -> "Doğrulama kodunu almak için e-posta veya telefonunu gir."
+                RegisterSteps.OTP -> "Gönderilen doğrulama kodunu gir."
                 else -> "Kaydını tamamla."
             },
             fontSize = metrics.bodyFontSize,
@@ -183,54 +223,48 @@ private fun RegisterFormBody(
         )
 
         when (uiState.currentStep) {
-            1 -> RegisterStep1Content(uiState, metrics, onEvent)
-            2 -> RegisterStepPlaceholderContent(
-                title = "Doğrula",
-                description = "Doğrulama adımı tasarımı yakında eklenecek.",
-                metrics = metrics
-            )
-            3 -> RegisterStepPlaceholderContent(
-                title = "Tamamla",
-                description = "Tamamlama adımı tasarımı yakında eklenecek.",
-                metrics = metrics
-            )
+            RegisterSteps.ACCOUNT -> RegisterStep1Content(uiState, metrics, onEvent)
+            RegisterSteps.VERIFICATION -> RegisterVerificationStep(uiState, metrics, onEvent)
+            RegisterSteps.OTP -> RegisterOtpStep(uiState, metrics, onEvent)
         }
 
         Spacer(modifier = Modifier.height(metrics.smallSpacing))
 
         KocKitPrimaryButton(
-            text = "Devam Et",
+            text = continueButtonText,
             onClick = { onEvent(RegisterEvent.ContinueClicked) },
-            enabled = continueEnabled,
+            enabled = !uiState.isLoading,
             isLoading = uiState.isLoading,
-            showTrailingArrow = true,
+            showTrailingArrow = uiState.currentStep == RegisterSteps.ACCOUNT,
             containerColor = PastelGreen,
             height = metrics.buttonHeight,
             fontSize = metrics.buttonFontSize
         )
 
-        Spacer(modifier = Modifier.height(metrics.sectionSpacing))
+        if (uiState.currentStep == RegisterSteps.ACCOUNT) {
+            Spacer(modifier = Modifier.height(metrics.smallSpacing))
 
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                modifier = Modifier
-                    .size(if (metrics.isExpanded) 56.dp else 52.dp)
-                    .clickable { onGoogleClicked() }
-                    .clip(CircleShape),
-                shape = CircleShape,
-                color = Color.White,
-                shadowElevation = 6.dp
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_google),
-                        contentDescription = null,
-                        tint = Color.Unspecified,
-                        modifier = Modifier.size(if (metrics.isExpanded) 24.dp else 22.dp)
-                    )
+                Surface(
+                    modifier = Modifier
+                        .size(metrics.socialButtonHeight)
+                        .clickable { onGoogleClicked() }
+                        .clip(CircleShape),
+                    shape = CircleShape,
+                    color = Color.White,
+                    shadowElevation = 6.dp
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_google),
+                            contentDescription = null,
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(if (metrics.isExpanded) 34.dp else 32.dp)
+                        )
+                    }
                 }
             }
         }
@@ -247,6 +281,7 @@ private fun RegisterStep1Content(
 ) {
     val colors = KocKitTheme.extraColors
     var showTermsDialog by remember { mutableStateOf(false) }
+    var showKvkkDialog by remember { mutableStateOf(false) }
     val usageAnnotatedText = buildAnnotatedString {
         pushStringAnnotation(tag = "terms", annotation = "terms")
         withStyle(
@@ -255,13 +290,58 @@ private fun RegisterStep1Content(
                 fontWeight = FontWeight.SemiBold
             )
         ) {
-            append("Kullanım koşulları")
+            append("Kullanım koşullarını ve Kvkk şartlarını ")
         }
         pop()
-        append("nı okudum ve kabul ediyorum.")
+        append("okudum ve kabul ediyorum.")
+    }
+
+    val usageKvkkText = buildAnnotatedString {
+        pushStringAnnotation(tag = "kvkk", annotation = "kvkk")
+        withStyle(
+            SpanStyle(
+                color = colors.pastelGreen,
+                fontWeight = FontWeight.SemiBold
+            )
+        ) {
+            append("KVKK kapsamında ")
+        }
+        pop()
+        append("verilerimin işlenmesini istiyorum.")
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(metrics.fieldSpacing)) {
+        AuthMethodTabs(
+            isNicknameSelected = uiState.accountMethod == RegisterAccountMethod.NICKNAME,
+            onNicknameSelected = { onEvent(RegisterEvent.AccountMethodChanged(RegisterAccountMethod.NICKNAME)) },
+            onPhoneSelected = { onEvent(RegisterEvent.AccountMethodChanged(RegisterAccountMethod.PHONE)) },
+            metrics = metrics
+        )
+
+        when (uiState.accountMethod) {
+            RegisterAccountMethod.NICKNAME -> {
+                KocKitTextField(
+                    uiState.nickname,
+                    { onEvent(RegisterEvent.NicknameChanged(it)) },
+                    "Rumuz",
+                    error = uiState.nicknameError,
+                    leadingIconVector = Icons.Filled.Tag,
+                    fieldHeight = metrics.fieldHeight,
+                    textFontSize = metrics.fieldFontSize,
+                    textLineHeight = metrics.fieldLineHeight
+                )
+            }
+            RegisterAccountMethod.PHONE -> {
+                AuthPhoneNumberField(
+                    value = uiState.phone,
+                    onValueChange = { onEvent(RegisterEvent.PhoneChanged(it)) },
+                    placeholder = "5XX XXX XX XX",
+                    error = uiState.phoneError,
+                    metrics = metrics
+                )
+            }
+        }
+
         KocKitTextField(
             uiState.fullName,
             { onEvent(RegisterEvent.FullNameChanged(it)) },
@@ -282,16 +362,6 @@ private fun RegisterStep1Content(
             textFontSize = metrics.fieldFontSize,
             textLineHeight = metrics.fieldLineHeight
         )
-        KocKitTextField(
-            uiState.nickname,
-            { onEvent(RegisterEvent.NicknameChanged(it)) },
-            "Nickname",
-            error = uiState.nicknameError,
-            leadingIconVector = Icons.Filled.Tag,
-            fieldHeight = metrics.fieldHeight,
-            textFontSize = metrics.fieldFontSize,
-            textLineHeight = metrics.fieldLineHeight
-        )
         KocKitPasswordField(
             uiState.password,
             { onEvent(RegisterEvent.PasswordChanged(it)) },
@@ -307,7 +377,7 @@ private fun RegisterStep1Content(
         KocKitPasswordField(
             uiState.confirmPassword,
             { onEvent(RegisterEvent.ConfirmPasswordChanged(it)) },
-            "Şifren Tekrar",
+            "Şifre Tekrar",
             uiState.isConfirmPasswordVisible,
             { onEvent(RegisterEvent.ConfirmPasswordVisibilityChanged) },
             error = uiState.confirmPasswordError,
@@ -316,15 +386,17 @@ private fun RegisterStep1Content(
             textFontSize = metrics.fieldFontSize,
             textLineHeight = metrics.fieldLineHeight
         )
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clickable { showTermsDialog = true }
                 .padding(top = 2.dp, bottom = 2.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             KocKitCheckbox(
                 checked = uiState.isTermsAccepted,
-                onCheckedChange = { onEvent(RegisterEvent.TermsCheckedChanged(it)) }
+                onCheckedChange = { showTermsDialog = true }
             )
             Spacer(modifier = Modifier.size(10.dp))
             androidx.compose.foundation.text.ClickableText(
@@ -337,52 +409,301 @@ private fun RegisterStep1Content(
                 ),
                 overflow = TextOverflow.Clip,
                 maxLines = 2,
-                onClick = { offset ->
-                    val annotation = usageAnnotatedText.getStringAnnotations(
-                        tag = "terms",
-                        start = offset,
-                        end = offset
-                    ).firstOrNull()
-                    if (annotation != null) showTermsDialog = true
-                }
+                onClick = { showTermsDialog = true }
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { showKvkkDialog = true }
+                .padding(top = 2.dp, bottom = 2.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            KocKitCheckbox(
+                checked = uiState.isDataAccepted,
+                onCheckedChange = { showKvkkDialog = true }
+            )
+            Spacer(modifier = Modifier.size(10.dp))
+            androidx.compose.foundation.text.ClickableText(
+                text = usageKvkkText,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontFamily = KocKitFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = if (metrics.isExpanded) 16.sp else 14.sp
+                ),
+                overflow = TextOverflow.Clip,
+                maxLines = 2,
+                onClick = { showKvkkDialog = true }
             )
         }
 
         if (showTermsDialog) {
-            AlertDialog(
-                onDismissRequest = { showTermsDialog = false },
-                text = { Spacer(modifier = Modifier.height(1.dp)) },
-                confirmButton = {
-                    KocKitPrimaryButton(
-                        text = "Tamam",
-                        onClick = { showTermsDialog = false },
-                        containerColor = colors.pastelGreen,
-                        height = metrics.buttonHeight,
-                        fontSize = metrics.buttonFontSize
-                    )
+            LegalAgreementDialog(
+                title = "Kullanım Koşulları",
+                body = TERMS_AGREEMENT_TEXT,
+                metrics = metrics,
+                onDismiss = { showTermsDialog = false },
+                onAccepted = {
+                    onEvent(RegisterEvent.TermsDialogAccepted)
+                    showTermsDialog = false
                 }
             )
         }
+
+        if (showKvkkDialog) {
+            LegalAgreementDialog(
+                title = "KVKK Aydınlatma Metni",
+                body = KVKK_AGREEMENT_TEXT,
+                metrics = metrics,
+                onDismiss = { showKvkkDialog = false },
+                onAccepted = {
+                    onEvent(RegisterEvent.DataDialogAccepted)
+                    showKvkkDialog = false
+                }
+            )
+        }
+
         uiState.termsError?.let { KocKitText(text = it, color = colors.coralAccent) }
     }
 }
 
 @Composable
-private fun RegisterStepPlaceholderContent(
-    title: String,
-    description: String,
+private fun RegisterVerificationStep(
+    uiState: RegisterUiState,
+    metrics: AuthFormMetrics,
+    onEvent: (RegisterEvent) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(metrics.fieldSpacing)) {
+        RegisterVerificationChannelTabs(
+            selectedChannel = uiState.verificationChannel,
+            onChannelSelected = { onEvent(RegisterEvent.VerificationChannelChanged(it)) },
+            metrics = metrics
+        )
+
+        when (uiState.verificationChannel) {
+            RegisterVerificationChannel.EMAIL -> {
+                KocKitTextField(
+                    value = uiState.verificationEmail,
+                    onValueChange = { onEvent(RegisterEvent.VerificationEmailChanged(it)) },
+                    placeholder = "example@gmail.com",
+                    error = uiState.verificationEmailError,
+                    leadingIconVector = Icons.Filled.Email,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    shape = LoginFieldShape,
+                    fieldHeight = metrics.fieldHeight,
+                    textFontSize = metrics.fieldFontSize,
+                    textLineHeight = metrics.fieldLineHeight
+                )
+                KocKitText(
+                    text = "Doğrulama kodunu e-posta adresine göndereceğiz.",
+                    color = TextSecondary,
+                    fontSize = metrics.subheadFontSize,
+                    lineHeight = metrics.subheadLineHeight
+                )
+            }
+            RegisterVerificationChannel.PHONE -> {
+                AuthPhoneNumberField(
+                    value = uiState.verificationPhone,
+                    onValueChange = { onEvent(RegisterEvent.VerificationPhoneChanged(it)) },
+                    placeholder = "5XX XXX XX XX",
+                    error = uiState.verificationPhoneError,
+                    metrics = metrics
+                )
+                KocKitText(
+                    text = "Doğrulama kodunu Türkiye cep telefonuna SMS ile göndereceğiz.",
+                    color = TextSecondary,
+                    fontSize = metrics.subheadFontSize,
+                    lineHeight = metrics.subheadLineHeight
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RegisterVerificationChannelTabs(
+    selectedChannel: RegisterVerificationChannel,
+    onChannelSelected: (RegisterVerificationChannel) -> Unit,
     metrics: AuthFormMetrics
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(metrics.smallSpacing)) {
-        KocKitSemiText(
-            text = title,
-            fontSize = metrics.subheadFontSize,
-            lineHeight = metrics.subheadLineHeight
-        )
+    val colors = KocKitTheme.extraColors
+    val tabRadius = if (metrics.isExpanded) 16.dp else 14.dp
+    val tabItemRadius = if (metrics.isExpanded) 12.dp else 10.dp
+    val tabItemPaddingV = if (metrics.isExpanded) 14.dp else 12.dp
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(tabRadius))
+            .background(colors.borderLight.copy(alpha = 0.45f))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        RegisterVerificationChannel.entries.forEach { channel ->
+            val isSelected = selectedChannel == channel
+            val label = when (channel) {
+                RegisterVerificationChannel.EMAIL -> "E-posta"
+                RegisterVerificationChannel.PHONE -> "Telefon"
+            }
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(tabItemRadius))
+                    .background(if (isSelected) PastelGreen else Color.Transparent)
+                    .clickable { onChannelSelected(channel) }
+                    .padding(vertical = tabItemPaddingV),
+                contentAlignment = Alignment.Center
+            ) {
+                KocKitSemiText(
+                    text = label,
+                    color = if (isSelected) Color.White else colors.textPrimary,
+                    fontSize = metrics.subheadFontSize,
+                    lineHeight = metrics.subheadLineHeight
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RegisterOtpStep(
+    uiState: RegisterUiState,
+    metrics: AuthFormMetrics,
+    onEvent: (RegisterEvent) -> Unit
+) {
+    val subtitle = when (uiState.verificationChannel) {
+        RegisterVerificationChannel.EMAIL -> "E-posta adresine gönderilen kodu gir"
+        RegisterVerificationChannel.PHONE -> "Telefon numarana gönderilen kodu gir"
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(metrics.fieldSpacing)) {
         KocKitText(
-            description,
+            text = subtitle,
+            color = TextSecondary,
             fontSize = metrics.bodyFontSize,
             lineHeight = metrics.bodyLineHeight
+        )
+
+        if (uiState.otpSentTo.isNotBlank()) {
+            KocKitSemiText(
+                text = uiState.otpSentTo,
+                color = TextPrimary,
+                fontSize = metrics.subheadFontSize,
+                lineHeight = metrics.subheadLineHeight
+            )
+        }
+
+        KocKitOtpCodeField(
+            value = uiState.otpCode,
+            onValueChange = { onEvent(RegisterEvent.OtpCodeChanged(it)) },
+            error = uiState.otpError,
+            cellHeight = metrics.otpCellHeight,
+            digitFontSize = metrics.otpDigitFontSize,
+            digitLineHeight = metrics.otpDigitLineHeight
+        )
+
+        val resendText = if (uiState.resendSecondsRemaining > 0) {
+            val minutes = uiState.resendSecondsRemaining / 60
+            val seconds = uiState.resendSecondsRemaining % 60
+            "Kodu yeniden gönder %d:%02d".format(minutes, seconds)
+        } else {
+            "Kodu yeniden gönder"
+        }
+
+        KocKitText(
+            text = resendText,
+            color = TextSecondary,
+            fontSize = metrics.subheadFontSize,
+            lineHeight = metrics.subheadLineHeight,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    enabled = uiState.resendSecondsRemaining == 0,
+                    onClick = { onEvent(RegisterEvent.ResendOtpClicked) }
+                )
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RegisterVerificationStepPreview() {
+    KocKitTheme {
+        RegisterScreenContent(
+            uiState = RegisterUiState(
+                currentStep = RegisterSteps.VERIFICATION,
+                verificationEmail = "adem@kockit.com"
+            ),
+            onEvent = {},
+            onGoogleClicked = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun RegisterOtpStepPreview() {
+    KocKitTheme {
+        RegisterScreenContent(
+            uiState = RegisterUiState(
+                currentStep = RegisterSteps.OTP,
+                verificationChannel = RegisterVerificationChannel.EMAIL,
+                otpSentTo = "a***@kockit.com",
+                otpCode = "123456"
+            ),
+            onEvent = {},
+            onGoogleClicked = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 840, heightDp = 1200, name = "Tablet")
+@Composable
+private fun RegisterScreenTabletPreview() {
+    KocKitTheme {
+        RegisterScreenContent(
+            uiState = RegisterUiState(
+                fullName = "Adem KocKit",
+                email = "adem@kockit.com",
+                nickname = "ademkockit",
+                accountMethod = RegisterAccountMethod.NICKNAME
+            ),
+            onEvent = {},
+            onGoogleClicked = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 840, heightDp = 1200, name = "Tablet Verification")
+@Composable
+private fun RegisterVerificationTabletPreview() {
+    KocKitTheme {
+        RegisterScreenContent(
+            uiState = RegisterUiState(
+                currentStep = RegisterSteps.VERIFICATION,
+                verificationEmail = "adem@kockit.com"
+            ),
+            onEvent = {},
+            onGoogleClicked = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 840, heightDp = 1200, name = "Tablet OTP")
+@Composable
+private fun RegisterOtpTabletPreview() {
+    KocKitTheme {
+        RegisterScreenContent(
+            uiState = RegisterUiState(
+                currentStep = RegisterSteps.OTP,
+                verificationChannel = RegisterVerificationChannel.PHONE,
+                otpSentTo = "+90 532 *** ** 41",
+                otpCode = "123456"
+            ),
+            onEvent = {},
+            onGoogleClicked = {}
         )
     }
 }
@@ -395,7 +716,8 @@ private fun RegisterScreenPreview() {
             uiState = RegisterUiState(
                 fullName = "Adem KocKit",
                 email = "adem@kockit.com",
-                nickname = "ademkockit"
+                nickname = "ademkockit",
+                accountMethod = RegisterAccountMethod.NICKNAME
             ),
             onEvent = {},
             onGoogleClicked = {}

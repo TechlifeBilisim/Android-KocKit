@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -13,7 +12,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
@@ -35,7 +34,6 @@ import com.techlife.kockit.core.designsystem.background.KocKitBackground
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitLogo
 import com.techlife.kockit.core.designsystem.component.KocKitText
-import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.component.KocKitPasswordField
 import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
@@ -46,6 +44,9 @@ import com.techlife.kockit.core.designsystem.layout.AuthFormContainer
 import com.techlife.kockit.core.designsystem.layout.AuthFormMetrics
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
+import com.techlife.kockit.feature.auth.common.AuthMethodTabs
+import com.techlife.kockit.feature.auth.common.AuthPhoneNumberField
+import com.techlife.kockit.feature.auth.common.normalizeTurkishPhone
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -90,26 +91,14 @@ fun LoginScreen(
 
     LoginContent(
         uiState = uiState,
-        onEmailChanged = { viewModel.onEvent(LoginEvent.EmailChanged(it)) },
-        onPasswordChanged = { viewModel.onEvent(LoginEvent.PasswordChanged(it)) },
-        onPasswordVisibilityToggle = { viewModel.onEvent(LoginEvent.PasswordVisibilityChanged) },
-        onForgotPasswordClick = { viewModel.onEvent(LoginEvent.ForgotPasswordClicked) },
-        onLoginClick = { viewModel.onEvent(LoginEvent.LoginClicked) },
-        onGoogleLoginClick = { viewModel.onEvent(LoginEvent.GoogleLoginClicked) },
-        onRegisterClick = { viewModel.onEvent(LoginEvent.RegisterClicked) }
+        onEvent = viewModel::onEvent
     )
 }
 
 @Composable
 private fun LoginContent(
     uiState: LoginUiState,
-    onEmailChanged: (String) -> Unit,
-    onPasswordChanged: (String) -> Unit,
-    onPasswordVisibilityToggle: () -> Unit,
-    onForgotPasswordClick: () -> Unit,
-    onLoginClick: () -> Unit,
-    onGoogleLoginClick: () -> Unit,
-    onRegisterClick: () -> Unit,
+    onEvent: (LoginEvent) -> Unit
 ) {
     KocKitBackground(useFormBackgroundImage = true) {
         AuthFormContainer(
@@ -118,13 +107,7 @@ private fun LoginContent(
             LoginFormBody(
                 uiState = uiState,
                 metrics = metrics,
-                onEmailChanged = onEmailChanged,
-                onPasswordChanged = onPasswordChanged,
-                onPasswordVisibilityToggle = onPasswordVisibilityToggle,
-                onForgotPasswordClick = onForgotPasswordClick,
-                onLoginClick = onLoginClick,
-                onGoogleLoginClick = onGoogleLoginClick,
-                onRegisterClick = onRegisterClick
+                onEvent = onEvent
             )
         }
     }
@@ -134,16 +117,13 @@ private fun LoginContent(
 private fun ColumnScope.LoginFormBody(
     uiState: LoginUiState,
     metrics: AuthFormMetrics,
-    onEmailChanged: (String) -> Unit,
-    onPasswordChanged: (String) -> Unit,
-    onPasswordVisibilityToggle: () -> Unit,
-    onForgotPasswordClick: () -> Unit,
-    onLoginClick: () -> Unit,
-    onGoogleLoginClick: () -> Unit,
-    onRegisterClick: () -> Unit
+    onEvent: (LoginEvent) -> Unit
 ) {
     val colors = KocKitTheme.extraColors
-    val loginEnabled = uiState.email.isNotBlank() && uiState.password.isNotBlank()
+    val loginEnabled = when (uiState.loginMethod) {
+        LoginMethod.NICKNAME -> uiState.nickname.isNotBlank() && uiState.password.isNotBlank()
+        LoginMethod.PHONE -> normalizeTurkishPhone(uiState.phone).length == 10
+    }
 
     Spacer(modifier = Modifier.height(metrics.topInset))
 
@@ -173,50 +153,72 @@ private fun ColumnScope.LoginFormBody(
 
     Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 
-    KocKitTextField(
-        value = uiState.email,
-        onValueChange = onEmailChanged,
-        placeholder = "E-posta adresin",
-        leadingIconVector = Icons.Filled.Email,
-        error = uiState.emailError,
-        shape = LoginFieldShape,
-        fieldHeight = metrics.fieldHeight,
-        textFontSize = metrics.fieldFontSize,
-        textLineHeight = metrics.fieldLineHeight
+    AuthMethodTabs(
+        isNicknameSelected = uiState.loginMethod == LoginMethod.NICKNAME,
+        onNicknameSelected = { onEvent(LoginEvent.LoginMethodChanged(LoginMethod.NICKNAME)) },
+        onPhoneSelected = { onEvent(LoginEvent.LoginMethodChanged(LoginMethod.PHONE)) },
+        metrics = metrics
     )
 
     Spacer(modifier = Modifier.height(metrics.fieldSpacing))
 
-    KocKitPasswordField(
-        value = uiState.password,
-        onValueChange = onPasswordChanged,
-        placeholder = "Şifren",
-        isPasswordVisible = uiState.isPasswordVisible,
-        onPasswordVisibilityToggle = onPasswordVisibilityToggle,
-        error = uiState.passwordError,
-        shape = LoginFieldShape,
-        fieldHeight = metrics.fieldHeight,
-        textFontSize = metrics.fieldFontSize,
-        textLineHeight = metrics.fieldLineHeight
-    )
+    when (uiState.loginMethod) {
+        LoginMethod.NICKNAME -> {
+            KocKitTextField(
+                value = uiState.nickname,
+                onValueChange = { onEvent(LoginEvent.NicknameChanged(it)) },
+                placeholder = "Rumuzun",
+                leadingIconVector = Icons.Filled.Tag,
+                error = uiState.nicknameError,
+                shape = LoginFieldShape,
+                fieldHeight = metrics.fieldHeight,
+                textFontSize = metrics.fieldFontSize,
+                textLineHeight = metrics.fieldLineHeight
+            )
 
-    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+            Spacer(modifier = Modifier.height(metrics.fieldSpacing))
 
-    KocKitBoldText(
-        text = "Şifremi unuttum?",
-        fontSize = metrics.bodyFontSize,
-        lineHeight = metrics.bodyLineHeight,
-        modifier = Modifier
-            .align(Alignment.End)
-            .clickable { onForgotPasswordClick() },
-        color = colors.textPrimary
-    )
+            KocKitPasswordField(
+                value = uiState.password,
+                onValueChange = { onEvent(LoginEvent.PasswordChanged(it)) },
+                placeholder = "Şifren",
+                isPasswordVisible = uiState.isPasswordVisible,
+                onPasswordVisibilityToggle = { onEvent(LoginEvent.PasswordVisibilityChanged) },
+                error = uiState.passwordError,
+                shape = LoginFieldShape,
+                fieldHeight = metrics.fieldHeight,
+                textFontSize = metrics.fieldFontSize,
+                textLineHeight = metrics.fieldLineHeight
+            )
+
+            Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+            KocKitBoldText(
+                text = "Şifremi unuttum?",
+                fontSize = metrics.bodyFontSize,
+                lineHeight = metrics.bodyLineHeight,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .clickable { onEvent(LoginEvent.ForgotPasswordClicked) },
+                color = colors.textPrimary
+            )
+        }
+        LoginMethod.PHONE -> {
+            AuthPhoneNumberField(
+                value = uiState.phone,
+                onValueChange = { onEvent(LoginEvent.PhoneChanged(it)) },
+                placeholder = "5XX XXX XX XX",
+                error = uiState.phoneError,
+                metrics = metrics
+            )
+        }
+    }
 
     Spacer(modifier = Modifier.height(metrics.fieldSpacing))
 
     KocKitPrimaryButton(
         text = "Giriş Yap",
-        onClick = onLoginClick,
+        onClick = { onEvent(LoginEvent.LoginClicked) },
         enabled = loginEnabled,
         isLoading = uiState.isLoading,
         containerColor = PastelGreen,
@@ -232,7 +234,7 @@ private fun ColumnScope.LoginFormBody(
 
     KocKitSocialButton(
         text = "Google ile giriş yap",
-        onClick = onGoogleLoginClick,
+        onClick = { onEvent(LoginEvent.GoogleLoginClicked) },
         iconPainter = painterResource(R.drawable.ic_google),
         height = metrics.socialButtonHeight,
         fontSize = metrics.bodyFontSize,
@@ -243,7 +245,7 @@ private fun ColumnScope.LoginFormBody(
 
     LoginRegisterFooter(
         metrics = metrics,
-        onRegisterClick = onRegisterClick,
+        onRegisterClick = { onEvent(LoginEvent.RegisterClicked) },
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 16.dp)
@@ -305,19 +307,24 @@ private fun LoginRegisterFooter(
     }
 }
 
-@Preview(showBackground = true, widthDp = 840, heightDp = 1200, name = "Tablet")
+@Preview(showBackground = true, widthDp = 840, heightDp = 1200, name = "Tablet Nickname")
 @Composable
-private fun LoginScreenTabletPreview() {
+private fun LoginScreenTabletNicknamePreview() {
     KocKitTheme {
         LoginContent(
-            uiState = LoginUiState(),
-            onEmailChanged = {},
-            onPasswordChanged = {},
-            onPasswordVisibilityToggle = {},
-            onForgotPasswordClick = {},
-            onLoginClick = {},
-            onGoogleLoginClick = {},
-            onRegisterClick = {}
+            uiState = LoginUiState(loginMethod = LoginMethod.NICKNAME),
+            onEvent = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 840, heightDp = 1200, name = "Tablet Phone")
+@Composable
+private fun LoginScreenTabletPhonePreview() {
+    KocKitTheme {
+        LoginContent(
+            uiState = LoginUiState(loginMethod = LoginMethod.PHONE, phone = "5321234567"),
+            onEvent = {}
         )
     }
 }
@@ -328,13 +335,7 @@ private fun LoginScreenPreview() {
     KocKitTheme {
         LoginContent(
             uiState = LoginUiState(),
-            onEmailChanged = {},
-            onPasswordChanged = {},
-            onPasswordVisibilityToggle = {},
-            onForgotPasswordClick = {},
-            onLoginClick = {},
-            onGoogleLoginClick = {},
-            onRegisterClick = {}
+            onEvent = {}
         )
     }
 }

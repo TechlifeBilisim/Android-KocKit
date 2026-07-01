@@ -33,6 +33,9 @@ fun StudyPlanScreen(
     var unavailableDays by remember { mutableStateOf(StudyPlanFakeData.initialUnavailableDays) }
     var specialDates by remember { mutableStateOf(StudyPlanFakeData.initialSpecialDates) }
     var showAddSpecialDateSheet by remember { mutableStateOf(false) }
+    var daysEditing by remember { mutableStateOf(false) }
+    var parametersEditing by remember { mutableStateOf(false) }
+    var unavailableEditing by remember { mutableStateOf(false) }
 
     val totalHours = days.sumOf { it.hours }
 
@@ -66,6 +69,9 @@ fun StudyPlanScreen(
                 StudyPlanDaysSection(
                     days = days,
                     totalHours = totalHours,
+                    isEditing = daysEditing,
+                    onEditClick = { daysEditing = true },
+                    onSaveClick = { daysEditing = false },
                     onHoursChange = { index, newHours ->
                         days = days.mapIndexed { i, item ->
                             if (i == index) item.copy(hours = newHours) else item
@@ -85,7 +91,10 @@ fun StudyPlanScreen(
                     onProblemChange = { problemMinutes = it },
                     revisionDay = revisionDay,
                     onRevisionDayChange = { revisionDay = it },
-                    revisionOptions = StudyPlanFakeData.revisionDayOptions
+                    revisionOptions = StudyPlanFakeData.revisionDayOptions,
+                    isEditing = parametersEditing,
+                    onEditClick = { parametersEditing = true },
+                    onSaveClick = { parametersEditing = false }
                 )
                 Spacer(modifier = Modifier.height(metrics.sectionSpacing))
             }
@@ -95,6 +104,9 @@ fun StudyPlanScreen(
                     weekDayOptions = StudyPlanFakeData.weekDayOptions,
                     selectedUnavailableDays = unavailableDays,
                     specialDates = specialDates,
+                    isEditing = unavailableEditing,
+                    onEditClick = { unavailableEditing = true },
+                    onSaveClick = { unavailableEditing = false },
                     onUnavailableDayToggle = { shortName ->
                         unavailableDays = if (shortName in unavailableDays) {
                             unavailableDays - shortName
@@ -108,11 +120,6 @@ fun StudyPlanScreen(
                     onAddSpecialDateClick = { showAddSpecialDateSheet = true }
                 )
                 Spacer(modifier = Modifier.height(metrics.sectionSpacing + 4.dp))
-            }
-
-            item(key = "save") {
-                StudyPlanSaveButton(onClick = { })
-                Spacer(modifier = Modifier.height(metrics.sectionSpacing))
             }
 
             item(key = "info") {

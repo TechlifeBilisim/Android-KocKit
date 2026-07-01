@@ -26,6 +26,18 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
 
     private var resendCountdownJob: Job? = null
 
+    fun startProfileFlow() {
+        resendCountdownJob?.cancel()
+        _uiState.value = ForgotPasswordUiState(
+            currentStep = ForgotPasswordSteps.CODE,
+            isProfileFlow = true
+        )
+        viewModelScope.launch {
+            startResendCountdown()
+            emit(ForgotPasswordEffect.ShowMessage("Doğrulama kodu e-posta adresine gönderildi."))
+        }
+    }
+
     fun onEvent(event: ForgotPasswordEvent) {
         when (event) {
             is ForgotPasswordEvent.EmailChanged -> _uiState.update {
@@ -138,7 +150,11 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
             delay(500)
             _uiState.update { it.copy(isLoading = false) }
             emit(ForgotPasswordEffect.ShowMessage("Şifren başarıyla güncellendi."))
-            emit(ForgotPasswordEffect.NavigateToLogin)
+            if (state.isProfileFlow) {
+                emit(ForgotPasswordEffect.Completed)
+            } else {
+                emit(ForgotPasswordEffect.NavigateToLogin)
+            }
         }
     }
 
@@ -171,8 +187,14 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
     private fun onBack() {
         when (_uiState.value.currentStep) {
             ForgotPasswordSteps.EMAIL -> emit(ForgotPasswordEffect.NavigateBack)
-            ForgotPasswordSteps.CODE -> _uiState.update {
-                it.copy(currentStep = ForgotPasswordSteps.EMAIL, code = "", codeError = null)
+            ForgotPasswordSteps.CODE -> {
+                if (_uiState.value.isProfileFlow) {
+                    emit(ForgotPasswordEffect.NavigateBack)
+                } else {
+                    _uiState.update {
+                        it.copy(currentStep = ForgotPasswordSteps.EMAIL, code = "", codeError = null)
+                    }
+                }
             }
             ForgotPasswordSteps.NEW_PASSWORD -> _uiState.update {
                 it.copy(

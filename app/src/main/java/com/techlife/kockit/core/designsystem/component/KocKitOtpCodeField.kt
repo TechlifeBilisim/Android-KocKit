@@ -76,7 +76,7 @@ fun KocKitOtpCodeField(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(colors.cardBackground)
                                 .border(
-                                    width = if (error != null) 1.5.dp else 1.dp,
+                                    width = 1.5.dp,
                                     color = when {
                                         error != null -> colors.coralAccent
                                         isFocusedCell -> colors.pastelGreen

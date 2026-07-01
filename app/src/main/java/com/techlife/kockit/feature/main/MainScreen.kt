@@ -34,7 +34,6 @@ fun MainScreen(
 ) {
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
-    var showStudyPlan by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -47,7 +46,6 @@ fun MainScreen(
                 selectedTab = selectedTab,
                 onTabSelected = {
                     showSearch = false
-                    showStudyPlan = false
                     selectedTab = it
                 }
             )
@@ -60,28 +58,25 @@ fun MainScreen(
         ) {
             when (selectedTab) {
                 MainTab.HOME -> {
-                    when {
-                        showSearch -> {
-                            SearchScreen(onBackClick = { showSearch = false })
-                        }
-                        showStudyPlan -> {
-                            StudyPlanScreen(onBackClick = { showStudyPlan = false })
-                        }
-                        else -> {
-                            HomeScreen(
-                                onNavigateToPlacement = onNavigateToPlacement,
-                                onNavigateToLogin = onNavigateToLogin,
-                                onSearchClick = { showSearch = true },
-                                onStudyPlanClick = { showStudyPlan = true }
-                            )
-                        }
+                    if (showSearch) {
+                        SearchScreen(onBackClick = { showSearch = false })
+                    } else {
+                        HomeScreen(
+                            onNavigateToPlacement = onNavigateToPlacement,
+                            onNavigateToLogin = onNavigateToLogin,
+                            onSearchClick = { showSearch = true },
+                            onStudyPlanClick = { selectedTab = MainTab.STUDY_PLAN }
+                        )
                     }
                 }
-                MainTab.EXAMS,
-                MainTab.ANALYSIS,
-                MainTab.GOALS -> MainTabPlaceholder(tab = selectedTab)
-                MainTab.PROFILE -> ProfileScreen(
+                MainTab.STUDY_PLAN -> StudyPlanScreen(
                     onBackClick = { selectedTab = MainTab.HOME }
+                )
+                MainTab.EXAMS,
+                MainTab.ANALYSIS -> MainTabPlaceholder(tab = selectedTab)
+                MainTab.PROFILE -> ProfileScreen(
+                    onBackClick = { selectedTab = MainTab.HOME },
+                    onLogoutClick = onNavigateToLogin
                 )
             }
         }

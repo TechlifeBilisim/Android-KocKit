@@ -117,22 +117,12 @@ fun GoalSetupSuccessDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+
                 GoalSetupSuccessActionButton(
-                    text = "Deneme Sınavına Geç",
-                    icon = Icons.Filled.Description,
+                    text = "Harika, kayıt oldunuz",
+                    icon = Icons.Filled.Home,
                     containerColor = PastelGreen,
                     contentColor = White,
-                    borderColor = PastelGreen,
-                    onClick = onGoToPlacement
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                GoalSetupSuccessActionButton(
-                    text = "Ana Sayfaya Geç",
-                    icon = Icons.Filled.Home,
-                    containerColor = White,
-                    contentColor = TextPrimary,
                     borderColor = PastelGreen,
                     onClick = onGoToHome
                 )

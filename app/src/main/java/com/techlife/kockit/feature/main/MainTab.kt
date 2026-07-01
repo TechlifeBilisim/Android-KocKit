@@ -2,10 +2,11 @@ package com.techlife.kockit.feature.main
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.TrackChanges
+import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -22,17 +23,17 @@ enum class MainTab(
     EXAMS(
         label = "Denemeler",
         selectedIcon = Icons.Filled.Description,
-        unselectedIcon = Icons.Filled.Description
+        unselectedIcon = Icons.Outlined.Description
     ),
     ANALYSIS(
         label = "Analiz",
         selectedIcon = Icons.Filled.Assessment,
         unselectedIcon = Icons.Filled.Assessment
     ),
-    GOALS(
-        label = "Hedefler",
-        selectedIcon = Icons.Filled.TrackChanges,
-        unselectedIcon = Icons.Filled.TrackChanges
+    STUDY_PLAN(
+        label = "Çalışma Planı",
+        selectedIcon = Icons.Filled.CalendarToday,
+        unselectedIcon = Icons.Outlined.CalendarToday
     ),
     PROFILE(
         label = "Profil",
