@@ -6,7 +6,11 @@ import com.techlife.kockit.domain.placement.model.PlacementProgress
 interface UserPreferences {
     val userSessionFlow: kotlinx.coroutines.flow.Flow<UserSession>
     val placementProgressFlow: kotlinx.coroutines.flow.Flow<PlacementProgress>
+    val accessTokenFlow: kotlinx.coroutines.flow.Flow<String?>
     suspend fun getUserSession(): UserSession
+    suspend fun getAccessToken(): String?
+    suspend fun getRefreshToken(): String?
+    suspend fun saveAuthTokens(accessToken: String, refreshToken: String? = null)
     suspend fun setFirstLaunch(isFirstLaunch: Boolean)
     suspend fun setLoggedIn(isLoggedIn: Boolean)
     suspend fun setOnboardingCompleted(isCompleted: Boolean)

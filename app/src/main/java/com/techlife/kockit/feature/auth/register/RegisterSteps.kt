@@ -18,6 +18,15 @@ enum class RegisterVerificationChannel {
     PHONE
 }
 
+internal fun validateRegisterFullName(fullName: String): String? {
+    val parts = fullName.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+    return when {
+        parts.isEmpty() -> "Ad soyad gerekli"
+        parts.size < 2 -> "Ad ve soyad gir"
+        else -> null
+    }
+}
+
 internal fun validateEmail(email: String): String? {
     val trimmed = email.trim()
     return when {

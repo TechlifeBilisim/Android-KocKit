@@ -261,12 +261,6 @@ fun HomeDailyGoalCard(
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
-                    KocKitBoldText(
-                        text = "$remainingNet net kaldı",
-                        color = PastelGreen,
-                        fontSize = metrics.cardBodySize,
-                        lineHeight = metrics.cardBodyLineHeight
-                    )
                     KocKitText(
                         text = "Devam et!",
                         color = TextSecondary,
@@ -274,6 +268,13 @@ fun HomeDailyGoalCard(
                         lineHeight = metrics.cardCaptionLineHeight,
                         maxLines = 2
                     )
+                    KocKitBoldText(
+                        text = "$remainingNet net kaldı",
+                        color = OrangeAccent,
+                        fontSize = metrics.cardBodySize,
+                        lineHeight = metrics.cardBodyLineHeight
+                    )
+
                 }
             }
         }

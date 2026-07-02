@@ -1,7 +1,9 @@
 package com.techlife.kockit.data.auth.local
 
 import com.techlife.kockit.core.datastore.UserPreferences
+import com.techlife.kockit.core.util.normalizeTurkishPhone
 import com.techlife.kockit.domain.auth.model.RegisterInfo
+import com.techlife.kockit.domain.auth.model.RegisterResult
 import com.techlife.kockit.domain.auth.model.UserSession
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -29,11 +31,12 @@ class AuthLocalDataSource @Inject constructor(
         }
     }
 
-    suspend fun register(registerInfo: RegisterInfo) {
+    suspend fun persistRegistration(registerInfo: RegisterInfo, result: RegisterResult) {
+        userPreferences.saveAuthTokens(result.accessToken, result.refreshToken)
         userPreferences.saveUserInfo(
             fullName = registerInfo.fullName.trim(),
             email = registerInfo.email.trim(),
-            phoneNumber = registerInfo.phoneNumber.trim()
+            phoneNumber = normalizeTurkishPhone(registerInfo.phone)
         )
         userPreferences.savePassword(registerInfo.password)
         userPreferences.setLoggedIn(true)

@@ -51,20 +51,25 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
@@ -75,6 +80,7 @@ import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.layout.LocalPlacementTestLayoutMetrics
 import com.techlife.kockit.core.designsystem.layout.rememberPlacementTestLayoutMetrics
 import com.techlife.kockit.core.designsystem.theme.CreamBackground
+import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
@@ -737,34 +743,6 @@ fun PlacementScopeItem(text: String) {
 }
 
 @Composable
-fun PlacementExamQuestionProgress(
-    currentQuestionIndex: Int,
-    totalQuestions: Int,
-    modifier: Modifier = Modifier
-) {
-    val progress = if (totalQuestions <= 0) {
-        0f
-    } else {
-        (currentQuestionIndex + 1).toFloat() / totalQuestions.toFloat()
-    }
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(6.dp)
-            .clip(RoundedCornerShape(3.dp))
-            .background(Color(0xFFE8E8E8))
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(progress.coerceIn(0f, 1f))
-                .height(6.dp)
-                .clip(RoundedCornerShape(3.dp))
-                .background(PlacementTestColors.green)
-        )
-    }
-}
-
-@Composable
 fun PlacementQuestionImage(
     @DrawableRes imageResId: Int,
     modifier: Modifier = Modifier
@@ -934,20 +912,35 @@ fun PlacementAnswerRadioRow(
 ) {
     val metrics = placementTestMetrics()
     val labels = listOf("A", "B", "C", "D", "E")
+    val optionHeight = if (metrics.isExpanded) 58.dp else 50.dp
 
-    Row(
+    Surface(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically
+        shape = RoundedCornerShape(metrics.answerOptionCornerRadius),
+        color = Color(0xFFF4F6F8),
+        border = BorderStroke(1.dp, Color(0xFFE8ECF0))
     ) {
-        labels.forEachIndexed { index, label ->
-            PlacementAnswerRadioItem(
-                label = label,
-                isSelected = selectedIndex == index,
-                accentColor = accentColor,
-                onClick = { onOptionSelected(index) },
-                metrics = metrics
-            )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = if (metrics.isExpanded) 10.dp else 8.dp,
+                    vertical = if (metrics.isExpanded) 10.dp else 8.dp
+                ),
+            horizontalArrangement = Arrangement.spacedBy(if (metrics.isExpanded) 10.dp else 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            labels.forEachIndexed { index, label ->
+                PlacementAnswerRadioItem(
+                    label = label,
+                    isSelected = selectedIndex == index,
+                    accentColor = accentColor,
+                    onClick = { onOptionSelected(index) },
+                    metrics = metrics,
+                    optionHeight = optionHeight,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
@@ -958,30 +951,76 @@ private fun PlacementAnswerRadioItem(
     isSelected: Boolean,
     accentColor: Color,
     onClick: () -> Unit,
-    metrics: com.techlife.kockit.core.designsystem.layout.PlacementTestLayoutMetrics
+    metrics: com.techlife.kockit.core.designsystem.layout.PlacementTestLayoutMetrics,
+    optionHeight: Dp,
+    modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
-            .padding(horizontal = if (metrics.isExpanded) 10.dp else 6.dp, vertical = 6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+    val shape = RoundedCornerShape(metrics.answerOptionCornerRadius)
+    val backgroundColor by animateColorAsState(
+        targetValue = if (isSelected) accentColor else White,
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "answerOptionBackground"
+    )
+    val borderColor by animateColorAsState(
+        targetValue = if (isSelected) accentColor else Color(0xFFDCE1E8),
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "answerOptionBorder"
+    )
+    val labelColor by animateColorAsState(
+        targetValue = if (isSelected) White else TextPrimary,
+        animationSpec = spring(stiffness = Spring.StiffnessMedium),
+        label = "answerOptionLabel"
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.03f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "answerOptionScale"
+    )
+
+    Box(
+        modifier = modifier
+            .height(optionHeight)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .shadow(
+                elevation = if (isSelected) 4.dp else 0.dp,
+                shape = shape,
+                clip = false
+            )
+            .clip(shape)
+            .border(
+                width = if (isSelected) 2.dp else 1.5.dp,
+                color = borderColor,
+                shape = shape
+            )
+            .background(backgroundColor)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
     ) {
-        RadioButton(
-            selected = isSelected,
-            onClick = onClick,
-            colors = RadioButtonDefaults.colors(
-                selectedColor = accentColor,
-                unselectedColor = Color(0xFFB0B8C1)
-            ),
-            modifier = Modifier.size(if (metrics.isExpanded) 28.dp else 24.dp)
-        )
-        KocKitBoldText(
+        KocKitExtraBoldText(
             text = label,
-            color = if (isSelected) accentColor else TextSecondary,
-            fontSize = metrics.bodyLargeSize,
-            lineHeight = metrics.bodyLargeLineHeight
+            color = labelColor,
+            fontSize = if (metrics.isExpanded) 20.sp else 17.sp,
+            lineHeight = if (metrics.isExpanded) 24.sp else 20.sp
+        )
+
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PlacementAnswerRadioRowPreview() {
+    KocKitTheme {
+        PlacementAnswerRadioRow(
+            selectedIndex = 2,
+            onOptionSelected = {},
+            accentColor = PlacementTestColors.green,
+            modifier = Modifier.padding(16.dp)
         )
     }
 }

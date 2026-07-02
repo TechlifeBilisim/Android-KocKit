@@ -48,6 +48,7 @@ import com.techlife.kockit.core.designsystem.theme.LavenderAccent
 import com.techlife.kockit.core.designsystem.theme.OrangeAccent
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.White
+import com.techlife.kockit.domain.location.model.Province
 import com.techlife.kockit.domain.onboarding.model.Department
 import com.techlife.kockit.domain.onboarding.model.ExamGoal
 import com.techlife.kockit.domain.onboarding.model.University
@@ -203,12 +204,33 @@ private fun GoalSetupExamStep(
     )
     KocKitDropdownField(
         label = "İl",
-        options = uiState.availableCities,
-        selectedOption = uiState.selectedCity,
-        onOptionSelected = { onEvent(GoalSetupEvent.CitySelected(it)) },
-        error = uiState.cityError,
+        options = uiState.provinces.map { it.name },
+        selectedOption = uiState.selectedProvinceName,
+        onOptionSelected = { name ->
+            val province = uiState.provinces.find { it.name == name } ?: return@KocKitDropdownField
+            onEvent(GoalSetupEvent.ProvinceSelected(province.id, province.name))
+        },
+        error = uiState.provinceError ?: uiState.provincesError,
         searchable = true,
         searchPlaceholder = "İl ara..."
+    )
+    KocKitDropdownField(
+        label = "İlçe",
+        options = uiState.districts.map { it.name },
+        selectedOption = uiState.selectedDistrictName,
+        onOptionSelected = { name ->
+            val district = uiState.districts.find { it.name == name } ?: return@KocKitDropdownField
+            onEvent(GoalSetupEvent.DistrictSelected(district.id, district.name))
+        },
+        error = uiState.districtError ?: uiState.districtsError,
+        searchable = true,
+        searchPlaceholder = if (uiState.isDistrictsLoading) {
+            "İlçeler yükleniyor..."
+        } else if (uiState.selectedProvinceId == null) {
+            "Önce il seçin"
+        } else {
+            "İlçe ara..."
+        }
     )
 
     KocKitDropdownField(
@@ -443,7 +465,19 @@ private fun GoalSetupScreenPreview() {
                 ),
                 selectedExamGoalId = "tyt",
                 selectedRegion = "Marmara",
-                selectedCity = "İstanbul",
+                provinces = listOf(Province(id = 34, name = "İstanbul")),
+                selectedProvinceId = 34,
+                selectedProvinceName = "İstanbul",
+                districts = listOf(
+                    com.techlife.kockit.domain.location.model.District(
+                        id = 1,
+                        name = "Kadıköy",
+                        provinceId = 34,
+                        provinceName = "İstanbul"
+                    )
+                ),
+                selectedDistrictId = 1,
+                selectedDistrictName = "Kadıköy",
                 selectedUniversityType = UniversityType.DEVLET,
                 selectedUniversityName = "Boğaziçi Üniversitesi",
                 selectedDepartmentName = "Bilgisayar Mühendisliği"

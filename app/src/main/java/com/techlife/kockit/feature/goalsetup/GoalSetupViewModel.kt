@@ -2,6 +2,9 @@ package com.techlife.kockit.feature.goalsetup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.techlife.kockit.core.network.model.ApiResult
+import com.techlife.kockit.domain.location.usecase.GetDistrictsUseCase
+import com.techlife.kockit.domain.location.usecase.GetProvincesUseCase
 import com.techlife.kockit.domain.onboarding.model.OnboardingInfo
 import com.techlife.kockit.domain.onboarding.model.University
 import com.techlife.kockit.domain.onboarding.usecase.GetDepartmentsUseCase
@@ -24,6 +27,8 @@ class GoalSetupViewModel @Inject constructor(
     private val getExamGoalsUseCase: GetExamGoalsUseCase,
     private val getUniversitiesUseCase: GetUniversitiesUseCase,
     private val getDepartmentsUseCase: GetDepartmentsUseCase,
+    private val getProvincesUseCase: GetProvincesUseCase,
+    private val getDistrictsUseCase: GetDistrictsUseCase,
     private val saveOnboardingInfoUseCase: SaveOnboardingInfoUseCase
 ) : ViewModel() {
 
@@ -44,11 +49,19 @@ class GoalSetupViewModel @Inject constructor(
             allUniversities = GoalSetupUniversityCatalog.universities
                 .ifEmpty { getUniversitiesUseCase() }
             val departments = GoalSetupDepartmentCatalog.departments.ifEmpty { getDepartmentsUseCase() }
+            val provinces = when (val result = getProvincesUseCase()) {
+                is ApiResult.Success -> result.data
+                is ApiResult.Error -> {
+                    _uiState.update { it.copy(provincesError = result.message) }
+                    emptyList()
+                }
+            }
             _uiState.update { state ->
                 applyUniversityFilters(
                     state.copy(
                         examGoals = getExamGoalsUseCase(),
                         departments = departments,
+                        provinces = provinces,
                         isDataLoading = false
                     )
                 )
@@ -84,22 +97,37 @@ class GoalSetupViewModel @Inject constructor(
                 applyUniversityFilters(
                     state.copy(
                         selectedRegion = event.name,
-                        selectedCity = null,
                         selectedUniversityName = null,
                         regionError = null,
-                        cityError = null,
                         universityError = null
                     )
                 )
             }
-            is GoalSetupEvent.CitySelected -> _uiState.update { state ->
-                applyUniversityFilters(
-                    state.copy(
-                        selectedCity = event.name,
-                        selectedUniversityName = null,
-                        cityError = null,
-                        universityError = null
+            is GoalSetupEvent.ProvinceSelected -> {
+                _uiState.update { state ->
+                    applyUniversityFilters(
+                        state.copy(
+                            selectedProvinceId = event.provinceId,
+                            selectedProvinceName = event.name,
+                            selectedDistrictId = null,
+                            selectedDistrictName = null,
+                            districts = emptyList(),
+                            districtsError = null,
+                            provinceError = null,
+                            districtError = null,
+                            selectedUniversityName = null,
+                            universityError = null,
+                            isDistrictsLoading = true
+                        )
                     )
+                }
+                loadDistricts(event.provinceId)
+            }
+            is GoalSetupEvent.DistrictSelected -> _uiState.update {
+                it.copy(
+                    selectedDistrictId = event.districtId,
+                    selectedDistrictName = event.name,
+                    districtError = null
                 )
             }
             is GoalSetupEvent.UniversityTypeSelected -> _uiState.update { state ->
@@ -123,32 +151,45 @@ class GoalSetupViewModel @Inject constructor(
         }
     }
 
-    private fun applyUniversityFilters(state: GoalSetupUiState): GoalSetupUiState {
-        val availableCities = allUniversities
-            .asSequence()
-            .filter { university ->
-                state.selectedRegion == null || university.region == state.selectedRegion
+    private fun loadDistricts(provinceId: Int) {
+        viewModelScope.launch {
+            when (val result = getDistrictsUseCase(provinceId)) {
+                is ApiResult.Success -> _uiState.update {
+                    it.copy(
+                        districts = result.data,
+                        isDistrictsLoading = false,
+                        districtsError = null
+                    )
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(
+                        districts = emptyList(),
+                        isDistrictsLoading = false,
+                        districtsError = result.message
+                    )
+                }
             }
-            .map { it.city }
-            .distinct()
-            .sorted()
-            .toList()
+        }
+    }
 
+    private fun applyUniversityFilters(state: GoalSetupUiState): GoalSetupUiState {
         val filteredUniversities = allUniversities.filter { university ->
             (state.selectedRegion == null || university.region == state.selectedRegion) &&
-                (state.selectedCity == null || university.city == state.selectedCity) &&
+                (state.selectedProvinceName == null ||
+                    university.city.equals(state.selectedProvinceName, ignoreCase = true)) &&
                 (state.selectedUniversityType == null || university.type == state.selectedUniversityType)
         }
 
-        val selectedCity = state.selectedCity?.takeIf { it in availableCities }
+        val selectedProvinceName = state.selectedProvinceName?.takeIf { name ->
+            state.provinces.any { it.name.equals(name, ignoreCase = true) }
+        }
         val selectedUniversityName = state.selectedUniversityName?.takeIf { name ->
             filteredUniversities.any { it.name == name }
         }
 
         return state.copy(
-            availableCities = availableCities,
             universities = filteredUniversities,
-            selectedCity = selectedCity,
+            selectedProvinceName = selectedProvinceName,
             selectedUniversityName = selectedUniversityName
         )
     }
@@ -171,7 +212,8 @@ class GoalSetupViewModel @Inject constructor(
             null
         }
         val regionError = if (state.selectedRegion == null) "Bölge seçimi gerekli" else null
-        val cityError = if (state.selectedCity == null) "İl seçimi gerekli" else null
+        val provinceError = if (state.selectedProvinceName == null) "İl seçimi gerekli" else null
+        val districtError = if (state.selectedDistrictName == null) "İlçe seçimi gerekli" else null
         val universityTypeError = if (state.selectedUniversityType == null) {
             "Üniversite türü seçimi gerekli"
         } else {
@@ -183,7 +225,8 @@ class GoalSetupViewModel @Inject constructor(
             examError != null ||
             aytFieldError != null ||
             regionError != null ||
-            cityError != null ||
+            provinceError != null ||
+            districtError != null ||
             universityTypeError != null ||
             universityError != null ||
             departmentError != null
@@ -193,7 +236,8 @@ class GoalSetupViewModel @Inject constructor(
                     examError = examError,
                     aytFieldError = aytFieldError,
                     regionError = regionError,
-                    cityError = cityError,
+                    provinceError = provinceError,
+                    districtError = districtError,
                     universityTypeError = universityTypeError,
                     universityError = universityError,
                     departmentError = departmentError

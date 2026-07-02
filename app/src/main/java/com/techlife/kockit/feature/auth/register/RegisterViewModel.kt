@@ -2,6 +2,12 @@ package com.techlife.kockit.feature.auth.register
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.techlife.kockit.core.common.Constants
+import com.techlife.kockit.core.network.model.ApiResult
+import com.techlife.kockit.domain.auth.model.RegisterAccountType
+import com.techlife.kockit.domain.auth.model.RegisterInfo
+import com.techlife.kockit.domain.auth.usecase.RegisterUseCase
+import com.techlife.kockit.feature.auth.common.validateTurkishPhone
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -16,7 +22,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class RegisterViewModel @Inject constructor() : ViewModel() {
+class RegisterViewModel @Inject constructor(
+    private val registerUseCase: RegisterUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
@@ -92,29 +100,89 @@ class RegisterViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun submitAccountStep() {
+        if (!validateAccountStep()) return
+
         val state = _uiState.value
-        val verificationChannel = when (state.accountMethod) {
-            RegisterAccountMethod.PHONE -> RegisterVerificationChannel.PHONE
-            RegisterAccountMethod.NICKNAME -> state.verificationChannel
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            when (
+                val result = registerUseCase(
+                    RegisterInfo(
+                        accountType = state.accountMethod.toDomainType(),
+                        fullName = state.fullName.trim(),
+                        email = state.email.trim(),
+                        nickname = state.nickname.trim(),
+                        phone = state.phone,
+                        password = state.password
+                    )
+                )
+            ) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    emit(RegisterEffect.ShowMessage("Kayıt başarılı."))
+                    emit(RegisterEffect.NavigateToGoalSetup)
+                }
+                is ApiResult.Error -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    emit(RegisterEffect.ShowMessage(result.message))
+                }
+            }
         }
-        _uiState.update {
-            it.copy(
-                currentStep = RegisterSteps.VERIFICATION,
-                verificationChannel = verificationChannel,
-                verificationEmail = it.email.trim(),
-                verificationPhone = when (state.accountMethod) {
-                    RegisterAccountMethod.PHONE -> state.phone
-                    RegisterAccountMethod.NICKNAME -> if (it.verificationPhone.isBlank()) it.phone else it.verificationPhone
-                },
-                fullNameError = null,
-                emailError = null,
-                nicknameError = null,
-                phoneError = null,
-                passwordError = null,
-                confirmPasswordError = null,
-                termsError = null
-            )
+    }
+
+    private fun validateAccountStep(): Boolean {
+        val state = _uiState.value
+        val fullNameError = validateRegisterFullName(state.fullName)
+        val emailError = validateEmail(state.email)
+        val nicknameError = when (state.accountMethod) {
+            RegisterAccountMethod.NICKNAME -> {
+                if (state.nickname.isBlank()) "Rumuz gerekli" else null
+            }
+            RegisterAccountMethod.PHONE -> null
         }
+        val phoneError = when (state.accountMethod) {
+            RegisterAccountMethod.PHONE -> validateTurkishPhone(state.phone)
+            RegisterAccountMethod.NICKNAME -> null
+        }
+        val passwordError = when {
+            state.password.length < Constants.MIN_PASSWORD_LENGTH ->
+                "Şifre en az ${Constants.MIN_PASSWORD_LENGTH} karakter olmalı"
+            else -> null
+        }
+        val confirmPasswordError = when {
+            state.confirmPassword.isBlank() -> "Şifre tekrarı gerekli"
+            state.confirmPassword != state.password -> "Şifreler eşleşmiyor"
+            else -> null
+        }
+        val termsError = if (!state.isTermsAccepted || !state.isDataAccepted) {
+            "Devam etmek için sözleşmeleri kabul etmelisin"
+        } else {
+            null
+        }
+
+        if (
+            fullNameError != null ||
+            emailError != null ||
+            nicknameError != null ||
+            phoneError != null ||
+            passwordError != null ||
+            confirmPasswordError != null ||
+            termsError != null
+        ) {
+            _uiState.update {
+                it.copy(
+                    fullNameError = fullNameError,
+                    emailError = emailError,
+                    nicknameError = nicknameError,
+                    phoneError = phoneError,
+                    passwordError = passwordError,
+                    confirmPasswordError = confirmPasswordError,
+                    termsError = termsError
+                )
+            }
+            return false
+        }
+        return true
     }
 
     private fun submitVerificationContact() {
@@ -208,6 +276,11 @@ class RegisterViewModel @Inject constructor() : ViewModel() {
 
     private fun emit(effect: RegisterEffect) {
         viewModelScope.launch { _effect.emit(effect) }
+    }
+
+    private fun RegisterAccountMethod.toDomainType(): RegisterAccountType = when (this) {
+        RegisterAccountMethod.NICKNAME -> RegisterAccountType.NICKNAME
+        RegisterAccountMethod.PHONE -> RegisterAccountType.PHONE
     }
 
     private companion object {

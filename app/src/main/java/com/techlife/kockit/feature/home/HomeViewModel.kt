@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.techlife.kockit.domain.auth.usecase.LogoutUseCase
 import com.techlife.kockit.domain.auth.usecase.ObserveUserSessionUseCase
+import com.techlife.kockit.domain.lesson.usecase.GetLessonsUseCase
 import com.techlife.kockit.domain.placement.usecase.ObservePlacementProgressUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -25,7 +26,8 @@ sealed interface HomeEffect {
 class HomeViewModel @Inject constructor(
     observeUserSessionUseCase: ObserveUserSessionUseCase,
     observePlacementProgressUseCase: ObservePlacementProgressUseCase,
-    private val logoutUseCase: LogoutUseCase
+    private val logoutUseCase: LogoutUseCase,
+    private val getLessonsUseCase: GetLessonsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -35,6 +37,7 @@ class HomeViewModel @Inject constructor(
     val effect: SharedFlow<HomeEffect> = _effect.asSharedFlow()
 
     init {
+        loadLessons()
         viewModelScope.launch {
             observeUserSessionUseCase().collect { session ->
                 _uiState.update {
@@ -56,6 +59,12 @@ class HomeViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    private fun loadLessons() {
+        viewModelScope.launch {
+            getLessonsUseCase()
         }
     }
 

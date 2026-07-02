@@ -24,7 +24,26 @@ class UserPreferencesDataStore @Inject constructor(
         prefs.toPlacementProgress()
     }
 
+    override val accessTokenFlow: Flow<String?> = dataStore.data.map { prefs ->
+        prefs[Keys.ACCESS_TOKEN]
+    }
+
     override suspend fun getUserSession(): UserSession = dataStore.data.first().toUserSession()
+
+    override suspend fun getAccessToken(): String? = dataStore.data.first()[Keys.ACCESS_TOKEN]
+
+    override suspend fun getRefreshToken(): String? = dataStore.data.first()[Keys.REFRESH_TOKEN]
+
+    override suspend fun saveAuthTokens(accessToken: String, refreshToken: String?) {
+        dataStore.edit { prefs ->
+            prefs[Keys.ACCESS_TOKEN] = accessToken
+            if (refreshToken != null) {
+                prefs[Keys.REFRESH_TOKEN] = refreshToken
+            } else {
+                prefs.remove(Keys.REFRESH_TOKEN)
+            }
+        }
+    }
 
     override suspend fun setFirstLaunch(isFirstLaunch: Boolean) {
         dataStore.edit { it[Keys.IS_FIRST_LAUNCH] = isFirstLaunch }
@@ -91,6 +110,8 @@ class UserPreferencesDataStore @Inject constructor(
             prefs.remove(Keys.SELECTED_UNIVERSITY)
             prefs.remove(Keys.SELECTED_DEPARTMENT)
             prefs.remove(Keys.PASSWORD)
+            prefs.remove(Keys.ACCESS_TOKEN)
+            prefs.remove(Keys.REFRESH_TOKEN)
             prefs.remove(Keys.PLACEMENT_ABILITY_COMPLETED)
             prefs.remove(Keys.PLACEMENT_CULTURE_COMPLETED)
         }
@@ -124,6 +145,8 @@ class UserPreferencesDataStore @Inject constructor(
         val SELECTED_UNIVERSITY = stringPreferencesKey("selected_university")
         val SELECTED_DEPARTMENT = stringPreferencesKey("selected_department")
         val PASSWORD = stringPreferencesKey("password")
+        val ACCESS_TOKEN = stringPreferencesKey("access_token")
+        val REFRESH_TOKEN = stringPreferencesKey("refresh_token")
         val PLACEMENT_ABILITY_COMPLETED = booleanPreferencesKey("placement_ability_completed")
         val PLACEMENT_CULTURE_COMPLETED = booleanPreferencesKey("placement_culture_completed")
     }

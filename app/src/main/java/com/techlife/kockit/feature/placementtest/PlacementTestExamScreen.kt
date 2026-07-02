@@ -1,7 +1,7 @@
 package com.techlife.kockit.feature.placementtest
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -30,6 +31,7 @@ import com.techlife.kockit.core.designsystem.layout.PlacementTestContentContaine
 import com.techlife.kockit.core.designsystem.layout.rememberPlacementTestLayoutMetrics
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
+import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.core.designsystem.theme.White
 
 @Composable
@@ -47,6 +49,7 @@ fun PlacementTestExamScreen(
         onBackClick = onBackClick,
         onFinishExam = onFinishExam,
         onSelectOption = viewModel::selectOption,
+        onPreviousClick = viewModel::goToPreviousQuestion,
         onNextClick = viewModel::goToNextQuestion
     )
 }
@@ -58,6 +61,7 @@ fun PlacementTestExamContent(
     onBackClick: () -> Unit,
     onFinishExam: () -> Unit,
     onSelectOption: (Int) -> Unit,
+    onPreviousClick: () -> Unit,
     onNextClick: () -> Unit,
 ) {
     val metrics = rememberPlacementTestLayoutMetrics()
@@ -66,6 +70,7 @@ fun PlacementTestExamContent(
         (examState.questions.size - 1).coerceAtLeast(0)
     )
     val question = examState.questions.getOrNull(questionIndex)
+    val isFirstQuestion = examState.currentQuestionIndex <= 0
     val isLastQuestion = examState.currentQuestionIndex >= examState.totalQuestions - 1
 
     PlacementTestDecorBackground(accentSoftColor = section.accentSoftColor) {
@@ -139,15 +144,6 @@ fun PlacementTestExamContent(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
 
-                        if (current.detail.isNotBlank()) {
-                            KocKitSemiText(
-                                text = current.detail,
-                                color = TextPrimary,
-                                fontSize = metrics.bodySize,
-                                lineHeight = metrics.bodyLineHeight
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
 
                         PlacementQuestionImage(imageResId = current.imageResId)
                     }
@@ -166,22 +162,53 @@ fun PlacementTestExamContent(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Box(
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.CenterEnd
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        OutlinedButton(
+                            onClick = onPreviousClick,
+                            enabled = !isFirstQuestion,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(metrics.primaryButtonHeight),
+                            shape = RoundedCornerShape(metrics.answerOptionCornerRadius),
+                            border = BorderStroke(1.5.dp, PlacementTestColors.green),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = White,
+                                contentColor = PlacementTestColors.green,
+                                disabledContainerColor = White,
+                                disabledContentColor = TextSecondary.copy(alpha = 0.45f)
+                            )
+                        ) {
+                            KocKitSemiText(
+                                text = "Önceki Soru",
+                                color = if (isFirstQuestion) {
+                                    TextSecondary.copy(alpha = 0.45f)
+                                } else {
+                                    PlacementTestColors.green
+                                },
+                                fontSize = metrics.primaryButtonTextSize,
+                                lineHeight = metrics.bodyLargeLineHeight
+                            )
+                        }
                         Button(
                             onClick = {
                                 if (isLastQuestion) onFinishExam()
                                 else onNextClick()
                             },
                             enabled = examState.selectedOptionIndex != null,
-                            modifier = Modifier.height(metrics.primaryButtonHeight),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(metrics.primaryButtonHeight),
                             shape = RoundedCornerShape(metrics.answerOptionCornerRadius),
-                            colors = ButtonDefaults.buttonColors(containerColor = PlacementTestColors.green)
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PlacementTestColors.green,
+                                disabledContainerColor = PlacementTestColors.green.copy(alpha = 0.35f)
+                            )
                         ) {
                             KocKitSemiText(
-                                text = if (isLastQuestion) "Bitir" else "Sonraki",
+                                text = if (isLastQuestion) "Bitir" else "Sonraki Soru",
                                 color = White,
                                 fontSize = metrics.primaryButtonTextSize,
                                 lineHeight = metrics.bodyLargeLineHeight
@@ -207,7 +234,6 @@ fun PlacementTestExamScreenPreview() {
                 questions = listOf(
                     PlacementQuestion(
                         prompt = "Soru 1",
-                        detail = "Grafikte verilen fonksiyon için doğru seçeneği işaretleyin.",
                         subject = "Matematik"
                     )
                 )
@@ -215,6 +241,7 @@ fun PlacementTestExamScreenPreview() {
             onBackClick = {},
             onFinishExam = {},
             onSelectOption = {},
+            onPreviousClick = {},
             onNextClick = {}
         )
     }
@@ -227,20 +254,25 @@ fun PlacementTestExamScreenTabletPreview() {
         PlacementTestExamContent(
             section = PlacementTestSection.GENERAL_ABILITY,
             examState = PlacementExamUiState(
-                currentQuestionIndex = 0,
+                currentQuestionIndex = 1,
                 timerText = "03:45",
                 selectedOptionIndex = 2,
+                answers = mapOf(0 to 1, 1 to 2),
                 questions = listOf(
                     PlacementQuestion(
                         prompt = "Soru 1",
-                        detail = "Grafikte verilen fonksiyon için doğru seçeneği işaretleyin.",
                         subject = "Matematik"
+                    ),
+                    PlacementQuestion(
+                        prompt = "Soru 2",
+                        subject = "Sayısal Yetenek"
                     )
                 )
             ),
             onBackClick = {},
             onFinishExam = {},
             onSelectOption = {},
+            onPreviousClick = {},
             onNextClick = {}
         )
     }

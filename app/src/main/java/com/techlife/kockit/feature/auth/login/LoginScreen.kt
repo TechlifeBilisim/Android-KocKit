@@ -167,7 +167,7 @@ private fun ColumnScope.LoginFormBody(
             KocKitTextField(
                 value = uiState.nickname,
                 onValueChange = { onEvent(LoginEvent.NicknameChanged(it)) },
-                placeholder = "Rumuzun",
+                placeholder = "Rumuz",
                 leadingIconVector = Icons.Filled.Tag,
                 error = uiState.nicknameError,
                 shape = LoginFieldShape,
@@ -181,7 +181,7 @@ private fun ColumnScope.LoginFormBody(
             KocKitPasswordField(
                 value = uiState.password,
                 onValueChange = { onEvent(LoginEvent.PasswordChanged(it)) },
-                placeholder = "Şifren",
+                placeholder = "Şifre",
                 isPasswordVisible = uiState.isPasswordVisible,
                 onPasswordVisibilityToggle = { onEvent(LoginEvent.PasswordVisibilityChanged) },
                 error = uiState.passwordError,

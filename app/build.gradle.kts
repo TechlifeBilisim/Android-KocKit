@@ -21,11 +21,18 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "API_BASE_URL", "\"https://apitest.kockit.com/\"")
+        buildConfigField("boolean", "ENABLE_API_LOGGING", "true")
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "ENABLE_API_LOGGING", "true")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("boolean", "ENABLE_API_LOGGING", "false")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -38,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -57,6 +65,12 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.okhttp)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation.compose)
     implementation("com.google.android.gms:play-services-auth:21.2.0")

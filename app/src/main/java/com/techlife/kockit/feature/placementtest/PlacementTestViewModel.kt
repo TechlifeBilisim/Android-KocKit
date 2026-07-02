@@ -12,6 +12,7 @@ data class PlacementExamUiState(
     val currentQuestionIndex: Int = 0,
     val timerText: String = "03:45",
     val selectedOptionIndex: Int? = null,
+    val answers: Map<Int, Int> = emptyMap(),
     val questions: List<PlacementQuestion> = emptyList()
 ) {
     val totalQuestions: Int get() = questions.size
@@ -32,16 +33,39 @@ class PlacementTestViewModel @Inject constructor() : ViewModel() {
     }
 
     fun selectOption(index: Int) {
-        _examState.update { it.copy(selectedOptionIndex = index) }
+        _examState.update { state ->
+            state.copy(
+                selectedOptionIndex = index,
+                answers = state.answers + (state.currentQuestionIndex to index)
+            )
+        }
     }
 
     fun goToNextQuestion() {
         _examState.update { state ->
-            if (state.currentQuestionIndex >= state.totalQuestions - 1) state
-            else state.copy(
-                currentQuestionIndex = state.currentQuestionIndex + 1,
-                selectedOptionIndex = null
-            )
+            if (state.currentQuestionIndex >= state.totalQuestions - 1) {
+                state
+            } else {
+                val nextIndex = state.currentQuestionIndex + 1
+                state.copy(
+                    currentQuestionIndex = nextIndex,
+                    selectedOptionIndex = state.answers[nextIndex]
+                )
+            }
+        }
+    }
+
+    fun goToPreviousQuestion() {
+        _examState.update { state ->
+            if (state.currentQuestionIndex <= 0) {
+                state
+            } else {
+                val previousIndex = state.currentQuestionIndex - 1
+                state.copy(
+                    currentQuestionIndex = previousIndex,
+                    selectedOptionIndex = state.answers[previousIndex]
+                )
+            }
         }
     }
 }
