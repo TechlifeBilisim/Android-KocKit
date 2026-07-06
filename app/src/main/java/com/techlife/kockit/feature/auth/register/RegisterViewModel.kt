@@ -6,7 +6,12 @@ import com.techlife.kockit.core.common.Constants
 import com.techlife.kockit.core.network.model.ApiResult
 import com.techlife.kockit.domain.auth.model.RegisterAccountType
 import com.techlife.kockit.domain.auth.model.RegisterInfo
+import com.techlife.kockit.domain.auth.usecase.LoginWithGoogleUseCase
 import com.techlife.kockit.domain.auth.usecase.RegisterUseCase
+import com.techlife.kockit.domain.auth.usecase.SendEmailCodeUseCase
+import com.techlife.kockit.domain.auth.usecase.SendSmsCodeUseCase
+import com.techlife.kockit.domain.auth.usecase.VerifyEmailCodeUseCase
+import com.techlife.kockit.domain.auth.usecase.VerifySmsCodeUseCase
 import com.techlife.kockit.feature.auth.common.validateTurkishPhone
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -23,7 +28,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val registerUseCase: RegisterUseCase
+    private val registerUseCase: RegisterUseCase,
+    private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
+    private val sendSmsCodeUseCase: SendSmsCodeUseCase,
+    private val sendEmailCodeUseCase: SendEmailCodeUseCase,
+    private val verifySmsCodeUseCase: VerifySmsCodeUseCase,
+    private val verifyEmailCodeUseCase: VerifyEmailCodeUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
@@ -91,6 +101,31 @@ class RegisterViewModel @Inject constructor(
         emit(RegisterEffect.LaunchGoogleSignIn)
     }
 
+    fun onGoogleSignInSuccess(oAuthIdToken: String?, email: String?) {
+        if (oAuthIdToken.isNullOrBlank()) {
+            emit(RegisterEffect.ShowMessage("Google token alınamadı."))
+            return
+        }
+        if (email.isNullOrBlank()) {
+            emit(RegisterEffect.ShowMessage("Google e-posta adresi alınamadı."))
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            when (val result = loginWithGoogleUseCase(oAuthIdToken, email)) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    emit(RegisterEffect.ShowMessage("Google ile giriş başarılı."))
+                    emit(RegisterEffect.NavigateToGoalSetup)
+                }
+                is ApiResult.Error -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    emit(RegisterEffect.ShowMessage(result.message))
+                }
+            }
+        }
+    }
+
     private fun onContinue() {
         when (_uiState.value.currentStep) {
             RegisterSteps.ACCOUNT -> submitAccountStep()
@@ -118,9 +153,26 @@ class RegisterViewModel @Inject constructor(
                 )
             ) {
                 is ApiResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false) }
-                    emit(RegisterEffect.ShowMessage("Kayıt başarılı."))
-                    emit(RegisterEffect.NavigateToGoalSetup)
+                    val registeredPhone = result.data.phone.orEmpty()
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            currentStep = RegisterSteps.VERIFICATION,
+                            verificationEmail = state.email.trim(),
+                            verificationPhone = registeredPhone.ifBlank { state.phone },
+                            verificationChannel = when (state.accountMethod) {
+                                RegisterAccountMethod.PHONE -> RegisterVerificationChannel.PHONE
+                                RegisterAccountMethod.NICKNAME -> {
+                                    if (registeredPhone.isNotBlank()) {
+                                        RegisterVerificationChannel.PHONE
+                                    } else {
+                                        RegisterVerificationChannel.EMAIL
+                                    }
+                                }
+                            }
+                        )
+                    }
+                    emit(RegisterEffect.ShowMessage("Kayıt başarılı. Hesabını doğrula."))
                 }
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(isLoading = false) }
@@ -187,54 +239,119 @@ class RegisterViewModel @Inject constructor(
 
     private fun submitVerificationContact() {
         val state = _uiState.value
+        val emailError = when (state.verificationChannel) {
+            RegisterVerificationChannel.EMAIL -> validateEmail(state.verificationEmail)
+            RegisterVerificationChannel.PHONE -> null
+        }
+        val phoneError = when (state.verificationChannel) {
+            RegisterVerificationChannel.PHONE -> validateTurkishPhone(state.verificationPhone)
+            RegisterVerificationChannel.EMAIL -> null
+        }
+        if (emailError != null || phoneError != null) {
+            _uiState.update {
+                it.copy(
+                    verificationEmailError = emailError,
+                    verificationPhoneError = phoneError
+                )
+            }
+            return
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            delay(400)
-            val destination = maskVerificationDestination(
-                channel = state.verificationChannel,
-                email = state.verificationEmail,
-                phone = state.verificationPhone
-            )
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    currentStep = RegisterSteps.OTP,
-                    otpCode = "",
-                    otpError = null,
-                    otpSentTo = destination,
-                    verificationEmailError = null,
-                    verificationPhoneError = null
-                )
+            val result = when (state.verificationChannel) {
+                RegisterVerificationChannel.EMAIL -> sendEmailCodeUseCase(state.verificationEmail)
+                RegisterVerificationChannel.PHONE -> sendSmsCodeUseCase(state.verificationPhone)
             }
-            startResendCountdown()
-            val message = when (state.verificationChannel) {
-                RegisterVerificationChannel.EMAIL -> "Doğrulama kodu e-posta adresine gönderildi."
-                RegisterVerificationChannel.PHONE -> "Doğrulama kodu telefon numarana gönderildi."
+            when (result) {
+                is ApiResult.Success -> {
+                    val destination = maskVerificationDestination(
+                        channel = state.verificationChannel,
+                        email = state.verificationEmail,
+                        phone = state.verificationPhone
+                    )
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            currentStep = RegisterSteps.OTP,
+                            otpCode = "",
+                            otpError = null,
+                            otpSentTo = destination,
+                            verificationEmailError = null,
+                            verificationPhoneError = null
+                        )
+                    }
+                    startResendCountdown()
+                    val message = when (state.verificationChannel) {
+                        RegisterVerificationChannel.EMAIL -> "Doğrulama kodu e-posta adresine gönderildi."
+                        RegisterVerificationChannel.PHONE -> "Doğrulama kodu telefon numarana gönderildi."
+                    }
+                    emit(RegisterEffect.ShowMessage(message))
+                }
+                is ApiResult.Error -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    emit(RegisterEffect.ShowMessage(result.message))
+                }
             }
-            emit(RegisterEffect.ShowMessage(message))
         }
     }
 
     private fun submitOtp() {
+        val state = _uiState.value
+        val otpError = when {
+            state.otpCode.length < 6 -> "6 haneli doğrulama kodunu gir"
+            else -> null
+        }
+        if (otpError != null) {
+            _uiState.update { it.copy(otpError = otpError) }
+            return
+        }
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, otpError = null) }
-            delay(500)
-            _uiState.update { it.copy(isLoading = false) }
-            emit(RegisterEffect.ShowMessage("Hesabın doğrulandı."))
-            emit(RegisterEffect.NavigateToGoalSetup)
+            val result = when (state.verificationChannel) {
+                RegisterVerificationChannel.EMAIL -> verifyEmailCodeUseCase(
+                    state.verificationEmail,
+                    state.otpCode
+                )
+                RegisterVerificationChannel.PHONE -> verifySmsCodeUseCase(
+                    state.verificationPhone,
+                    state.otpCode
+                )
+            }
+            when (result) {
+                is ApiResult.Success -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    emit(RegisterEffect.ShowMessage("Hesabın doğrulandı."))
+                    emit(RegisterEffect.NavigateToGoalSetup)
+                }
+                is ApiResult.Error -> {
+                    _uiState.update { it.copy(isLoading = false, otpError = result.message) }
+                    emit(RegisterEffect.ShowMessage(result.message))
+                }
+            }
         }
     }
 
     private fun onResendOtp() {
         if (_uiState.value.resendSecondsRemaining > 0) return
+        val state = _uiState.value
         viewModelScope.launch {
-            startResendCountdown()
-            val message = when (_uiState.value.verificationChannel) {
-                RegisterVerificationChannel.EMAIL -> "Doğrulama kodu e-posta adresine yeniden gönderildi."
-                RegisterVerificationChannel.PHONE -> "Doğrulama kodu telefon numarana yeniden gönderildi."
+            val result = when (state.verificationChannel) {
+                RegisterVerificationChannel.EMAIL -> sendEmailCodeUseCase(state.verificationEmail)
+                RegisterVerificationChannel.PHONE -> sendSmsCodeUseCase(state.verificationPhone)
             }
-            emit(RegisterEffect.ShowMessage(message))
+            when (result) {
+                is ApiResult.Success -> {
+                    startResendCountdown()
+                    val message = when (state.verificationChannel) {
+                        RegisterVerificationChannel.EMAIL -> "Doğrulama kodu e-posta adresine yeniden gönderildi."
+                        RegisterVerificationChannel.PHONE -> "Doğrulama kodu telefon numarana yeniden gönderildi."
+                    }
+                    emit(RegisterEffect.ShowMessage(message))
+                }
+                is ApiResult.Error -> emit(RegisterEffect.ShowMessage(result.message))
+            }
         }
     }
 

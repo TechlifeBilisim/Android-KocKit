@@ -2,6 +2,7 @@ package com.techlife.kockit.feature.auth.login
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,14 +27,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.common.api.ApiException
 import com.techlife.kockit.R
 import com.techlife.kockit.core.auth.GoogleSignInHelper
+import com.techlife.kockit.core.auth.GoogleSignInOutcome
 import com.techlife.kockit.core.designsystem.background.KocKitBackground
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitLogo
 import com.techlife.kockit.core.designsystem.component.KocKitText
+import com.techlife.kockit.core.designsystem.component.KocKitOtpCodeField
 import com.techlife.kockit.core.designsystem.component.KocKitPasswordField
 import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
@@ -44,6 +45,8 @@ import com.techlife.kockit.core.designsystem.layout.AuthFormContainer
 import com.techlife.kockit.core.designsystem.layout.AuthFormMetrics
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
+import com.techlife.kockit.core.designsystem.theme.TextPrimary
+import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.feature.auth.common.AuthMethodTabs
 import com.techlife.kockit.feature.auth.common.AuthPhoneNumberField
 import com.techlife.kockit.feature.auth.common.normalizeTurkishPhone
@@ -64,13 +67,12 @@ fun LoginScreen(
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult()
         ) { result ->
-            val data = result.data
-            try {
-                val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-                task.getResult(ApiException::class.java)
-                onNavigateToGoalSetup()
-            } catch (_: Exception) {
-                onShowMessage("Google hesabı seçilemedi.")
+            when (val outcome = GoogleSignInHelper.parseSignInResult(result.resultCode, result.data)) {
+                is GoogleSignInOutcome.Success -> {
+                    viewModel.onGoogleSignInSuccess(outcome.account.idToken, outcome.account.email)
+                }
+                is GoogleSignInOutcome.Error -> onShowMessage(outcome.message)
+                GoogleSignInOutcome.Cancelled -> Unit
             }
         }
 
@@ -81,7 +83,11 @@ fun LoginScreen(
                 LoginEffect.NavigateToGoalSetup -> onNavigateToGoalSetup()
                 LoginEffect.NavigateToForgotPassword -> onNavigateToForgotPassword()
                 LoginEffect.LaunchGoogleSignIn -> {
-                    val intent = GoogleSignInHelper.client(context).signInIntent
+                    if (!GoogleSignInHelper.isConfigured(context)) {
+                        onShowMessage(GoogleSignInHelper.configurationErrorMessage())
+                        return@collectLatest
+                    }
+                    val intent = GoogleSignInHelper.createSignInIntent(context)
                     googleLauncher.launch(intent)
                 }
                 is LoginEffect.ShowMessage -> onShowMessage(effect.message)
@@ -120,9 +126,20 @@ private fun ColumnScope.LoginFormBody(
     onEvent: (LoginEvent) -> Unit
 ) {
     val colors = KocKitTheme.extraColors
-    val loginEnabled = when (uiState.loginMethod) {
-        LoginMethod.NICKNAME -> uiState.nickname.isNotBlank() && uiState.password.isNotBlank()
-        LoginMethod.PHONE -> normalizeTurkishPhone(uiState.phone).length == 10
+    val loginEnabled = when (uiState.currentStep) {
+        LoginSteps.OTP -> uiState.otpCode.length == 6
+        LoginSteps.CREDENTIALS -> when (uiState.loginMethod) {
+            LoginMethod.NICKNAME -> uiState.nickname.isNotBlank() && uiState.password.isNotBlank()
+            LoginMethod.PHONE -> normalizeTurkishPhone(uiState.phone).length == 10
+        }
+        else -> false
+    }
+    val loginButtonText = if (uiState.currentStep == LoginSteps.OTP) "Doğrula" else "Giriş Yap"
+    val headlineText = if (uiState.currentStep == LoginSteps.OTP) "Doğrulama Kodu" else "Giriş Yap"
+    val subtitleText = if (uiState.currentStep == LoginSteps.OTP) {
+        "Telefon numarana gönderilen kodu gir."
+    } else {
+        "Hesabına giriş yap ve \nçalışmalarına devam et."
     }
 
     Spacer(modifier = Modifier.height(metrics.topInset))
@@ -136,7 +153,7 @@ private fun ColumnScope.LoginFormBody(
     Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 
     KocKitBoldText(
-        text = "Giriş Yap",
+        text = headlineText,
         fontSize = metrics.headlineFontSize,
         lineHeight = metrics.headlineLineHeight,
         color = colors.textPrimary
@@ -145,7 +162,7 @@ private fun ColumnScope.LoginFormBody(
     Spacer(modifier = Modifier.height(metrics.smallSpacing))
 
     KocKitText(
-        text = "Hesabına giriş yap ve \nçalışmalarına devam et.",
+        text = subtitleText,
         fontSize = metrics.bodyFontSize,
         lineHeight = metrics.bodyLineHeight,
         color = colors.textPrimary
@@ -153,6 +170,57 @@ private fun ColumnScope.LoginFormBody(
 
     Spacer(modifier = Modifier.height(metrics.sectionSpacing))
 
+    when (uiState.currentStep) {
+        LoginSteps.CREDENTIALS -> LoginCredentialsContent(uiState, metrics, onEvent)
+        LoginSteps.OTP -> LoginOtpContent(uiState, metrics, onEvent)
+    }
+
+    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+    KocKitPrimaryButton(
+        text = loginButtonText,
+        onClick = { onEvent(LoginEvent.LoginClicked) },
+        enabled = loginEnabled,
+        isLoading = uiState.isLoading,
+        containerColor = PastelGreen,
+        height = metrics.buttonHeight,
+        fontSize = metrics.buttonFontSize
+    )
+
+    if (uiState.currentStep == LoginSteps.CREDENTIALS) {
+        Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+        LoginOrDivider(metrics = metrics)
+
+        Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+        KocKitSocialButton(
+            text = "Google ile giriş yap",
+            onClick = { onEvent(LoginEvent.GoogleLoginClicked) },
+            iconPainter = painterResource(R.drawable.ic_google),
+            height = metrics.socialButtonHeight,
+            fontSize = metrics.bodyFontSize,
+            iconSize = if (metrics.isExpanded) 26.dp else 22.dp
+        )
+
+        Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+
+        LoginRegisterFooter(
+            metrics = metrics,
+            onRegisterClick = { onEvent(LoginEvent.RegisterClicked) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        )
+    }
+}
+
+@Composable
+private fun ColumnScope.LoginCredentialsContent(
+    uiState: LoginUiState,
+    metrics: AuthFormMetrics,
+    onEvent: (LoginEvent) -> Unit
+) {
     AuthMethodTabs(
         isNicknameSelected = uiState.loginMethod == LoginMethod.NICKNAME,
         onNicknameSelected = { onEvent(LoginEvent.LoginMethodChanged(LoginMethod.NICKNAME)) },
@@ -200,7 +268,7 @@ private fun ColumnScope.LoginFormBody(
                 modifier = Modifier
                     .align(Alignment.End)
                     .clickable { onEvent(LoginEvent.ForgotPasswordClicked) },
-                color = colors.textPrimary
+                color = KocKitTheme.extraColors.textPrimary
             )
         }
         LoginMethod.PHONE -> {
@@ -213,43 +281,55 @@ private fun ColumnScope.LoginFormBody(
             )
         }
     }
+}
 
-    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+@Composable
+private fun ColumnScope.LoginOtpContent(
+    uiState: LoginUiState,
+    metrics: AuthFormMetrics,
+    onEvent: (LoginEvent) -> Unit
+) {
+    val colors = KocKitTheme.extraColors
+    Column(verticalArrangement = Arrangement.spacedBy(metrics.fieldSpacing)) {
+        KocKitOtpCodeField(
+            value = uiState.otpCode,
+            onValueChange = { onEvent(LoginEvent.OtpCodeChanged(it)) },
+            error = uiState.otpError,
+            cellHeight = metrics.otpCellHeight,
+            digitFontSize = metrics.otpDigitFontSize,
+            digitLineHeight = metrics.otpDigitLineHeight
+        )
 
-    KocKitPrimaryButton(
-        text = "Giriş Yap",
-        onClick = { onEvent(LoginEvent.LoginClicked) },
-        enabled = loginEnabled,
-        isLoading = uiState.isLoading,
-        containerColor = PastelGreen,
-        height = metrics.buttonHeight,
-        fontSize = metrics.buttonFontSize
-    )
+        val resendText = if (uiState.resendSecondsRemaining > 0) {
+            val minutes = uiState.resendSecondsRemaining / 60
+            val seconds = uiState.resendSecondsRemaining % 60
+            "Kodu yeniden gönder %d:%02d".format(minutes, seconds)
+        } else {
+            "Kodu yeniden gönder"
+        }
 
-    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
+        KocKitSemiText(
+            text = resendText,
+            fontSize = metrics.subheadFontSize,
+            lineHeight = metrics.subheadLineHeight,
+            color = if (uiState.resendSecondsRemaining > 0) TextSecondary else colors.primaryTeal,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .clickable(enabled = uiState.resendSecondsRemaining == 0) {
+                    onEvent(LoginEvent.ResendOtpClicked)
+                }
+        )
 
-    LoginOrDivider(metrics = metrics)
-
-    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
-
-    KocKitSocialButton(
-        text = "Google ile giriş yap",
-        onClick = { onEvent(LoginEvent.GoogleLoginClicked) },
-        iconPainter = painterResource(R.drawable.ic_google),
-        height = metrics.socialButtonHeight,
-        fontSize = metrics.bodyFontSize,
-        iconSize = if (metrics.isExpanded) 26.dp else 22.dp
-    )
-
-    Spacer(modifier = Modifier.height(metrics.fieldSpacing))
-
-    LoginRegisterFooter(
-        metrics = metrics,
-        onRegisterClick = { onEvent(LoginEvent.RegisterClicked) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp)
-    )
+        KocKitSemiText(
+            text = "Geri dön",
+            fontSize = metrics.subheadFontSize,
+            lineHeight = metrics.subheadLineHeight,
+            color = TextPrimary,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .clickable { onEvent(LoginEvent.BackClicked) }
+        )
+    }
 }
 
 @Composable
@@ -339,3 +419,4 @@ private fun LoginScreenPreview() {
         )
     }
 }
+

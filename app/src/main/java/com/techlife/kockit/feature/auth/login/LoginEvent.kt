@@ -5,8 +5,11 @@ sealed interface LoginEvent {
     data class NicknameChanged(val nickname: String) : LoginEvent
     data class PhoneChanged(val phone: String) : LoginEvent
     data class PasswordChanged(val password: String) : LoginEvent
+    data class OtpCodeChanged(val code: String) : LoginEvent
     data object PasswordVisibilityChanged : LoginEvent
     data object LoginClicked : LoginEvent
+    data object ResendOtpClicked : LoginEvent
+    data object BackClicked : LoginEvent
     data object ForgotPasswordClicked : LoginEvent
     data object RegisterClicked : LoginEvent
     data object GoogleLoginClicked : LoginEvent

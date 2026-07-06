@@ -3,6 +3,7 @@ package com.techlife.kockit.di
 import com.techlife.kockit.BuildConfig
 import com.techlife.kockit.core.network.auth.SessionTokenProvider
 import com.techlife.kockit.core.network.auth.TokenProvider
+import com.techlife.kockit.core.network.interceptor.AuthAuthenticator
 import com.techlife.kockit.core.network.interceptor.AuthTokenInterceptor
 import com.techlife.kockit.core.network.interceptor.KocKitLoggingInterceptor
 import com.squareup.moshi.Moshi
@@ -41,11 +42,13 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         authTokenInterceptor: AuthTokenInterceptor,
+        authAuthenticator: AuthAuthenticator,
         loggingInterceptor: KocKitLoggingInterceptor
     ): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(NetworkTimeouts.CONNECT_SECONDS, TimeUnit.SECONDS)
         .readTimeout(NetworkTimeouts.READ_SECONDS, TimeUnit.SECONDS)
         .writeTimeout(NetworkTimeouts.WRITE_SECONDS, TimeUnit.SECONDS)
+        .authenticator(authAuthenticator)
         .addInterceptor(authTokenInterceptor)
         .addInterceptor(loggingInterceptor)
         .build()

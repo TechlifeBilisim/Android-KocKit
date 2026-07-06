@@ -5,9 +5,9 @@ import com.techlife.kockit.domain.auth.model.LoginResult
 import com.techlife.kockit.domain.auth.repository.AuthRepository
 import javax.inject.Inject
 
-class LoginUseCase @Inject constructor(
+class LoginWithGoogleUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(nickname: String, password: String): ApiResult<LoginResult> =
-        authRepository.loginWithNickname(nickname, password)
+    suspend operator fun invoke(oAuthIdToken: String, email: String): ApiResult<LoginResult> =
+        authRepository.loginWithGoogle(oAuthIdToken, email)
 }

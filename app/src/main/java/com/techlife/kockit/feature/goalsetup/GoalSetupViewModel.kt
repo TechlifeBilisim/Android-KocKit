@@ -32,6 +32,11 @@ class GoalSetupViewModel @Inject constructor(
     private val saveOnboardingInfoUseCase: SaveOnboardingInfoUseCase
 ) : ViewModel() {
 
+    private companion object {
+        // Geçici: hedef seçimleri zorunlu değil.
+        const val REQUIRE_SELECTIONS = false
+    }
+
     private val _uiState = MutableStateFlow(GoalSetupUiState())
     val uiState: StateFlow<GoalSetupUiState> = _uiState.asStateFlow()
 
@@ -92,16 +97,6 @@ class GoalSetupViewModel @Inject constructor(
             GoalSetupEvent.GoToMainClicked -> {
                 _uiState.update { it.copy(showSuccessDialog = false) }
                 emit(GoalSetupEffect.NavigateToMain)
-            }
-            is GoalSetupEvent.RegionSelected -> _uiState.update { state ->
-                applyUniversityFilters(
-                    state.copy(
-                        selectedRegion = event.name,
-                        selectedUniversityName = null,
-                        regionError = null,
-                        universityError = null
-                    )
-                )
             }
             is GoalSetupEvent.ProvinceSelected -> {
                 _uiState.update { state ->
@@ -174,9 +169,8 @@ class GoalSetupViewModel @Inject constructor(
 
     private fun applyUniversityFilters(state: GoalSetupUiState): GoalSetupUiState {
         val filteredUniversities = allUniversities.filter { university ->
-            (state.selectedRegion == null || university.region == state.selectedRegion) &&
-                (state.selectedProvinceName == null ||
-                    university.city.equals(state.selectedProvinceName, ignoreCase = true)) &&
+            (state.selectedProvinceName == null ||
+                university.city.equals(state.selectedProvinceName, ignoreCase = true)) &&
                 (state.selectedUniversityType == null || university.type == state.selectedUniversityType)
         }
 
@@ -195,12 +189,14 @@ class GoalSetupViewModel @Inject constructor(
     }
 
     private fun onContinue() {
-        if (validate()) {
+        if (!REQUIRE_SELECTIONS || validate()) {
             save()
         }
     }
 
     private fun validate(): Boolean {
+        if (!REQUIRE_SELECTIONS) return true
+
         val state = _uiState.value
         val exam = state.examGoals.find { it.id == state.selectedExamGoalId }
         val university = state.universities.find { it.name == state.selectedUniversityName }
@@ -211,7 +207,6 @@ class GoalSetupViewModel @Inject constructor(
         } else {
             null
         }
-        val regionError = if (state.selectedRegion == null) "Bölge seçimi gerekli" else null
         val provinceError = if (state.selectedProvinceName == null) "İl seçimi gerekli" else null
         val districtError = if (state.selectedDistrictName == null) "İlçe seçimi gerekli" else null
         val universityTypeError = if (state.selectedUniversityType == null) {
@@ -224,7 +219,6 @@ class GoalSetupViewModel @Inject constructor(
         if (
             examError != null ||
             aytFieldError != null ||
-            regionError != null ||
             provinceError != null ||
             districtError != null ||
             universityTypeError != null ||
@@ -235,7 +229,6 @@ class GoalSetupViewModel @Inject constructor(
                 it.copy(
                     examError = examError,
                     aytFieldError = aytFieldError,
-                    regionError = regionError,
                     provinceError = provinceError,
                     districtError = districtError,
                     universityTypeError = universityTypeError,
@@ -250,20 +243,24 @@ class GoalSetupViewModel @Inject constructor(
 
     private fun save() {
         val state = _uiState.value
-        val exam = state.examGoals.find { it.id == state.selectedExamGoalId } ?: return
-        val university = allUniversities.find { it.name == state.selectedUniversityName } ?: return
-        val department = state.departments.find { it.name == state.selectedDepartmentName } ?: return
+        val exam = state.examGoals.find { it.id == state.selectedExamGoalId }
+        val university = allUniversities.find { it.name == state.selectedUniversityName }
+        val department = state.departments.find { it.name == state.selectedDepartmentName }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            saveOnboardingInfoUseCase(OnboardingInfo(exam, university, department))
-                .onSuccess {
-                    _uiState.update { it.copy(isLoading = false, showSuccessDialog = true) }
-                }
-                .onFailure {
-                    _uiState.update { it.copy(isLoading = false) }
-                    emit(GoalSetupEffect.ShowMessage("Kayıt başarısız."))
-                }
+            if (exam != null && university != null && department != null) {
+                saveOnboardingInfoUseCase(OnboardingInfo(exam, university, department))
+                    .onSuccess {
+                        _uiState.update { it.copy(isLoading = false, showSuccessDialog = true) }
+                    }
+                    .onFailure {
+                        _uiState.update { it.copy(isLoading = false) }
+                        emit(GoalSetupEffect.ShowMessage("Kayıt başarısız."))
+                    }
+            } else {
+                _uiState.update { it.copy(isLoading = false, showSuccessDialog = true) }
+            }
         }
     }
 

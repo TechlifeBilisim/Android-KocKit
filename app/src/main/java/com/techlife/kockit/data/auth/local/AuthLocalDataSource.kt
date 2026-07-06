@@ -2,6 +2,7 @@ package com.techlife.kockit.data.auth.local
 
 import com.techlife.kockit.core.datastore.UserPreferences
 import com.techlife.kockit.core.util.normalizeTurkishPhone
+import com.techlife.kockit.domain.auth.model.LoginResult
 import com.techlife.kockit.domain.auth.model.RegisterInfo
 import com.techlife.kockit.domain.auth.model.RegisterResult
 import com.techlife.kockit.domain.auth.model.UserSession
@@ -15,28 +16,29 @@ class AuthLocalDataSource @Inject constructor(
 
     suspend fun getUserSession(): UserSession = userPreferences.getUserSession()
 
-    suspend fun login(email: String, password: String): Result<Unit> {
-        val storedPassword = userPreferences.getPassword()
-        val session = userPreferences.getUserSession()
-        val isValid = if (storedPassword != null && session.email != null) {
-            session.email.equals(email.trim(), ignoreCase = true) && storedPassword == password
-        } else {
-            true
+    suspend fun persistLogin(result: LoginResult, password: String? = null) {
+        result.accessToken?.let { token ->
+            userPreferences.saveAuthTokens(token, result.refreshToken)
         }
-        return if (isValid) {
-            userPreferences.setLoggedIn(true)
-            Result.success(Unit)
-        } else {
-            Result.failure(IllegalArgumentException("Invalid credentials"))
-        }
+        userPreferences.saveUserInfo(
+            fullName = result.fullName,
+            email = result.email,
+            phoneNumber = result.phone
+        )
+        password?.let { userPreferences.savePassword(it) }
+        userPreferences.setLoggedIn(true)
     }
+
+    suspend fun getRefreshToken(): String? = userPreferences.getRefreshToken()
 
     suspend fun persistRegistration(registerInfo: RegisterInfo, result: RegisterResult) {
         userPreferences.saveAuthTokens(result.accessToken, result.refreshToken)
+        val phoneNumber = result.phone?.takeIf { it.isNotBlank() }
+            ?: normalizeTurkishPhone(registerInfo.phone).takeIf { it.isNotBlank() }
         userPreferences.saveUserInfo(
             fullName = registerInfo.fullName.trim(),
-            email = registerInfo.email.trim(),
-            phoneNumber = normalizeTurkishPhone(registerInfo.phone)
+            email = result.email ?: registerInfo.email.trim(),
+            phoneNumber = phoneNumber
         )
         userPreferences.savePassword(registerInfo.password)
         userPreferences.setLoggedIn(true)

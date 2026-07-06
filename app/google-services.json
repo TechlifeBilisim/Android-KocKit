@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "190791893512",
+    "project_id": "koc-kit",
+    "storage_bucket": "koc-kit.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:190791893512:android:3cf6071d52a83382d487bd",
+        "android_client_info": {
+          "package_name": "com.techlife.kockit"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "190791893512-4nfqho6ieo8oqsd0pogkogko2iq97gp9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBVX19ioBNZrOW3L9ndVAWJwX11pC58MCc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "190791893512-4nfqho6ieo8oqsd0pogkogko2iq97gp9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "190791893512-3im318pofgmpd5la32on9na7b9hj0uga.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.tl.kockit"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

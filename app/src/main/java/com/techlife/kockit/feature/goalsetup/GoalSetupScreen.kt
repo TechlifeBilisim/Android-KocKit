@@ -194,15 +194,6 @@ private fun GoalSetupExamStep(
     )
     uiState.universityTypeError?.let { KocKitText(text = it, color = colors.coralAccent) }
     KocKitDropdownField(
-        label = "Bölge",
-        options = uiState.availableRegions,
-        selectedOption = uiState.selectedRegion,
-        onOptionSelected = { onEvent(GoalSetupEvent.RegionSelected(it)) },
-        error = uiState.regionError,
-        searchable = true,
-        searchPlaceholder = "Bölge ara..."
-    )
-    KocKitDropdownField(
         label = "İl",
         options = uiState.provinces.map { it.name },
         selectedOption = uiState.selectedProvinceName,
@@ -464,7 +455,6 @@ private fun GoalSetupScreenPreview() {
                     Department("d02", "Yazılım Mühendisliği")
                 ),
                 selectedExamGoalId = "tyt",
-                selectedRegion = "Marmara",
                 provinces = listOf(Province(id = 34, name = "İstanbul")),
                 selectedProvinceId = 34,
                 selectedProvinceName = "İstanbul",

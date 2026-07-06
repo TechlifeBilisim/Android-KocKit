@@ -43,7 +43,7 @@ fun AppNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Register.route
+        startDestination = Screen.Main.route
     ) {
         composable(Screen.Splash.route) {
             val viewModel: SplashViewModel = hiltViewModel()
@@ -58,6 +58,9 @@ fun AppNavGraph(
                     navController.navigate(Screen.Register.route) {
                         // Back stack kalsın (geri ikonu çalışsın).
                     }
+                },
+                onNavigateToMain = {
+                    navController.navigateToMainClearingBackStack()
                 }
             )
         }
@@ -123,9 +126,7 @@ fun AppNavGraph(
                     }
                 },
                 onNavigateToMain = {
-                    navController.navigate(Screen.Main.route) {
-                        popUpTo(Screen.GoalSetup.route) { inclusive = true }
-                    }
+                    navController.navigateToMainClearingBackStack()
                 },
                 onNavigateBack = { navController.popBackStack() },
                 onShowMessage = ::showToast
@@ -204,9 +205,7 @@ fun AppNavGraph(
                         }
                     },
                     onGoToHome = {
-                        navController.navigate(Screen.Main.route) {
-                            popUpTo(Screen.Placement.route) { inclusive = true }
-                        }
+                        navController.navigateToMainClearingBackStack()
                     }
                 )
             }
@@ -218,9 +217,7 @@ fun AppNavGraph(
                     navController.navigate(Screen.placementInfo(sectionKey))
                 },
                 onNavigateToLogin = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Main.route) { inclusive = true }
-                    }
+                    navController.navigateToLoginClearingBackStack()
                 }
             )
         }

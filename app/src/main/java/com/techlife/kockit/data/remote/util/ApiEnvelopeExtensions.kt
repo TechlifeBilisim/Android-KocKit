@@ -12,3 +12,12 @@ fun <T> ApiEnvelopeDto<T>.requireData(): T {
     }
     return data
 }
+
+fun ApiEnvelopeDto<*>.requireSuccess() {
+    if (!success) {
+        throw ApiEnvelopeException(
+            message = message?.takeIf { it.isNotBlank() } ?: "İşlem başarısız",
+            statusCode = statusCode
+        )
+    }
+}

@@ -18,11 +18,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.techlife.kockit.core.designsystem.component.KocKitBottomNavigation
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.theme.CreamBackground
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.feature.home.HomeScreen
+import com.techlife.kockit.feature.home.HomeViewModel
 import com.techlife.kockit.feature.profile.ProfileScreen
 import com.techlife.kockit.feature.search.SearchScreen
 import com.techlife.kockit.feature.studyplan.StudyPlanScreen
@@ -32,6 +34,7 @@ fun MainScreen(
     onNavigateToPlacement: (sectionKey: String) -> Unit = {},
     onNavigateToLogin: () -> Unit = {}
 ) {
+    val homeViewModel: HomeViewModel = hiltViewModel()
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
     var showSearch by rememberSaveable { mutableStateOf(false) }
 
@@ -62,6 +65,7 @@ fun MainScreen(
                         SearchScreen(onBackClick = { showSearch = false })
                     } else {
                         HomeScreen(
+                            viewModel = homeViewModel,
                             onNavigateToPlacement = onNavigateToPlacement,
                             onNavigateToLogin = onNavigateToLogin,
                             onSearchClick = { showSearch = true },
@@ -76,7 +80,7 @@ fun MainScreen(
                 MainTab.ANALYSIS -> MainTabPlaceholder(tab = selectedTab)
                 MainTab.PROFILE -> ProfileScreen(
                     onBackClick = { selectedTab = MainTab.HOME },
-                    onLogoutClick = onNavigateToLogin
+                    onLogoutClick = { homeViewModel.onLogoutClick() }
                 )
             }
         }

@@ -17,5 +17,7 @@ data class RegisterInfo(
 data class RegisterResult(
     val userId: String,
     val accessToken: String,
-    val refreshToken: String?
+    val refreshToken: String?,
+    val email: String? = null,
+    val phone: String? = null
 )

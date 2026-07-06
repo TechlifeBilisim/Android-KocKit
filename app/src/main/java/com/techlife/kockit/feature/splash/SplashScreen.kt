@@ -32,13 +32,15 @@ import kotlinx.coroutines.flow.collectLatest
 fun SplashScreen(
     viewModel: SplashViewModel,
     onNavigateToLogin: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNavigateToMain: () -> Unit
 ) {
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
             when (effect) {
                 SplashEffect.NavigateToLogin -> onNavigateToLogin()
                 SplashEffect.NavigateToRegister -> onNavigateToRegister()
+                SplashEffect.NavigateToMain -> onNavigateToMain()
             }
         }
     }

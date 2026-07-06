@@ -2,6 +2,11 @@ package com.techlife.kockit.feature.auth.forgotpassword
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.techlife.kockit.core.network.model.ApiResult
+import com.techlife.kockit.domain.auth.repository.AuthRepository
+import com.techlife.kockit.domain.auth.usecase.SendEmailCodeUseCase
+import com.techlife.kockit.domain.auth.usecase.VerifyEmailCodeUseCase
+import com.techlife.kockit.feature.auth.register.validateEmail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -16,7 +21,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
+class ForgotPasswordViewModel @Inject constructor(
+    private val authRepository: AuthRepository,
+    private val sendEmailCodeUseCase: SendEmailCodeUseCase,
+    private val verifyEmailCodeUseCase: VerifyEmailCodeUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ForgotPasswordUiState())
     val uiState: StateFlow<ForgotPasswordUiState> = _uiState.asStateFlow()
@@ -28,13 +37,24 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
 
     fun startProfileFlow() {
         resendCountdownJob?.cancel()
-        _uiState.value = ForgotPasswordUiState(
-            currentStep = ForgotPasswordSteps.CODE,
-            isProfileFlow = true
-        )
         viewModelScope.launch {
-            startResendCountdown()
-            emit(ForgotPasswordEffect.ShowMessage("Doğrulama kodu e-posta adresine gönderildi."))
+            val email = authRepository.getCurrentSession().email.orEmpty()
+            if (email.isBlank()) {
+                emit(ForgotPasswordEffect.ShowMessage("E-posta adresi bulunamadı."))
+                return@launch
+            }
+            _uiState.value = ForgotPasswordUiState(
+                currentStep = ForgotPasswordSteps.CODE,
+                email = email,
+                isProfileFlow = true
+            )
+            when (val result = sendEmailCodeUseCase(email)) {
+                is ApiResult.Success -> {
+                    startResendCountdown()
+                    emit(ForgotPasswordEffect.ShowMessage("Doğrulama kodu e-posta adresine gönderildi."))
+                }
+                is ApiResult.Error -> emit(ForgotPasswordEffect.ShowMessage(result.message))
+            }
         }
     }
 
@@ -74,11 +94,7 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
 
     private fun submitEmail() {
         val email = _uiState.value.email.trim()
-        val emailError = when {
-            email.isBlank() -> "E-posta adresi gerekli"
-            !email.contains("@") || !email.contains(".") -> "Geçerli bir e-posta adresi gir"
-            else -> null
-        }
+        val emailError = validateEmail(email)
         if (emailError != null) {
             _uiState.update { it.copy(emailError = emailError) }
             return
@@ -86,23 +102,30 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            delay(400)
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    currentStep = ForgotPasswordSteps.CODE,
-                    code = ""
-                )
+            when (val result = sendEmailCodeUseCase(email)) {
+                is ApiResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            currentStep = ForgotPasswordSteps.CODE,
+                            code = ""
+                        )
+                    }
+                    startResendCountdown()
+                    emit(ForgotPasswordEffect.ShowMessage("Doğrulama kodu e-posta adresine gönderildi."))
+                }
+                is ApiResult.Error -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    emit(ForgotPasswordEffect.ShowMessage(result.message))
+                }
             }
-            startResendCountdown()
-            emit(ForgotPasswordEffect.ShowMessage("Doğrulama kodu e-posta adresine gönderildi."))
         }
     }
 
     private fun submitCode() {
-        val code = _uiState.value.code
+        val state = _uiState.value
         val codeError = when {
-            code.length < 6 -> "6 haneli doğrulama kodunu gir"
+            state.code.length < 6 -> "6 haneli doğrulama kodunu gir"
             else -> null
         }
         if (codeError != null) {
@@ -112,14 +135,21 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            delay(400)
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    currentStep = ForgotPasswordSteps.NEW_PASSWORD,
-                    newPassword = "",
-                    confirmPassword = ""
-                )
+            when (val result = verifyEmailCodeUseCase(state.email, state.code)) {
+                is ApiResult.Success -> {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            currentStep = ForgotPasswordSteps.NEW_PASSWORD,
+                            newPassword = "",
+                            confirmPassword = ""
+                        )
+                    }
+                }
+                is ApiResult.Error -> {
+                    _uiState.update { it.copy(isLoading = false, codeError = result.message) }
+                    emit(ForgotPasswordEffect.ShowMessage(result.message))
+                }
             }
         }
     }
@@ -161,8 +191,13 @@ class ForgotPasswordViewModel @Inject constructor() : ViewModel() {
     private fun onResendCode() {
         if (_uiState.value.resendSecondsRemaining > 0) return
         viewModelScope.launch {
-            emit(ForgotPasswordEffect.ShowMessage("Doğrulama kodu yeniden gönderildi."))
-            startResendCountdown()
+            when (val result = sendEmailCodeUseCase(_uiState.value.email)) {
+                is ApiResult.Success -> {
+                    emit(ForgotPasswordEffect.ShowMessage("Doğrulama kodu yeniden gönderildi."))
+                    startResendCountdown()
+                }
+                is ApiResult.Error -> emit(ForgotPasswordEffect.ShowMessage(result.message))
+            }
         }
     }
 

@@ -72,14 +72,13 @@ import com.techlife.kockit.core.designsystem.component.KocKitOtpCodeField
 import com.techlife.kockit.core.designsystem.component.LoginFieldShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.common.api.ApiException
 import com.techlife.kockit.feature.auth.common.AuthMethodTabs
 import com.techlife.kockit.feature.auth.common.AuthPhoneNumberField
 import com.techlife.kockit.feature.auth.common.KVKK_AGREEMENT_TEXT
 import com.techlife.kockit.feature.auth.common.LegalAgreementDialog
 import com.techlife.kockit.feature.auth.common.TERMS_AGREEMENT_TEXT
 import com.techlife.kockit.core.auth.GoogleSignInHelper
+import com.techlife.kockit.core.auth.GoogleSignInOutcome
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -97,13 +96,12 @@ fun RegisterScreen(
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult()
         ) { result ->
-            val data = result.data
-            try {
-                val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-                task.getResult(ApiException::class.java)
-                onNavigateToGoalSetup()
-            } catch (_: Exception) {
-                onShowMessage("Google hesabı seçilemedi.")
+            when (val outcome = GoogleSignInHelper.parseSignInResult(result.resultCode, result.data)) {
+                is GoogleSignInOutcome.Success -> {
+                    viewModel.onGoogleSignInSuccess(outcome.account.idToken, outcome.account.email)
+                }
+                is GoogleSignInOutcome.Error -> onShowMessage(outcome.message)
+                GoogleSignInOutcome.Cancelled -> Unit
             }
         }
 
@@ -114,7 +112,11 @@ fun RegisterScreen(
                 RegisterEffect.NavigateToGoalSetup -> onNavigateToGoalSetup()
                 RegisterEffect.NavigateBack -> onNavigateBack()
                 RegisterEffect.LaunchGoogleSignIn -> {
-                    val intent = GoogleSignInHelper.client(context).signInIntent
+                    if (!GoogleSignInHelper.isConfigured(context)) {
+                        onShowMessage(GoogleSignInHelper.configurationErrorMessage())
+                        return@collectLatest
+                    }
+                    val intent = GoogleSignInHelper.createSignInIntent(context)
                     googleLauncher.launch(intent)
                 }
                 is RegisterEffect.ShowMessage -> onShowMessage(effect.message)
