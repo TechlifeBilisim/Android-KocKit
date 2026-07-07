@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -32,6 +33,7 @@ import com.techlife.kockit.core.auth.GoogleSignInHelper
 import com.techlife.kockit.core.auth.GoogleSignInOutcome
 import com.techlife.kockit.core.designsystem.background.KocKitBackground
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
+import com.techlife.kockit.core.designsystem.component.KocKitCheckbox
 import com.techlife.kockit.core.designsystem.component.KocKitLogo
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitOtpCodeField
@@ -57,7 +59,6 @@ fun LoginScreen(
     viewModel: LoginViewModel,
     onNavigateToRegister: () -> Unit,
     onNavigateToGoalSetup: () -> Unit,
-    onNavigateToForgotPassword: () -> Unit,
     onShowMessage: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -81,7 +82,6 @@ fun LoginScreen(
             when (effect) {
                 LoginEffect.NavigateToRegister -> onNavigateToRegister()
                 LoginEffect.NavigateToGoalSetup -> onNavigateToGoalSetup()
-                LoginEffect.NavigateToForgotPassword -> onNavigateToForgotPassword()
                 LoginEffect.LaunchGoogleSignIn -> {
                     if (!GoogleSignInHelper.isConfigured(context)) {
                         onShowMessage(GoogleSignInHelper.configurationErrorMessage())
@@ -128,10 +128,7 @@ private fun ColumnScope.LoginFormBody(
     val colors = KocKitTheme.extraColors
     val loginEnabled = when (uiState.currentStep) {
         LoginSteps.OTP -> uiState.otpCode.length == 6
-        LoginSteps.CREDENTIALS -> when (uiState.loginMethod) {
-            LoginMethod.NICKNAME -> uiState.nickname.isNotBlank() && uiState.password.isNotBlank()
-            LoginMethod.PHONE -> normalizeTurkishPhone(uiState.phone).length == 10
-        }
+        LoginSteps.CREDENTIALS -> normalizeTurkishPhone(uiState.phone).length == 10
         else -> false
     }
     val loginButtonText = if (uiState.currentStep == LoginSteps.OTP) "Doğrula" else "Giriş Yap"
@@ -221,65 +218,47 @@ private fun ColumnScope.LoginCredentialsContent(
     metrics: AuthFormMetrics,
     onEvent: (LoginEvent) -> Unit
 ) {
-    AuthMethodTabs(
-        isNicknameSelected = uiState.loginMethod == LoginMethod.NICKNAME,
-        onNicknameSelected = { onEvent(LoginEvent.LoginMethodChanged(LoginMethod.NICKNAME)) },
-        onPhoneSelected = { onEvent(LoginEvent.LoginMethodChanged(LoginMethod.PHONE)) },
+    AuthPhoneNumberField(
+        value = uiState.phone,
+        onValueChange = { onEvent(LoginEvent.PhoneChanged(it)) },
+        placeholder = "5XX XXX XX XX",
+        error = uiState.phoneError,
         metrics = metrics
     )
 
     Spacer(modifier = Modifier.height(metrics.fieldSpacing))
 
-    when (uiState.loginMethod) {
-        LoginMethod.NICKNAME -> {
-            KocKitTextField(
-                value = uiState.nickname,
-                onValueChange = { onEvent(LoginEvent.NicknameChanged(it)) },
-                placeholder = "Rumuz",
-                leadingIconVector = Icons.Filled.Tag,
-                error = uiState.nicknameError,
-                shape = LoginFieldShape,
-                fieldHeight = metrics.fieldHeight,
-                textFontSize = metrics.fieldFontSize,
-                textLineHeight = metrics.fieldLineHeight
-            )
+    LoginRememberMeRow(
+        checked = uiState.rememberMe,
+        metrics = metrics,
+        onCheckedChange = { onEvent(LoginEvent.RememberMeChanged(it)) }
+    )
+}
 
-            Spacer(modifier = Modifier.height(metrics.fieldSpacing))
-
-            KocKitPasswordField(
-                value = uiState.password,
-                onValueChange = { onEvent(LoginEvent.PasswordChanged(it)) },
-                placeholder = "Şifre",
-                isPasswordVisible = uiState.isPasswordVisible,
-                onPasswordVisibilityToggle = { onEvent(LoginEvent.PasswordVisibilityChanged) },
-                error = uiState.passwordError,
-                shape = LoginFieldShape,
-                fieldHeight = metrics.fieldHeight,
-                textFontSize = metrics.fieldFontSize,
-                textLineHeight = metrics.fieldLineHeight
-            )
-
-            Spacer(modifier = Modifier.height(metrics.fieldSpacing))
-
-            KocKitBoldText(
-                text = "Şifremi unuttum?",
-                fontSize = metrics.bodyFontSize,
-                lineHeight = metrics.bodyLineHeight,
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .clickable { onEvent(LoginEvent.ForgotPasswordClicked) },
-                color = KocKitTheme.extraColors.textPrimary
-            )
-        }
-        LoginMethod.PHONE -> {
-            AuthPhoneNumberField(
-                value = uiState.phone,
-                onValueChange = { onEvent(LoginEvent.PhoneChanged(it)) },
-                placeholder = "5XX XXX XX XX",
-                error = uiState.phoneError,
-                metrics = metrics
-            )
-        }
+@Composable
+private fun LoginRememberMeRow(
+    checked: Boolean,
+    metrics: AuthFormMetrics,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val colors = KocKitTheme.extraColors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) },
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        KocKitCheckbox(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        KocKitSemiText(
+            text = "Beni hatırla",
+            fontSize = metrics.subheadFontSize,
+            lineHeight = metrics.subheadLineHeight,
+            color = colors.textPrimary
+        )
     }
 }
 

@@ -88,12 +88,12 @@ fun HomeScreen(
                         onSearchClick = onSearchClick
                     )
                 }
+                item(key = "greeting") {
+                    HomeGreetingSection(
+                        userName = uiState.fullName.ifBlank { HomeFakeData.USER_NAME }
+                    )
+                }
                 if (!placementPending) {
-                    item(key = "greeting") {
-                        HomeGreetingSection(
-                            userName = uiState.fullName.ifBlank { HomeFakeData.USER_NAME }
-                        )
-                    }
                     item(key = "daily_goal") {
                         HomeDailyGoalCard(
                             completedNet = HomeFakeData.DAILY_GOAL_COMPLETED,
@@ -105,7 +105,8 @@ fun HomeScreen(
                 if (placementPending) {
                     item(key = "placement_reminder") {
                         HomePlacementReminderCard(
-                            onClick = viewModel::onPlacementReminderClick
+                            onClick = viewModel::onPlacementReminderClick,
+                            remainingCount = uiState.remainingPlacementCount
                         )
                     }
                 }

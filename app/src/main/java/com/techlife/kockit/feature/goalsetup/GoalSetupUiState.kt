@@ -4,6 +4,7 @@ import com.techlife.kockit.domain.location.model.District
 import com.techlife.kockit.domain.location.model.Province
 import com.techlife.kockit.domain.onboarding.model.Department
 import com.techlife.kockit.domain.onboarding.model.ExamGoal
+import com.techlife.kockit.domain.onboarding.model.Gender
 import com.techlife.kockit.domain.onboarding.model.University
 import com.techlife.kockit.domain.onboarding.model.UniversityType
 
@@ -14,6 +15,9 @@ data class GoalSetupUiState(
     val districts: List<District> = emptyList(),
     val departments: List<Department> = emptyList(),
     val aytFieldOptions: List<GoalSetupOption> = GoalSetupAytFields.options,
+    val onlyTyt: Boolean = false,
+    val selectedGender: Gender? = null,
+    val genderError: String? = null,
     val selectedExamGoalId: String? = null,
     val selectedAytFieldId: String? = null,
     val selectedProvinceId: Int? = null,

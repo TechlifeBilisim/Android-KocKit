@@ -56,7 +56,9 @@ class RegisterViewModel @Inject constructor(
             is RegisterEvent.FullNameChanged -> _uiState.update { it.copy(fullName = event.value, fullNameError = null) }
             is RegisterEvent.EmailChanged -> _uiState.update { it.copy(email = event.value, emailError = null) }
             is RegisterEvent.NicknameChanged -> _uiState.update { it.copy(nickname = event.value, nicknameError = null) }
-            is RegisterEvent.PhoneChanged -> _uiState.update { it.copy(phone = event.value, phoneError = null) }
+            is RegisterEvent.PhoneChanged -> _uiState.update {
+                it.copy(phone = event.value.filter(Char::isDigit).take(11), phoneError = null)
+            }
             is RegisterEvent.PasswordChanged -> _uiState.update { it.copy(password = event.value, passwordError = null) }
             is RegisterEvent.ConfirmPasswordChanged -> _uiState.update {
                 it.copy(confirmPassword = event.value, confirmPasswordError = null)
@@ -143,36 +145,46 @@ class RegisterViewModel @Inject constructor(
             when (
                 val result = registerUseCase(
                     RegisterInfo(
-                        accountType = state.accountMethod.toDomainType(),
+                        accountType = RegisterAccountType.PHONE,
                         fullName = state.fullName.trim(),
                         email = state.email.trim(),
                         nickname = state.nickname.trim(),
-                        phone = state.phone,
-                        password = state.password
+                        phone = state.phone
                     )
                 )
             ) {
                 is ApiResult.Success -> {
-                    val registeredPhone = result.data.phone.orEmpty()
+                    val registeredPhone = result.data.phone.orEmpty().ifBlank { state.phone }
                     _uiState.update {
                         it.copy(
-                            isLoading = false,
-                            currentStep = RegisterSteps.VERIFICATION,
                             verificationEmail = state.email.trim(),
-                            verificationPhone = registeredPhone.ifBlank { state.phone },
-                            verificationChannel = when (state.accountMethod) {
-                                RegisterAccountMethod.PHONE -> RegisterVerificationChannel.PHONE
-                                RegisterAccountMethod.NICKNAME -> {
-                                    if (registeredPhone.isNotBlank()) {
-                                        RegisterVerificationChannel.PHONE
-                                    } else {
-                                        RegisterVerificationChannel.EMAIL
-                                    }
-                                }
-                            }
+                            verificationPhone = registeredPhone,
+                            verificationChannel = RegisterVerificationChannel.PHONE
                         )
                     }
-                    emit(RegisterEffect.ShowMessage("Kayıt başarılı. Hesabını doğrula."))
+                    when (val smsResult = sendSmsCodeUseCase(registeredPhone)) {
+                        is ApiResult.Success -> {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    currentStep = RegisterSteps.OTP,
+                                    otpCode = "",
+                                    otpError = null,
+                                    otpSentTo = maskVerificationDestination(
+                                        channel = RegisterVerificationChannel.PHONE,
+                                        email = state.email.trim(),
+                                        phone = registeredPhone
+                                    )
+                                )
+                            }
+                            startResendCountdown()
+                            emit(RegisterEffect.ShowMessage("Kayıt başarılı. Telefonuna gönderilen kodu gir."))
+                        }
+                        is ApiResult.Error -> {
+                            _uiState.update { it.copy(isLoading = false) }
+                            emit(RegisterEffect.ShowMessage(smsResult.message))
+                        }
+                    }
                 }
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(isLoading = false) }
@@ -186,26 +198,8 @@ class RegisterViewModel @Inject constructor(
         val state = _uiState.value
         val fullNameError = validateRegisterFullName(state.fullName)
         val emailError = validateEmail(state.email)
-        val nicknameError = when (state.accountMethod) {
-            RegisterAccountMethod.NICKNAME -> {
-                if (state.nickname.isBlank()) "Rumuz gerekli" else null
-            }
-            RegisterAccountMethod.PHONE -> null
-        }
-        val phoneError = when (state.accountMethod) {
-            RegisterAccountMethod.PHONE -> validateTurkishPhone(state.phone)
-            RegisterAccountMethod.NICKNAME -> null
-        }
-        val passwordError = when {
-            state.password.length < Constants.MIN_PASSWORD_LENGTH ->
-                "Şifre en az ${Constants.MIN_PASSWORD_LENGTH} karakter olmalı"
-            else -> null
-        }
-        val confirmPasswordError = when {
-            state.confirmPassword.isBlank() -> "Şifre tekrarı gerekli"
-            state.confirmPassword != state.password -> "Şifreler eşleşmiyor"
-            else -> null
-        }
+        val nicknameError = if (state.nickname.isBlank()) "Rumuz gerekli" else null
+        val phoneError = validateTurkishPhone(state.phone)
         val termsError = if (!state.isTermsAccepted || !state.isDataAccepted) {
             "Devam etmek için sözleşmeleri kabul etmelisin"
         } else {
@@ -217,8 +211,6 @@ class RegisterViewModel @Inject constructor(
             emailError != null ||
             nicknameError != null ||
             phoneError != null ||
-            passwordError != null ||
-            confirmPasswordError != null ||
             termsError != null
         ) {
             _uiState.update {
@@ -227,8 +219,6 @@ class RegisterViewModel @Inject constructor(
                     emailError = emailError,
                     nicknameError = nicknameError,
                     phoneError = phoneError,
-                    passwordError = passwordError,
-                    confirmPasswordError = confirmPasswordError,
                     termsError = termsError
                 )
             }
@@ -376,7 +366,7 @@ class RegisterViewModel @Inject constructor(
                 resendCountdownJob?.cancel()
                 _uiState.update {
                     it.copy(
-                        currentStep = RegisterSteps.VERIFICATION,
+                        currentStep = RegisterSteps.ACCOUNT,
                         otpCode = "",
                         otpError = null,
                         resendSecondsRemaining = 0

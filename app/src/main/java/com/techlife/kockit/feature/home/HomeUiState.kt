@@ -6,5 +6,6 @@ data class HomeUiState(
     val university: String = "",
     val department: String = "",
     val showPlacementReminderCard: Boolean = true,
-    val placementSectionKey: String? = null
+    val placementSectionKey: String? = null,
+    val remainingPlacementCount: Int = 0
 )

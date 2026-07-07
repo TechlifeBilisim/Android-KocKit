@@ -55,7 +55,8 @@ class HomeViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         showPlacementReminderCard = progress.shouldShowReminderCard,
-                        placementSectionKey = progress.nextIncompleteSectionKey
+                        placementSectionKey = progress.nextIncompleteSectionKey,
+                        remainingPlacementCount = progress.remainingCount
                     )
                 }
             }

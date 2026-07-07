@@ -4,10 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.techlife.kockit.core.common.Constants
 import com.techlife.kockit.core.network.model.ApiResult
+import com.techlife.kockit.domain.auth.usecase.GetRememberedPhoneUseCase
+import com.techlife.kockit.domain.auth.usecase.HasActiveSessionUseCase
 import com.techlife.kockit.domain.auth.usecase.LoginUseCase
 import com.techlife.kockit.domain.auth.usecase.LoginWithGoogleUseCase
 import com.techlife.kockit.domain.auth.usecase.LoginWithSmsUseCase
 import com.techlife.kockit.domain.auth.usecase.RequestLoginSmsUseCase
+import com.techlife.kockit.domain.auth.usecase.SetRememberMeUseCase
+import com.techlife.kockit.feature.auth.common.normalizeTurkishPhone
 import com.techlife.kockit.feature.auth.common.validateTurkishPhone
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -27,7 +31,10 @@ class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
     private val requestLoginSmsUseCase: RequestLoginSmsUseCase,
     private val loginWithSmsUseCase: LoginWithSmsUseCase,
-    private val loginWithGoogleUseCase: LoginWithGoogleUseCase
+    private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
+    private val setRememberMeUseCase: SetRememberMeUseCase,
+    private val getRememberedPhoneUseCase: GetRememberedPhoneUseCase,
+    private val hasActiveSessionUseCase: HasActiveSessionUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -37,6 +44,17 @@ class LoginViewModel @Inject constructor(
     val effect: SharedFlow<LoginEffect> = _effect.asSharedFlow()
 
     private var resendCountdownJob: Job? = null
+
+    init {
+        viewModelScope.launch {
+            val rememberedPhone = getRememberedPhoneUseCase()
+            if (!rememberedPhone.isNullOrBlank()) {
+                _uiState.update {
+                    it.copy(phone = rememberedPhone, rememberMe = true)
+                }
+            }
+        }
+    }
 
     fun onEvent(event: LoginEvent) {
         when (event) {
@@ -70,6 +88,9 @@ class LoginViewModel @Inject constructor(
             is LoginEvent.OtpCodeChanged -> _uiState.update {
                 it.copy(otpCode = event.code.filter(Char::isDigit).take(6), otpError = null)
             }
+            is LoginEvent.RememberMeChanged -> _uiState.update {
+                it.copy(rememberMe = event.value)
+            }
             LoginEvent.PasswordVisibilityChanged -> _uiState.update {
                 it.copy(isPasswordVisible = !it.isPasswordVisible)
             }
@@ -77,7 +98,6 @@ class LoginViewModel @Inject constructor(
             LoginEvent.ResendOtpClicked -> onResendOtp()
             LoginEvent.BackClicked -> onBack()
             LoginEvent.RegisterClicked -> emit(LoginEffect.NavigateToRegister)
-            LoginEvent.ForgotPasswordClicked -> emit(LoginEffect.NavigateToForgotPassword)
             LoginEvent.GoogleLoginClicked -> emit(LoginEffect.LaunchGoogleSignIn)
             LoginEvent.AppleLoginClicked -> emit(LoginEffect.ShowMessage("Apple girişi yakında eklenecek."))
         }
@@ -96,6 +116,7 @@ class LoginViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             when (val result = loginWithGoogleUseCase(oAuthIdToken, email)) {
                 is ApiResult.Success -> {
+                    setRememberMeUseCase(_uiState.value.rememberMe, null)
                     _uiState.update { it.copy(isLoading = false) }
                     emit(LoginEffect.ShowMessage("Giriş başarılı."))
                     emit(LoginEffect.NavigateToGoalSetup)
@@ -116,9 +137,25 @@ class LoginViewModel @Inject constructor(
     }
 
     private fun submitCredentials() {
-        when (_uiState.value.loginMethod) {
-            LoginMethod.NICKNAME -> submitNicknameLogin()
-            LoginMethod.PHONE -> requestPhoneLoginSms()
+        val state = _uiState.value
+        val phoneError = validateTurkishPhone(state.phone)
+        if (phoneError != null) {
+            _uiState.update { it.copy(phoneError = phoneError) }
+            return
+        }
+
+        viewModelScope.launch {
+            // "Beni hatırla" ile daha önce girilmiş aynı telefon numarası ve hâlâ geçerli
+            // bir oturum varsa SMS adımını atlayıp doğrudan içeri al.
+            val rememberedPhone = getRememberedPhoneUseCase()
+            val sameRememberedPhone = !rememberedPhone.isNullOrBlank() &&
+                normalizeTurkishPhone(state.phone) == normalizeTurkishPhone(rememberedPhone)
+            if (state.rememberMe && sameRememberedPhone && hasActiveSessionUseCase()) {
+                emit(LoginEffect.ShowMessage("Giriş başarılı."))
+                emit(LoginEffect.NavigateToGoalSetup)
+                return@launch
+            }
+            requestPhoneLoginSms()
         }
     }
 
@@ -199,6 +236,10 @@ class LoginViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, otpError = null) }
             when (val result = loginWithSmsUseCase(state.phone, state.otpCode)) {
                 is ApiResult.Success -> {
+                    setRememberMeUseCase(
+                        state.rememberMe,
+                        if (state.rememberMe) normalizeTurkishPhone(state.phone) else null
+                    )
                     _uiState.update { it.copy(isLoading = false) }
                     emit(LoginEffect.ShowMessage("Giriş başarılı."))
                     emit(LoginEffect.NavigateToGoalSetup)

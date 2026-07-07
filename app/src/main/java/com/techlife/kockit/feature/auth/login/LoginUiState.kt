@@ -2,11 +2,12 @@ package com.techlife.kockit.feature.auth.login
 
 data class LoginUiState(
     val currentStep: Int = LoginSteps.CREDENTIALS,
-    val loginMethod: LoginMethod = LoginMethod.NICKNAME,
+    val loginMethod: LoginMethod = LoginMethod.PHONE,
     val nickname: String = "",
     val phone: String = "",
     val password: String = "",
     val otpCode: String = "",
+    val rememberMe: Boolean = false,
     val resendSecondsRemaining: Int = 0,
     val isPasswordVisible: Boolean = false,
     val nicknameError: String? = null,

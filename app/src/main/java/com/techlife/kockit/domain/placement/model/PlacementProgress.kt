@@ -7,6 +7,9 @@ data class PlacementProgress(
     val shouldShowReminderCard: Boolean
         get() = !isGeneralAbilityCompleted || !isGeneralCultureCompleted
 
+    val remainingCount: Int
+        get() = listOf(isGeneralAbilityCompleted, isGeneralCultureCompleted).count { !it }
+
     val nextIncompleteSectionKey: String?
         get() = when {
             !isGeneralAbilityCompleted -> SECTION_GENERAL_ABILITY

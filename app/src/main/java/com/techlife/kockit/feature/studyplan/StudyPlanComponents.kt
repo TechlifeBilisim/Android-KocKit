@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarToday
@@ -55,7 +54,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.techlife.kockit.core.designsystem.component.KocKitBackButton
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
+import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitNumberPickerField
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
@@ -107,20 +108,11 @@ fun StudyPlanHeader(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Box(
-                modifier = Modifier
-                    .size(metrics.backButtonSize)
-                    .clip(CircleShape)
-                    .clickable(onClick = onBackClick),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Geri",
-                    modifier = Modifier.size(metrics.backIconSize),
-                    tint = TextPrimary
-                )
-            }
+            KocKitBackButton(
+                onClick = onBackClick,
+                size = metrics.backButtonSize,
+                iconSize = metrics.backIconSize
+            )
         }
         Spacer(modifier = Modifier.height(18.dp))
         KocKitBoldText(
@@ -400,13 +392,18 @@ fun StudyPlanParameterStepper(
 ) {
     val metrics = studyPlanMetrics()
     if (!enabled) {
-        KocKitSemiText(
-            text = if (suffix.isBlank()) value.toString() else "$value $suffix",
-            color = TextPrimary,
-            fontSize = metrics.parameterPickerSize,
-            lineHeight = metrics.parameterPickerLineHeight,
-            modifier = modifier
-        )
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.Center
+        ) {
+            KocKitExtraBoldText(
+                text = if (suffix.isBlank()) value.toString() else "$value $suffix",
+                color = TextPrimary,
+                fontSize = metrics.parameterPickerSize,
+                lineHeight = metrics.parameterPickerLineHeight,
+                maxLines = 1
+            )
+        }
         return
     }
     Row(

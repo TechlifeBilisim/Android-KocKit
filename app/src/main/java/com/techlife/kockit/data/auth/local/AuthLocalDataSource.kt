@@ -31,6 +31,8 @@ class AuthLocalDataSource @Inject constructor(
 
     suspend fun getRefreshToken(): String? = userPreferences.getRefreshToken()
 
+    suspend fun getAccessToken(): String? = userPreferences.getAccessToken()
+
     suspend fun persistRegistration(registerInfo: RegisterInfo, result: RegisterResult) {
         userPreferences.saveAuthTokens(result.accessToken, result.refreshToken)
         val phoneNumber = result.phone?.takeIf { it.isNotBlank() }
@@ -43,7 +45,16 @@ class AuthLocalDataSource @Inject constructor(
         userPreferences.savePassword(registerInfo.password)
         userPreferences.setLoggedIn(true)
         userPreferences.setOnboardingCompleted(false)
+        // Yeni kayıt olan kullanıcı yeniden açılışta tekrar giriş yapmak zorunda kalmasın.
+        userPreferences.setRememberMe(true, phoneNumber)
     }
+
+    suspend fun setRememberMe(remember: Boolean, phone: String?) =
+        userPreferences.setRememberMe(remember, phone)
+
+    suspend fun isRemembered(): Boolean = userPreferences.getRememberMe()
+
+    suspend fun getRememberedPhone(): String? = userPreferences.getRememberedPhone()
 
     suspend fun logout() {
         userPreferences.clearSession()

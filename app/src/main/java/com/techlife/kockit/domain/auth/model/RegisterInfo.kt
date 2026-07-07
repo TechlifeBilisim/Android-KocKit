@@ -11,7 +11,7 @@ data class RegisterInfo(
     val email: String,
     val nickname: String,
     val phone: String,
-    val password: String
+    val password: String = ""
 )
 
 data class RegisterResult(

@@ -49,7 +49,8 @@ fun RegisterInfo.toStudentRegisterRequestDto(): StudentRegisterRequestDto {
             cepTelefon = normalizeTurkishPhone(phone),
             loginTypeId = AuthLoginType.TELEFON,
             eposta = email.trim(),
-            sifre = password,
+            sifre = password.ifBlank { null },
+            rumuz = nickname.trim().ifBlank { null },
             cinsiyetId = RegisterApiConstants.DEFAULT_CINSIYET_ID,
             ilId = RegisterApiConstants.DEFAULT_IL_ID,
             ilceId = RegisterApiConstants.DEFAULT_ILCE_ID

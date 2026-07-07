@@ -8,7 +8,7 @@ data class StudentRegisterRequestDto(
     val cepTelefon: String? = null,
     val loginTypeId: Int,
     val eposta: String,
-    val sifre: String,
+    val sifre: String? = null,
     val cinsiyetId: Int = 1,
     val ilId: Int = 1,
     val ilceId: Int = 1,

@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.outlined.AccountBalance
@@ -57,6 +56,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.techlife.kockit.core.designsystem.component.KocKitBackButton
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
@@ -97,20 +97,11 @@ fun ProfileTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(metrics.backButtonSize)
-                .clip(CircleShape)
-                .clickable(onClick = onBackClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Geri",
-                modifier = Modifier.size(metrics.backIconSize),
-                tint = TextPrimary
-            )
-        }
+        KocKitBackButton(
+            onClick = onBackClick,
+            size = metrics.backButtonSize,
+            iconSize = metrics.backIconSize
+        )
     }
 }
 
@@ -659,7 +650,6 @@ private fun ProfileStudyDetailCell(
 @Composable
 fun ProfileAccountSettingsCard(
     onPersonalInfoClick: () -> Unit,
-    onChangePasswordClick: () -> Unit,
     onGoalsClick: () -> Unit,
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -687,12 +677,6 @@ fun ProfileAccountSettingsCard(
                 label = "Kişisel Bilgiler",
                 icon = Icons.Outlined.Person,
                 onClick = onPersonalInfoClick
-            )
-            ProfileAccountSettingDivider()
-            ProfileAccountSettingRow(
-                label = "Şifre Değiştir",
-                icon = Icons.Outlined.Lock,
-                onClick = onChangePasswordClick
             )
             ProfileAccountSettingDivider()
             ProfileAccountSettingRow(

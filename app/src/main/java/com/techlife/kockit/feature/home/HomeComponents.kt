@@ -945,7 +945,8 @@ private fun HomePriorityLessonRow(
 @Composable
 fun HomePlacementReminderCard(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    remainingCount: Int = 0
 ) {
     val metrics = homeMetrics()
     val iconBoxSize = if (metrics.isExpanded) 60.dp else 52.dp
@@ -1002,7 +1003,11 @@ fun HomePlacementReminderCard(
             Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
                 KocKitBoldText(
-                    text = "Seviye Testini Yapmayı Unutma...",
+                    text = if (remainingCount > 0) {
+                        "Planınızı görmek için $remainingCount test kaldı"
+                    } else {
+                        "Seviye Testini Yapmayı Unutma..."
+                    },
                     color = TextPrimary,
                     fontSize = metrics.placementTitleSize,
                     lineHeight = metrics.placementTitleLineHeight,
@@ -1010,7 +1015,7 @@ fun HomePlacementReminderCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 KocKitText(
-                    text = "Sana en uygun çalışma planını oluşturabilmemiz için seviye testini çözmelisin.",
+                    text = "Sana en uygun çalışma planını oluşturabilmemiz için seviye testlerini çözmelisin.",
                     color = TextSecondary,
                     fontSize = metrics.placementBodySize,
                     lineHeight = metrics.placementBodyLineHeight,
@@ -1091,7 +1096,7 @@ fun HomeGoalBannerCard(modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(start = 4.dp)
             ) {
                 KocKitSemiText(
-                    text = "Hedefini Güncelle >",
+                    text = "Hedefini Gözden Geçir",
                     color = OrangeAccent,
                     fontSize = if (metrics.isExpanded) 12.sp else 9.sp,
                     lineHeight = metrics.cardCaptionLineHeight

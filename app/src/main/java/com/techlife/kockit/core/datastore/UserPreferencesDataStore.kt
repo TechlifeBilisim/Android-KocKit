@@ -99,6 +99,24 @@ class UserPreferencesDataStore @Inject constructor(
         }
     }
 
+    override suspend fun setRememberMe(remember: Boolean, phone: String?) {
+        dataStore.edit { prefs ->
+            prefs[Keys.REMEMBER_ME] = remember
+            val trimmedPhone = phone?.takeIf { it.isNotBlank() }
+            if (remember && trimmedPhone != null) {
+                prefs[Keys.REMEMBERED_PHONE] = trimmedPhone
+            } else if (!remember) {
+                prefs.remove(Keys.REMEMBERED_PHONE)
+            }
+        }
+    }
+
+    override suspend fun getRememberMe(): Boolean =
+        dataStore.data.first()[Keys.REMEMBER_ME] ?: false
+
+    override suspend fun getRememberedPhone(): String? =
+        dataStore.data.first()[Keys.REMEMBERED_PHONE]
+
     override suspend fun clearSession() {
         dataStore.edit { prefs ->
             prefs[Keys.IS_LOGGED_IN] = false
@@ -114,6 +132,9 @@ class UserPreferencesDataStore @Inject constructor(
             prefs.remove(Keys.REFRESH_TOKEN)
             prefs.remove(Keys.PLACEMENT_ABILITY_COMPLETED)
             prefs.remove(Keys.PLACEMENT_CULTURE_COMPLETED)
+            // "Beni hatırla" açık çıkış sonrası da telefonu ön dolgu için saklanır,
+            // ancak otomatik girişi engellemek için bayrak kapatılır.
+            prefs[Keys.REMEMBER_ME] = false
         }
     }
 
@@ -149,5 +170,7 @@ class UserPreferencesDataStore @Inject constructor(
         val REFRESH_TOKEN = stringPreferencesKey("refresh_token")
         val PLACEMENT_ABILITY_COMPLETED = booleanPreferencesKey("placement_ability_completed")
         val PLACEMENT_CULTURE_COMPLETED = booleanPreferencesKey("placement_culture_completed")
+        val REMEMBER_ME = booleanPreferencesKey("remember_me")
+        val REMEMBERED_PHONE = stringPreferencesKey("remembered_phone")
     }
 }

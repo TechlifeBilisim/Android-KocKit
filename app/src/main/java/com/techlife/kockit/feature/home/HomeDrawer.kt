@@ -4,11 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.runtime.Composable
@@ -25,7 +28,6 @@ import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.OrangeAccent
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
-import com.techlife.kockit.core.designsystem.theme.White
 
 private val drawerItems = listOf(
     "Çalışma Planı",
@@ -45,12 +47,15 @@ fun HomeDrawerContent(
 ) {
     ModalDrawerSheet(
         modifier = modifier.width(280.dp),
-        drawerContainerColor = White
+        drawerContainerColor = CreamBackground,
+        drawerShape = RoundedCornerShape(topEnd = 24.dp, bottomEnd = 24.dp),
+        windowInsets = WindowInsets(0, 0, 0, 0)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .background(CreamBackground)
+                .systemBarsPadding()
                 .padding(24.dp)
         ) {
             KocKitBoldText(

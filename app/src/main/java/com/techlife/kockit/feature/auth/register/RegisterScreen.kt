@@ -292,7 +292,7 @@ private fun RegisterStep1Content(
                 fontWeight = FontWeight.SemiBold
             )
         ) {
-            append("Kullanım koşullarını ve Kvkk şartlarını ")
+            append("Kullanım koşullarını ")
         }
         pop()
         append("okudum ve kabul ediyorum.")
@@ -313,37 +313,6 @@ private fun RegisterStep1Content(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(metrics.fieldSpacing)) {
-        AuthMethodTabs(
-            isNicknameSelected = uiState.accountMethod == RegisterAccountMethod.NICKNAME,
-            onNicknameSelected = { onEvent(RegisterEvent.AccountMethodChanged(RegisterAccountMethod.NICKNAME)) },
-            onPhoneSelected = { onEvent(RegisterEvent.AccountMethodChanged(RegisterAccountMethod.PHONE)) },
-            metrics = metrics
-        )
-
-        when (uiState.accountMethod) {
-            RegisterAccountMethod.NICKNAME -> {
-                KocKitTextField(
-                    uiState.nickname,
-                    { onEvent(RegisterEvent.NicknameChanged(it)) },
-                    "Rumuz",
-                    error = uiState.nicknameError,
-                    leadingIconVector = Icons.Filled.Tag,
-                    fieldHeight = metrics.fieldHeight,
-                    textFontSize = metrics.fieldFontSize,
-                    textLineHeight = metrics.fieldLineHeight
-                )
-            }
-            RegisterAccountMethod.PHONE -> {
-                AuthPhoneNumberField(
-                    value = uiState.phone,
-                    onValueChange = { onEvent(RegisterEvent.PhoneChanged(it)) },
-                    placeholder = "5XX XXX XX XX",
-                    error = uiState.phoneError,
-                    metrics = metrics
-                )
-            }
-        }
-
         KocKitTextField(
             uiState.fullName,
             { onEvent(RegisterEvent.FullNameChanged(it)) },
@@ -355,35 +324,28 @@ private fun RegisterStep1Content(
             textLineHeight = metrics.fieldLineHeight
         )
         KocKitTextField(
+            uiState.nickname,
+            { onEvent(RegisterEvent.NicknameChanged(it)) },
+            "Rumuz",
+            error = uiState.nicknameError,
+            leadingIconVector = Icons.Filled.Tag,
+            fieldHeight = metrics.fieldHeight,
+            textFontSize = metrics.fieldFontSize,
+            textLineHeight = metrics.fieldLineHeight
+        )
+        AuthPhoneNumberField(
+            value = uiState.phone,
+            onValueChange = { onEvent(RegisterEvent.PhoneChanged(it)) },
+            placeholder = "5XX XXX XX XX",
+            error = uiState.phoneError,
+            metrics = metrics
+        )
+        KocKitTextField(
             uiState.email,
             { onEvent(RegisterEvent.EmailChanged(it)) },
             "E-posta adresi",
             error = uiState.emailError,
             leadingIconVector = Icons.Filled.Email,
-            fieldHeight = metrics.fieldHeight,
-            textFontSize = metrics.fieldFontSize,
-            textLineHeight = metrics.fieldLineHeight
-        )
-        KocKitPasswordField(
-            uiState.password,
-            { onEvent(RegisterEvent.PasswordChanged(it)) },
-            "Şifre",
-            uiState.isPasswordVisible,
-            { onEvent(RegisterEvent.PasswordVisibilityChanged) },
-            error = uiState.passwordError,
-            showTrailingIcon = false,
-            fieldHeight = metrics.fieldHeight,
-            textFontSize = metrics.fieldFontSize,
-            textLineHeight = metrics.fieldLineHeight
-        )
-        KocKitPasswordField(
-            uiState.confirmPassword,
-            { onEvent(RegisterEvent.ConfirmPasswordChanged(it)) },
-            "Şifre Tekrar",
-            uiState.isConfirmPasswordVisible,
-            { onEvent(RegisterEvent.ConfirmPasswordVisibilityChanged) },
-            error = uiState.confirmPasswordError,
-            showTrailingIcon = false,
             fieldHeight = metrics.fieldHeight,
             textFontSize = metrics.fieldFontSize,
             textLineHeight = metrics.fieldLineHeight

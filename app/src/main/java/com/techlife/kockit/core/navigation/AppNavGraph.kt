@@ -13,8 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.techlife.kockit.feature.auth.forgotpassword.ForgotPasswordScreen
-import com.techlife.kockit.feature.auth.forgotpassword.ForgotPasswordViewModel
 import com.techlife.kockit.feature.auth.login.LoginScreen
 import com.techlife.kockit.feature.auth.login.LoginViewModel
 import com.techlife.kockit.feature.auth.register.RegisterScreen
@@ -43,7 +41,7 @@ fun AppNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Main.route
+        startDestination = Screen.Splash.route
     ) {
         composable(Screen.Splash.route) {
             val viewModel: SplashViewModel = hiltViewModel()
@@ -52,11 +50,6 @@ fun AppNavGraph(
                 onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
-                    }
-                },
-                onNavigateToRegister = {
-                    navController.navigate(Screen.Register.route) {
-                        // Back stack kalsın (geri ikonu çalışsın).
                     }
                 },
                 onNavigateToMain = {
@@ -75,9 +68,6 @@ fun AppNavGraph(
                 onNavigateToGoalSetup = {
                     navController.navigate(Screen.GoalSetup.route)
                 },
-                onNavigateToForgotPassword = {
-                    navController.navigate(Screen.ForgotPassword.route)
-                },
                 onShowMessage = ::showToast
             )
         }
@@ -95,23 +85,6 @@ fun AppNavGraph(
                     navController.navigate(Screen.GoalSetup.route)
                 },
                 onNavigateBack = { navController.popBackStack() },
-                onShowMessage = ::showToast
-            )
-        }
-
-        composable(Screen.ForgotPassword.route) {
-            val viewModel: ForgotPasswordViewModel = hiltViewModel()
-            ForgotPasswordScreen(
-                viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToLogin = {
-                    navController.popBackStack(Screen.Login.route, inclusive = false)
-                },
-                onNavigateToRegister = {
-                    navController.navigate(Screen.Register.route) {
-                        popUpTo(Screen.ForgotPassword.route) { inclusive = true }
-                    }
-                },
                 onShowMessage = ::showToast
             )
         }

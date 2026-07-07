@@ -16,9 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,6 +32,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.techlife.kockit.R
+import com.techlife.kockit.core.designsystem.component.KocKitBackButton
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitOtpCodeField
 import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
@@ -88,23 +87,10 @@ fun AuthVerificationTopBar(
             .padding(horizontal = metrics.horizontalPadding)
             .height(if (metrics.isExpanded) 56.dp else 48.dp)
     ) {
-        Surface(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .size(40.dp),
-            shape = CircleShape,
-            color = White,
-            shadowElevation = 4.dp
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Geri",
-                    tint = TextPrimary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
+        KocKitBackButton(
+            onClick = onBackClick,
+            modifier = Modifier.align(Alignment.CenterStart)
+        )
         KocKitBoldText(
             text = title,
             color = TextPrimary,

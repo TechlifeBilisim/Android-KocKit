@@ -27,5 +27,8 @@ interface UserPreferences {
     suspend fun savePassword(password: String)
     suspend fun getPassword(): String?
     suspend fun setPlacementSectionCompleted(sectionKey: String, completed: Boolean)
+    suspend fun setRememberMe(remember: Boolean, phone: String?)
+    suspend fun getRememberMe(): Boolean
+    suspend fun getRememberedPhone(): String?
     suspend fun clearSession()
 }

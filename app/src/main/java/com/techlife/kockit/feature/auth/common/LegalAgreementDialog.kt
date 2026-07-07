@@ -1,20 +1,30 @@
 package com.techlife.kockit.feature.auth.common
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
+import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.layout.AuthFormMetrics
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
@@ -33,6 +43,11 @@ fun LegalAgreementDialog(
     val hasReadToEnd by remember {
         derivedStateOf {
             scrollState.maxValue == 0 || scrollState.value >= scrollState.maxValue - 32
+        }
+    }
+    val canScrollMore by remember {
+        derivedStateOf {
+            scrollState.maxValue > 0 && scrollState.value < scrollState.maxValue - 32
         }
     }
 
@@ -62,15 +77,46 @@ fun LegalAgreementDialog(
             }
         },
         confirmButton = {
-            KocKitPrimaryButton(
-                text = "Tamam",
-                onClick = onAccepted,
-                enabled = hasReadToEnd,
-                containerColor = colors.pastelGreen,
-                height = metrics.buttonHeight,
-                fontSize = metrics.buttonFontSize,
-                modifier = Modifier.padding(end = 8.dp, bottom = 8.dp)
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.End
+            ) {
+                AnimatedVisibility(
+                    visible = canScrollMore,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        KocKitSemiText(
+                            text = "Devam etmek için aşağı kaydır",
+                            color = colors.pastelGreen,
+                            fontSize = metrics.subheadFontSize,
+                            lineHeight = metrics.subheadLineHeight
+                        )
+                        Icon(
+                            imageVector = Icons.Filled.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = colors.pastelGreen,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+                }
+                KocKitPrimaryButton(
+                    text = "Tamam",
+                    onClick = onAccepted,
+                    enabled = hasReadToEnd,
+                    containerColor = colors.pastelGreen,
+                    height = metrics.buttonHeight,
+                    fontSize = metrics.buttonFontSize,
+                    modifier = Modifier.padding(end = 8.dp, bottom = 8.dp)
+                )
+            }
         }
     )
 }

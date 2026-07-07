@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.Flow
 interface AuthRepository {
     fun observeUserSession(): Flow<UserSession>
     suspend fun getCurrentSession(): UserSession
+    suspend fun getAccessToken(): String?
+    suspend fun setRememberMe(remember: Boolean, phone: String?)
+    suspend fun isRemembered(): Boolean
+    suspend fun getRememberedPhone(): String?
     suspend fun loginWithNickname(nickname: String, password: String): ApiResult<LoginResult>
     suspend fun requestLoginSms(phone: String): ApiResult<Unit>
     suspend fun loginWithSms(phone: String, code: String): ApiResult<LoginResult>

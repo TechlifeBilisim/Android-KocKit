@@ -87,6 +87,16 @@ class GoalSetupViewModel @Inject constructor(
             is GoalSetupEvent.AytFieldSelected -> _uiState.update {
                 it.copy(selectedAytFieldId = event.id, aytFieldError = null)
             }
+            is GoalSetupEvent.OnlyTytToggled -> _uiState.update {
+                it.copy(
+                    onlyTyt = event.value,
+                    selectedExamGoalId = if (event.value) "tyt" else "ayt",
+                    examError = null
+                )
+            }
+            is GoalSetupEvent.GenderSelected -> _uiState.update {
+                it.copy(selectedGender = event.gender, genderError = null)
+            }
             GoalSetupEvent.SuccessDialogDismissed -> _uiState.update {
                 it.copy(showSuccessDialog = false)
             }
@@ -243,14 +253,15 @@ class GoalSetupViewModel @Inject constructor(
 
     private fun save() {
         val state = _uiState.value
-        val exam = state.examGoals.find { it.id == state.selectedExamGoalId }
+        val examId = state.selectedExamGoalId ?: if (state.onlyTyt) "tyt" else "ayt"
+        val exam = state.examGoals.find { it.id == examId }
         val university = allUniversities.find { it.name == state.selectedUniversityName }
         val department = state.departments.find { it.name == state.selectedDepartmentName }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             if (exam != null && university != null && department != null) {
-                saveOnboardingInfoUseCase(OnboardingInfo(exam, university, department))
+                saveOnboardingInfoUseCase(OnboardingInfo(exam, university, department, state.selectedGender))
                     .onSuccess {
                         _uiState.update { it.copy(isLoading = false, showSuccessDialog = true) }
                     }

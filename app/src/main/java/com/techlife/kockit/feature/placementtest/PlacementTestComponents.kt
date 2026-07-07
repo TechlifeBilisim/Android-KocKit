@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
@@ -72,6 +71,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.techlife.kockit.core.designsystem.component.KocKitBackButton
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
@@ -128,21 +128,11 @@ fun PlacementTestInfoBackHeader(
 ) {
     val metrics = placementTestMetrics()
     Column(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .size(metrics.backButtonSize)
-                .clip(CircleShape)
-                .background(White)
-                .clickable(onClick = onBackClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = null,
-                tint = TextPrimary,
-                modifier = Modifier.size(metrics.backIconSize)
-            )
-        }
+        KocKitBackButton(
+            onClick = onBackClick,
+            size = metrics.backButtonSize,
+            iconSize = metrics.backIconSize
+        )
         Spacer(modifier = Modifier.height(12.dp))
         KocKitExtraBoldText(
             text = title,
@@ -620,17 +610,6 @@ fun PlacementTestExamHeader(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(
-            onClick = onBackClick,
-            modifier = Modifier.size(metrics.backButtonSize)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = null,
-                tint = TextPrimary,
-                modifier = Modifier.size(metrics.backIconSize)
-            )
-        }
         KocKitBoldText(
             text = title,
             color = TextPrimary,
@@ -639,7 +618,6 @@ fun PlacementTestExamHeader(
             modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.size(metrics.backButtonSize))
     }
 }
 
@@ -748,13 +726,6 @@ fun PlacementQuestionImage(
     modifier: Modifier = Modifier
 ) {
     val metrics = placementTestMetrics()
-    var showFullscreen by remember(imageResId) { mutableStateOf(false) }
-    var scale by remember(imageResId) { mutableFloatStateOf(1f) }
-    var offset by remember(imageResId) { mutableStateOf(Offset.Zero) }
-    val transformState = rememberTransformableState { zoomChange, panChange, _ ->
-        scale = (scale * zoomChange).coerceIn(1f, 4f)
-        offset += panChange
-    }
 
     Box(
         modifier = modifier
@@ -762,7 +733,6 @@ fun PlacementQuestionImage(
             .clip(RoundedCornerShape(metrics.answerOptionCornerRadius))
             .background(Color.White)
             .border(1.dp, Color(0xFFE8E8E8), RoundedCornerShape(metrics.answerOptionCornerRadius))
-            .clickable { showFullscreen = true }
     ) {
         Image(
             painter = painterResource(imageResId),
@@ -771,135 +741,8 @@ fun PlacementQuestionImage(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(metrics.questionImageHeight)
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                    translationX = offset.x
-                    translationY = offset.y
-                }
-                .transformable(state = transformState)
                 .padding(8.dp)
         )
-        Surface(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(10.dp),
-            shape = RoundedCornerShape(8.dp),
-            color = Color.Black.copy(alpha = 0.55f)
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.ZoomIn,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(14.dp)
-                )
-                KocKitSemiText(
-                    text = "Tam Ekran",
-                    color = Color.White,
-                    fontSize = metrics.smallSize,
-                    lineHeight = metrics.smallLineHeight
-                )
-            }
-        }
-    }
-
-    if (showFullscreen) {
-        PlacementQuestionImageZoomDialog(
-            imageResId = imageResId,
-            onDismiss = {
-                showFullscreen = false
-                scale = 1f
-                offset = Offset.Zero
-            }
-        )
-    }
-}
-
-@Composable
-private fun PlacementQuestionImageZoomDialog(
-    @DrawableRes imageResId: Int,
-    onDismiss: () -> Unit
-) {
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
-    val transformState = rememberTransformableState { zoomChange, panChange, _ ->
-        scale = (scale * zoomChange).coerceIn(1f, 5f)
-        offset += panChange
-    }
-
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.92f))
-        ) {
-            Image(
-                painter = painterResource(imageResId),
-                contentDescription = "Soru görseli",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        translationX = offset.x
-                        translationY = offset.y
-                    }
-                    .transformable(state = transformState)
-                    .padding(24.dp)
-            )
-            IconButton(
-                onClick = onDismiss,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = "Kapat",
-                    tint = Color.White
-                )
-            }
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 24.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color.White.copy(alpha = 0.15f)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.ZoomOut,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        KocKitSemiText(
-                            text = "İki parmakla yakınlaştır",
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            lineHeight = 14.sp
-                        )
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -927,7 +770,7 @@ fun PlacementAnswerRadioRow(
                     horizontal = if (metrics.isExpanded) 10.dp else 8.dp,
                     vertical = if (metrics.isExpanded) 10.dp else 8.dp
                 ),
-            horizontalArrangement = Arrangement.spacedBy(if (metrics.isExpanded) 10.dp else 8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             labels.forEachIndexed { index, label ->
@@ -937,8 +780,7 @@ fun PlacementAnswerRadioRow(
                     accentColor = accentColor,
                     onClick = { onOptionSelected(index) },
                     metrics = metrics,
-                    optionHeight = optionHeight,
-                    modifier = Modifier.weight(1f)
+                    optionHeight = optionHeight
                 )
             }
         }
@@ -955,7 +797,7 @@ private fun PlacementAnswerRadioItem(
     optionHeight: Dp,
     modifier: Modifier = Modifier
 ) {
-    val shape = RoundedCornerShape(metrics.answerOptionCornerRadius)
+    val shape = CircleShape
     val backgroundColor by animateColorAsState(
         targetValue = if (isSelected) accentColor else White,
         animationSpec = spring(stiffness = Spring.StiffnessMedium),
@@ -982,7 +824,7 @@ private fun PlacementAnswerRadioItem(
 
     Box(
         modifier = modifier
-            .height(optionHeight)
+            .size(optionHeight)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale

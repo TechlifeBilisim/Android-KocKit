@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.DeleteOutline
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -47,6 +46,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
+import com.techlife.kockit.core.designsystem.component.KocKitBackButton
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
@@ -75,21 +75,11 @@ fun SearchTopBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Surface(
-            modifier = Modifier.size(metrics.backButtonSize),
-            shape = CircleShape,
-            color = White,
-            shadowElevation = 2.dp
-        ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Geri",
-                    tint = TextPrimary,
-                    modifier = Modifier.size(metrics.backIconSize)
-                )
-            }
-        }
+        KocKitBackButton(
+            onClick = onBackClick,
+            size = metrics.backButtonSize,
+            iconSize = metrics.backIconSize
+        )
         SearchInputField(
             query = query,
             onQueryChange = onQueryChange,

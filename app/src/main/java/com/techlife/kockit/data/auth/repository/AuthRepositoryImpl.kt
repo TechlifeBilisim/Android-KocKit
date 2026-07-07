@@ -3,17 +3,21 @@ package com.techlife.kockit.data.auth.repository
 import com.techlife.kockit.core.network.model.ApiResult
 import com.techlife.kockit.data.auth.local.AuthLocalDataSource
 import com.techlife.kockit.data.remote.datasource.AuthRemoteDataSource
+import com.techlife.kockit.di.ApplicationScope
 import com.techlife.kockit.domain.auth.model.LoginResult
 import com.techlife.kockit.domain.auth.model.RegisterInfo
 import com.techlife.kockit.domain.auth.model.RegisterResult
 import com.techlife.kockit.domain.auth.model.UserSession
 import com.techlife.kockit.domain.auth.repository.AuthRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
     private val authLocalDataSource: AuthLocalDataSource,
-    private val authRemoteDataSource: AuthRemoteDataSource
+    private val authRemoteDataSource: AuthRemoteDataSource,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) : AuthRepository {
 
     override fun observeUserSession(): Flow<UserSession> =
@@ -21,6 +25,16 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun getCurrentSession(): UserSession =
         authLocalDataSource.getUserSession()
+
+    override suspend fun getAccessToken(): String? =
+        authLocalDataSource.getAccessToken()
+
+    override suspend fun setRememberMe(remember: Boolean, phone: String?) =
+        authLocalDataSource.setRememberMe(remember, phone)
+
+    override suspend fun isRemembered(): Boolean = authLocalDataSource.isRemembered()
+
+    override suspend fun getRememberedPhone(): String? = authLocalDataSource.getRememberedPhone()
 
     override suspend fun loginWithNickname(nickname: String, password: String): ApiResult<LoginResult> {
         return when (val result = authRemoteDataSource.loginWithNickname(nickname, password)) {
@@ -115,7 +129,10 @@ class AuthRepositoryImpl @Inject constructor(
         authRemoteDataSource.verifyEmailCode(email, code)
 
     override suspend fun logout() {
-        authRemoteDataSource.logout()
+        // Sunucuya çıkış bildirimi (token hâlâ mevcutken) — best effort, uygulama kapansa
+        // veya ağ yavaş olsa bile yerel temizliği bloklamaz.
+        applicationScope.launch { authRemoteDataSource.logout() }
+        // Yerel oturum ve token'lar her koşulda hemen ve garantili temizlenir.
         authLocalDataSource.logout()
     }
 
