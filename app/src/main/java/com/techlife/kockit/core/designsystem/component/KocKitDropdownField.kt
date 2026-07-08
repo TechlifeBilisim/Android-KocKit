@@ -17,12 +17,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -67,7 +69,10 @@ fun KocKitDropdownField(
     error: String? = null,
     searchable: Boolean = false,
     searchPlaceholder: String = "Ara...",
-    emptySearchResultText: String = "Sonuç bulunamadı"
+    emptySearchResultText: String = "Sonuç bulunamadı",
+    leadingIcon: ImageVector? = null,
+    leadingIconTint: Color? = null,
+    leadingIconBackground: Color? = null
 ) {
     val colors = KocKitTheme.extraColors
     var expanded by remember { mutableStateOf(false) }
@@ -108,6 +113,33 @@ fun KocKitDropdownField(
                     indication = null
                 ) { expanded = true },
             placeholder = { KocKitText(text = label, color = colors.textSecondary) },
+            leadingIcon = leadingIcon?.let { icon ->
+                {
+                    val tint = leadingIconTint ?: colors.textSecondary
+                    if (leadingIconBackground != null) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(leadingIconBackground),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = tint,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    } else {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = tint
+                        )
+                    }
+                }
+            },
             trailingIcon = {
                 Icon(
                     Icons.Filled.KeyboardArrowDown,

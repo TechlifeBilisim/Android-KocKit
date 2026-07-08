@@ -19,12 +19,20 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.outlined.Assignment
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,24 +40,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.techlife.kockit.R
 import com.techlife.kockit.core.designsystem.background.KocKitBackground
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitDropdownField
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
-import com.techlife.kockit.core.designsystem.component.KocKitPrimaryButton
-import com.techlife.kockit.core.designsystem.component.KocKitSelectableCard
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.component.KocKitTopBar
-import com.techlife.kockit.core.designsystem.theme.CardShape
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.LavenderAccent
 import com.techlife.kockit.core.designsystem.theme.OrangeAccent
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
+import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.White
 import com.techlife.kockit.domain.location.model.Province
 import com.techlife.kockit.domain.onboarding.model.Department
@@ -103,20 +112,17 @@ fun GoalSetupScreenContent(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState())
-                        .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     GoalSetupExamStep(
                         uiState = uiState,
                         onEvent = onEvent
                     )
                 }
-                KocKitPrimaryButton(
-                    text = "Devam Et",
-                    onClick = { onEvent(GoalSetupEvent.ContinueClicked) },
+                GoalSetupContinueButton(
                     isLoading = uiState.isLoading,
-                    showTrailingArrow = false,
-                    containerColor = PastelGreen,
+                    onClick = { onEvent(GoalSetupEvent.ContinueClicked) },
                     modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 32.dp)
                 )
             }
@@ -141,11 +147,10 @@ private fun GoalSetupExamStep(
 
     KocKitExtraBoldText(
         text = "Sınav Seçimi",
-        color = Color.Black,
+        color = TextPrimary,
         fontSize = KocKitTextDefaults.fontSizeHeadline,
         lineHeight = KocKitTextDefaults.lineHeightHeadline
     )
-    Spacer(modifier = Modifier.height(8.dp))
 
     GoalSetupOnlyTytCard(
         onlyTyt = uiState.onlyTyt,
@@ -153,33 +158,20 @@ private fun GoalSetupExamStep(
     )
     uiState.examError?.let { KocKitText(text = it, color = colors.coralAccent) }
 
-    Spacer(modifier = Modifier.height(16.dp))
-
-    KocKitBoldText(
-        text = "Cinsiyet",
-        color = Color.Black,
-        fontSize = KocKitTextDefaults.fontSizeTitle,
-        lineHeight = KocKitTextDefaults.lineHeightTitle
-    )
+    GoalSetupSectionTitle(text = "Cinsiyet")
     GoalSetupGenderSwitch(
         selectedGender = uiState.selectedGender,
         onGenderSelected = { onEvent(GoalSetupEvent.GenderSelected(it)) }
     )
     uiState.genderError?.let { KocKitText(text = it, color = colors.coralAccent) }
 
-    Spacer(modifier = Modifier.height(16.dp))
-
-    KocKitBoldText(
-        text = "Hedefini seç",
-        color = Color.Black,
-        fontSize = KocKitTextDefaults.fontSizeTitle,
-        lineHeight = KocKitTextDefaults.lineHeightTitle
-    )
+    GoalSetupSectionTitle(text = "Hedefini seç")
     GoalSetupUniversityTypeSwitch(
         selectedType = uiState.selectedUniversityType,
         onTypeSelected = { onEvent(GoalSetupEvent.UniversityTypeSelected(it)) }
     )
     uiState.universityTypeError?.let { KocKitText(text = it, color = colors.coralAccent) }
+
     KocKitDropdownField(
         label = "İl",
         options = uiState.provinces.map { it.name },
@@ -190,7 +182,10 @@ private fun GoalSetupExamStep(
         },
         error = uiState.provinceError ?: uiState.provincesError,
         searchable = true,
-        searchPlaceholder = "İl ara..."
+        searchPlaceholder = "İl ara...",
+        leadingIcon = Icons.Filled.LocationOn,
+        leadingIconTint = OrangeAccent,
+        leadingIconBackground = OrangeAccent.copy(alpha = 0.15f)
     )
     KocKitDropdownField(
         label = "İlçe",
@@ -208,9 +203,11 @@ private fun GoalSetupExamStep(
             "Önce il seçin"
         } else {
             "İlçe ara..."
-        }
+        },
+        leadingIcon = Icons.Filled.Place,
+        leadingIconTint = LavenderAccent,
+        leadingIconBackground = LavenderAccent.copy(alpha = 0.15f)
     )
-
     KocKitDropdownField(
         label = "Üniversite",
         options = uiState.universities.map { it.name },
@@ -218,7 +215,10 @@ private fun GoalSetupExamStep(
         onOptionSelected = { onEvent(GoalSetupEvent.UniversitySelected(it)) },
         error = uiState.universityError,
         searchable = true,
-        searchPlaceholder = "Üniversite ara..."
+        searchPlaceholder = "Üniversite ara...",
+        leadingIcon = Icons.Filled.School,
+        leadingIconTint = PastelGreen,
+        leadingIconBackground = PastelGreen.copy(alpha = 0.15f)
     )
     KocKitDropdownField(
         label = "Bilim",
@@ -227,163 +227,77 @@ private fun GoalSetupExamStep(
         onOptionSelected = { onEvent(GoalSetupEvent.DepartmentSelected(it)) },
         error = uiState.departmentError,
         searchable = true,
-        searchPlaceholder = "Bilim ara..."
+        searchPlaceholder = "Bilim ara...",
+        leadingIcon = Icons.Filled.MenuBook,
+        leadingIconTint = LavenderAccent,
+        leadingIconBackground = LavenderAccent.copy(alpha = 0.12f)
     )
 }
 
-private val GoalSetupAttachedCardRadius = 20.dp
-
 @Composable
-private fun GoalSetupAytExamCard(
-    goal: ExamGoal,
-    backgroundColor: Color,
-    isSelected: Boolean,
-    fieldOptions: List<GoalSetupOption>,
-    selectedFieldId: String?,
-    fieldError: String?,
-    onExamSelected: () -> Unit,
-    onFieldSelected: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val isExpanded = isSelected
-    val topShape = if (isExpanded) {
-        RoundedCornerShape(
-            topStart = GoalSetupAttachedCardRadius,
-            topEnd = GoalSetupAttachedCardRadius
-        )
-    } else {
-        CardShape
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(
-                if (isSelected) {
-                    Modifier.border(
-                        width = 2.dp,
-                        color = White.copy(alpha = 0.85f),
-                        shape = RoundedCornerShape(GoalSetupAttachedCardRadius)
-                    )
-                } else {
-                    Modifier
-                }
-            )
-    ) {
-        KocKitSelectableCard(
-            title = goal.title,
-            subtitle = goal.subtitle,
-            backgroundColor = backgroundColor,
-            leadingIcon = Icons.Filled.MenuBook,
-            isSelected = isSelected,
-            onClick = onExamSelected,
-            shape = topShape,
-            showSelectionBorder = false,
-            showExpandArrow = true
-        )
-        if (isExpanded) {
-            GoalSetupAytFieldPanel(
-                fieldOptions = fieldOptions,
-                selectedFieldId = selectedFieldId,
-                backgroundColor = backgroundColor,
-                onFieldSelected = onFieldSelected,
-                error = fieldError
-            )
-        }
-    }
+private fun GoalSetupSectionTitle(text: String) {
+    KocKitBoldText(
+        text = text,
+        color = TextPrimary,
+        fontSize = KocKitTextDefaults.fontSizeTitle,
+        lineHeight = KocKitTextDefaults.lineHeightTitle
+    )
 }
 
 @Composable
-private fun GoalSetupAytFieldPanel(
-    fieldOptions: List<GoalSetupOption>,
-    selectedFieldId: String?,
-    backgroundColor: Color,
-    onFieldSelected: (String) -> Unit,
-    error: String?,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(
-                RoundedCornerShape(
-                    bottomStart = GoalSetupAttachedCardRadius,
-                    bottomEnd = GoalSetupAttachedCardRadius
-                )
-            )
-            .background(backgroundColor)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        KocKitSemiText(
-            text = "Alan Seçimi",
-            color = White.copy(alpha = 0.9f),
-            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-            lineHeight = KocKitTextDefaults.lineHeightBodyLarge
-        )
-        fieldOptions.chunked(2).forEach { rowOptions ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                rowOptions.forEach { option ->
-                    GoalSetupAytFieldOption(
-                        label = option.label,
-                        isSelected = selectedFieldId == option.id,
-                        backgroundColor = backgroundColor,
-                        onClick = { onFieldSelected(option.id) },
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                if (rowOptions.size == 1) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
-        error?.let {
-            KocKitText(
-                text = it,
-                color = White
-            )
-        }
-    }
-}
-
-@Composable
-private fun GoalSetupAytFieldOption(
-    label: String,
-    isSelected: Boolean,
-    backgroundColor: Color,
+private fun GoalSetupContinueButton(
+    isLoading: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val chipBackground = if (isSelected) White else White.copy(alpha = 0.18f)
-    val borderColor = if (isSelected) White else White.copy(alpha = 0.35f)
-    val textColor = if (isSelected) backgroundColor else White
-
-    Box(
+    Surface(
+        onClick = onClick,
+        enabled = !isLoading,
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .border(
-                width = if (isSelected) 2.dp else 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(12.dp)
-            )
-            .background(chipBackground)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 14.dp),
-        contentAlignment = Alignment.Center
+            .fillMaxWidth()
+            .height(56.dp),
+        shape = RoundedCornerShape(28.dp),
+        color = PastelGreen
     ) {
-        KocKitSemiText(
-            text = label,
-            color = textColor,
-            fontSize = KocKitTextDefaults.fontSizeBody,
-            lineHeight = KocKitTextDefaults.lineHeightBody,
-            textAlign = TextAlign.Center,
-            maxLines = 2
-        )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isLoading) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = White,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                KocKitBoldText(
+                    text = "Devam Et",
+                    color = White,
+                    fontSize = KocKitTextDefaults.fontSizeButton
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 8.dp)
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(White.copy(alpha = 0.25f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = White,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
     }
 }
+
+private val GoalSetupCardShape = RoundedCornerShape(20.dp)
+private val GoalSetupSegmentShape = RoundedCornerShape(16.dp)
 
 @Composable
 private fun GoalSetupUniversityTypeSwitch(
@@ -392,40 +306,91 @@ private fun GoalSetupUniversityTypeSwitch(
     modifier: Modifier = Modifier
 ) {
     val colors = KocKitTheme.extraColors
-    val options: List<Pair<UniversityType?, String>> = buildList {
-        add(null to "Tümü")
-        UniversityType.entries.forEach { add(it to it.label) }
-    }
+    val options = listOf(
+        GoalSetupUniversityTypeOption(null, "Tümü", iconPainter = null, iconVector = null, accentColor = OrangeAccent),
+        GoalSetupUniversityTypeOption(
+            UniversityType.DEVLET,
+            "Devlet",
+            iconPainter = null,
+            iconVector = Icons.Filled.AccountBalance,
+            accentColor = LavenderAccent
+        ),
+        GoalSetupUniversityTypeOption(
+            UniversityType.VAKIF,
+            "Vakıf",
+            iconPainter = null,
+            iconVector = Icons.Filled.Shield,
+            accentColor = OrangeAccent
+        ),
+        GoalSetupUniversityTypeOption(
+            UniversityType.OZEL,
+            "Özel",
+            iconPainter = null,
+            iconVector = Icons.Filled.Person,
+            accentColor = PastelGreen
+        )
+    )
 
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(colors.borderLight.copy(alpha = 0.45f))
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+            .clip(GoalSetupCardShape)
+            .background(White)
+            .border(1.dp, colors.borderLight.copy(alpha = 0.7f), GoalSetupCardShape)
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        options.forEach { (type, label) ->
-            val isSelected = selectedType == type
-            Box(
+        options.forEach { option ->
+            val isSelected = selectedType == option.type
+            val backgroundColor = if (isSelected) OrangeAccent else Color.Transparent
+            val contentColor = if (isSelected) White else TextPrimary
+            val iconTint = if (isSelected) White else option.accentColor
+
+            Column(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (isSelected) PastelGreen else Color.Transparent)
-                    .clickable { onTypeSelected(type) }
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(backgroundColor)
+                    .clickable { onTypeSelected(option.type) }
+                    .padding(vertical = 12.dp, horizontal = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
+                if (option.type == null) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_goal_target),
+                        contentDescription = null,
+                        tint = if (isSelected) White else Color.Unspecified,
+                        modifier = Modifier.size(22.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = option.iconVector!!,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
                 KocKitSemiText(
-                    text = label,
-                    color = if (isSelected) Color.White else colors.textPrimary,
+                    text = option.label,
+                    color = contentColor,
                     fontSize = KocKitTextDefaults.fontSizeBody,
-                    lineHeight = KocKitTextDefaults.lineHeightBody
+                    lineHeight = KocKitTextDefaults.lineHeightBody,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
                 )
             }
         }
     }
 }
+
+private data class GoalSetupUniversityTypeOption(
+    val type: UniversityType?,
+    val label: String,
+    val iconPainter: androidx.compose.ui.graphics.painter.Painter?,
+    val iconVector: ImageVector?,
+    val accentColor: Color
+)
 
 @Composable
 private fun GoalSetupGenderSwitch(
@@ -438,8 +403,9 @@ private fun GoalSetupGenderSwitch(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(colors.borderLight.copy(alpha = 0.45f))
+            .clip(GoalSetupSegmentShape)
+            .background(White)
+            .border(1.dp, colors.borderLight.copy(alpha = 0.7f), GoalSetupSegmentShape)
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -448,15 +414,15 @@ private fun GoalSetupGenderSwitch(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (isSelected) PastelGreen else Color.Transparent)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (isSelected) LavenderAccent else Color.Transparent)
                     .clickable { onGenderSelected(gender) }
-                    .padding(vertical = 12.dp),
+                    .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center
             ) {
                 KocKitSemiText(
                     text = gender.label,
-                    color = if (isSelected) Color.White else colors.textPrimary,
+                    color = if (isSelected) White else TextPrimary,
                     fontSize = KocKitTextDefaults.fontSizeBody,
                     lineHeight = KocKitTextDefaults.lineHeightBody
                 )
@@ -476,26 +442,40 @@ private fun GoalSetupOnlyTytCard(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(GoalSetupCardShape)
             .background(White)
-            .border(
-                width = 1.dp,
-                color = colors.borderLight.copy(alpha = 0.6f),
-                shape = RoundedCornerShape(18.dp)
-            )
+            .border(1.dp, colors.borderLight.copy(alpha = 0.7f), GoalSetupCardShape)
             .clickable { onToggle(!onlyTyt) }
-            .padding(horizontal = 18.dp, vertical = 18.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        KocKitBoldText(
-            text = "Sadece TYT'ye mi girmek istiyorsunuz?",
-            color = Color.Black,
-            modifier = Modifier.weight(1f)
-        )
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(LavenderAccent.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.School,
+                contentDescription = null,
+                tint = LavenderAccent,
+                modifier = Modifier.size(22.dp)
+            )
+        }
         Spacer(modifier = Modifier.width(12.dp))
+        KocKitSemiText(
+            text = "Sadece TYT'ye mi girmek istiyorsunuz?",
+            color = TextPrimary,
+            modifier = Modifier.weight(1f),
+            fontSize = KocKitTextDefaults.fontSizeBodyLarge,
+            lineHeight = KocKitTextDefaults.lineHeightBodyLarge
+        )
+        Spacer(modifier = Modifier.width(8.dp))
         GoalSetupPillSwitch(
             checked = onlyTyt,
-            onCheckedChange = onToggle
+            onCheckedChange = onToggle,
+            activeColor = LavenderAccent
         )
     }
 }
@@ -504,13 +484,14 @@ private fun GoalSetupOnlyTytCard(
 private fun GoalSetupPillSwitch(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    activeColor: Color = LavenderAccent
 ) {
     val trackWidth = 52.dp
     val trackHeight = 30.dp
     val thumbSize = 24.dp
     val trackColor by androidx.compose.animation.animateColorAsState(
-        targetValue = if (checked) PastelGreen else Color(0xFFD9DDE3),
+        targetValue = if (checked) activeColor else Color(0xFFD9DDE3),
         label = "onlyTytTrack"
     )
     val thumbOffset by androidx.compose.animation.core.animateDpAsState(
@@ -531,7 +512,7 @@ private fun GoalSetupPillSwitch(
                 .align(Alignment.CenterStart)
                 .offset(x = thumbOffset)
                 .size(thumbSize)
-                .clip(androidx.compose.foundation.shape.CircleShape)
+                .clip(CircleShape)
                 .background(White)
         )
     }
@@ -569,7 +550,9 @@ private fun GoalSetupScreenPreview() {
                 ),
                 selectedDistrictId = 1,
                 selectedDistrictName = "Kadıköy",
-                selectedUniversityType = UniversityType.DEVLET,
+                selectedUniversityType = null,
+                selectedGender = Gender.ERKEK,
+                onlyTyt = true,
                 selectedUniversityName = "Boğaziçi Üniversitesi",
                 selectedDepartmentName = "Bilgisayar Mühendisliği"
             ),
