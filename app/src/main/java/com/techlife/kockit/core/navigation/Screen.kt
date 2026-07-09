@@ -8,6 +8,7 @@ sealed class Screen(val route: String) {
     data object Placement : Screen("placement")
     data object Main : Screen("main")
     data object Home : Screen("home")
+    data object TurkeyMap : Screen("turkey_map")
 
     companion object {
         const val PLACEMENT_SECTION_ARG = "section"

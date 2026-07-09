@@ -20,6 +20,7 @@ import com.techlife.kockit.feature.auth.register.RegisterViewModel
 import com.techlife.kockit.feature.goalsetup.GoalSetupScreen
 import com.techlife.kockit.feature.goalsetup.GoalSetupViewModel
 import com.techlife.kockit.feature.main.MainScreen
+import com.techlife.kockit.feature.map.TurkeyMapScreen
 import com.techlife.kockit.feature.placementtest.PlacementTestExamScreen
 import com.techlife.kockit.feature.placementtest.PlacementTestInfoScreen
 import com.techlife.kockit.feature.placementtest.PlacementTestResultScreen
@@ -41,7 +42,7 @@ fun AppNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route
+        startDestination = Screen.Main.route
     ) {
         composable(Screen.Splash.route) {
             val viewModel: SplashViewModel = hiltViewModel()
@@ -191,7 +192,16 @@ fun AppNavGraph(
                 },
                 onNavigateToLogin = {
                     navController.navigateToLoginClearingBackStack()
+                },
+                onNavigateToTurkeyMap = {
+                    navController.navigate(Screen.TurkeyMap.route)
                 }
+            )
+        }
+
+        composable(Screen.TurkeyMap.route) {
+            TurkeyMapScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

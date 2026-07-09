@@ -32,7 +32,8 @@ import com.techlife.kockit.feature.studyplan.StudyPlanScreen
 @Composable
 fun MainScreen(
     onNavigateToPlacement: (sectionKey: String) -> Unit = {},
-    onNavigateToLogin: () -> Unit = {}
+    onNavigateToLogin: () -> Unit = {},
+    onNavigateToTurkeyMap: () -> Unit = {}
 ) {
     val homeViewModel: HomeViewModel = hiltViewModel()
     var selectedTab by rememberSaveable { mutableStateOf(MainTab.HOME) }
@@ -69,7 +70,8 @@ fun MainScreen(
                             onNavigateToPlacement = onNavigateToPlacement,
                             onNavigateToLogin = onNavigateToLogin,
                             onSearchClick = { showSearch = true },
-                            onStudyPlanClick = { selectedTab = MainTab.STUDY_PLAN }
+                            onStudyPlanClick = { selectedTab = MainTab.STUDY_PLAN },
+                            onNotificationClick = onNavigateToTurkeyMap
                         )
                     }
                 }

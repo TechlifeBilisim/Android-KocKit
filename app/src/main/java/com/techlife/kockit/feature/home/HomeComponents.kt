@@ -93,6 +93,7 @@ fun HomeTopBar(
     notificationCount: Int,
     onMenuClick: () -> Unit,
     onSearchClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val metrics = homeMetrics()
@@ -128,7 +129,9 @@ fun HomeTopBar(
                     .clickable(onClick = onSearchClick),
                 tint = TextPrimary
             )
-            Box {
+            Box(
+                modifier = Modifier.clickable(onClick = onNotificationClick)
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Notifications,
                     contentDescription = "Bildirimler",

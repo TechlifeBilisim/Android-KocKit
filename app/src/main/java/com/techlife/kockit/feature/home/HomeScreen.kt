@@ -33,7 +33,8 @@ fun HomeScreen(
     onNavigateToPlacement: (sectionKey: String) -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
     onSearchClick: () -> Unit = {},
-    onStudyPlanClick: () -> Unit = {}
+    onStudyPlanClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -85,7 +86,8 @@ fun HomeScreen(
                     HomeTopBar(
                         notificationCount = HomeFakeData.NOTIFICATION_COUNT,
                         onMenuClick = onMenuClick,
-                        onSearchClick = onSearchClick
+                        onSearchClick = onSearchClick,
+                        onNotificationClick = onNotificationClick
                     )
                 }
                 item(key = "greeting") {
