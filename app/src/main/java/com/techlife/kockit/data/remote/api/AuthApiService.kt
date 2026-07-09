@@ -25,71 +25,71 @@ import retrofit2.http.POST
 
 interface AuthApiService {
 
-    @POST("api/yonetim/kullanici/ogrenci/kayit")
+    @POST("Api/Yonetim/Kullanici/Kayit/Ogrenci")
     @ApiLog(ApiServices.AUTH_STUDENT_REGISTER)
     suspend fun registerStudent(
         @Body request: StudentRegisterRequestDto
     ): ApiEnvelopeDto<StudentRegisterResponseDto>
 
-    @POST("api/yonetim/kullanici/giris/rumuz")
+    @POST("Api/Yonetim/Kullanici/Giris/Rumuz")
     @ApiLog(ApiServices.AUTH_LOGIN_NICKNAME)
     suspend fun loginWithNickname(
         @Body request: NicknameLoginRequestDto
     ): ApiEnvelopeDto<AuthSessionDto>
 
-    @POST("api/yonetim/kullanici/giris/sms")
+    @POST("Api/Yonetim/Kullanici/Giris/CepTelefon")
     @ApiLog(ApiServices.AUTH_LOGIN_SMS_REQUEST)
     suspend fun requestLoginSms(
         @Body request: LoginSmsRequestDto
     ): ApiEnvelopeDto<LoginInitResponseDto>
 
-    @POST("api/yonetim/kullanici/giris/sms-dogrula")
+    @POST("Api/Yonetim/Kullanici/Giris/Sms/Dogrula")
     @ApiLog(ApiServices.AUTH_LOGIN_SMS_VERIFY)
     suspend fun loginWithSms(
         @Body request: LoginSmsVerifyRequestDto
     ): ApiEnvelopeDto<AuthSessionDto>
 
-    @POST("api/yonetim/kullanici/giris/google")
+    @POST("Api/Yonetim/Kullanici/Giris/Google")
     @ApiLog(ApiServices.AUTH_LOGIN_GOOGLE)
     suspend fun loginWithGoogle(
         @Body request: GoogleLoginRequestDto
     ): ApiEnvelopeDto<GoogleLoginResponseDto>
 
-    @POST("api/yonetim/kullanici/giris/techpass")
+    @POST("Api/Yonetim/Kullanici/Giris/Techpass")
     @ApiLog(ApiServices.AUTH_LOGIN_TECHPASS)
     suspend fun loginWithTechpass(
         @Body request: TechpassLoginRequestDto
     ): ApiEnvelopeDto<AuthSessionDto>
 
-    @POST("api/yonetim/kullanici/token/yenile")
+    @POST("Api/Yonetim/Kullanici/Token/Yenile")
     @ApiLog(ApiServices.AUTH_TOKEN_REFRESH)
     suspend fun refreshToken(
         @Body request: RefreshTokenRequestDto
     ): ApiEnvelopeDto<RefreshTokenResponseDto>
 
-    @POST("api/yonetim/kullanici/cikis")
+    @POST("Api/Yonetim/Kullanici/Cikis")
     @ApiLog(ApiServices.AUTH_LOGOUT)
     suspend fun logout(): ApiEnvelopeDto<EmptyDataDto?>
 
-    @POST("api/yonetim/kullanici/sms/kod-gonder")
+    @POST("Api/Yonetim/Kullanici/Sms/KodGonder")
     @ApiLog(ApiServices.AUTH_SMS_SEND_CODE)
     suspend fun sendSmsCode(
         @Body request: SendSmsCodeRequestDto
     ): ApiEnvelopeDto<EmptyDataDto?>
 
-    @POST("api/yonetim/kullanici/sms/kod-dogrula")
+    @POST("Api/Yonetim/Kullanici/Sms/KodDogrula")
     @ApiLog(ApiServices.AUTH_SMS_VERIFY_CODE)
     suspend fun verifySmsCode(
         @Body request: VerifySmsCodeRequestDto
     ): ApiEnvelopeDto<EmptyDataDto?>
 
-    @POST("api/yonetim/kullanici/email/kod-gonder")
+    @POST("Api/Yonetim/Kullanici/Email/KodGonder")
     @ApiLog(ApiServices.AUTH_EMAIL_SEND_CODE)
     suspend fun sendEmailCode(
         @Body request: SendEmailCodeRequestDto
     ): ApiEnvelopeDto<EmptyDataDto?>
 
-    @POST("api/yonetim/kullanici/email/kod-dogrula")
+    @POST("Api/Yonetim/Kullanici/Email/KodDogrula")
     @ApiLog(ApiServices.AUTH_EMAIL_VERIFY_CODE)
     suspend fun verifyEmailCode(
         @Body request: VerifyEmailCodeRequestDto

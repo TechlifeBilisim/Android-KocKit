@@ -10,11 +10,11 @@ import retrofit2.http.Query
 
 interface LocationApiService {
 
-    @GET("api/il")
+    @GET("Api/Il")
     @ApiLog(ApiServices.PROVINCE_LIST)
     suspend fun getProvinces(): ApiEnvelopeDto<List<ProvinceDto>>
 
-    @GET("api/ilce")
+    @GET("Api/Ilce")
     @ApiLog(ApiServices.DISTRICT_LIST)
     suspend fun getDistricts(
         @Query("IlId") provinceId: Int

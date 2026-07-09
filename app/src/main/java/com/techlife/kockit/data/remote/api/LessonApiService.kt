@@ -8,7 +8,7 @@ import retrofit2.http.GET
 
 interface LessonApiService {
 
-    @GET("api/lesson")
+    @GET("Api/Lesson")
     @ApiLog(ApiServices.LESSON_LIST)
     suspend fun getLessons(): ApiEnvelopeDto<List<LessonDto>>
 }
