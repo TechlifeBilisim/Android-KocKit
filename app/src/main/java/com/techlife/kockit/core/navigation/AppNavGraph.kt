@@ -50,7 +50,7 @@ fun AppNavGraph(
                 viewModel = viewModel,
                 onNavigateToLogin = {
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
+                        popUpTo(Screen.Main.route) { inclusive = true }
                     }
                 },
                 onNavigateToMain = {

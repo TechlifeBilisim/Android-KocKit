@@ -1,19 +1,13 @@
 package com.techlife.kockit.feature.map
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,16 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.techlife.kockit.R
-import com.techlife.kockit.core.designsystem.background.KocKitBackground
-import com.techlife.kockit.core.designsystem.component.KocKitBoldText
-import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
 import com.techlife.kockit.core.designsystem.component.KocKitTopBar
 import com.techlife.kockit.core.designsystem.theme.CreamBackground
-import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
-import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
 import com.techlife.kockit.feature.map.components.ProvinceInfoDialog
 import com.techlife.kockit.feature.map.components.TurkeyMapCanvas
@@ -73,74 +62,45 @@ fun TurkeyMapScreenContent(
     var selectedProvince by remember { mutableStateOf<TurkeyProvince?>(null) }
     var showProvinceDialog by remember { mutableStateOf(false) }
 
-    KocKitBackground(useFormBackgroundImage = true) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(CreamBackground)
-                .windowInsetsPadding(WindowInsets.systemBars)
-        ) {
-            KocKitTopBar(onBackClick = onNavigateBack)
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = KocKitTheme.extraColors.cardBackground),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    when {
-                        mapData == null -> {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(24.dp),
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                CircularProgressIndicator(color = PastelGreen)
-                            }
-                        }
-                        mapData.provinces.isEmpty() -> {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(24.dp),
-                                verticalArrangement = Arrangement.Center
-                            ) {
-                                KocKitSemiText(
-                                    text = "Harita verisi yüklenemedi.",
-                                    color = TextSecondary,
-                                    fontSize = KocKitTextDefaults.fontSizeBodyLarge,
-                                    lineHeight = KocKitTextDefaults.lineHeightBodyLarge
-                                )
-                            }
-                        }
-                        else -> {
-                            TurkeyMapCanvas(
-                                mapData = mapData,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(12.dp),
-                                selectedPlateCode = selectedProvince?.plateCode,
-                                onProvinceClick = { province ->
-                                    selectedProvince = province
-                                    showProvinceDialog = true
-                                }
-                            )
-                        }
-                    }
-                }
-
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(CreamBackground)
+            .windowInsetsPadding(WindowInsets.systemBars)
+    ) {
+        when {
+            mapData == null -> {
+                CircularProgressIndicator(
+                    color = PastelGreen,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
+            mapData.provinces.isEmpty() -> {
+                KocKitSemiText(
+                    text = "Harita verisi yüklenemedi.",
+                    color = TextSecondary,
+                    fontSize = KocKitTextDefaults.fontSizeBodyLarge,
+                    lineHeight = KocKitTextDefaults.lineHeightBodyLarge,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(24.dp)
+                )
+            }
+            else -> {
+                TurkeyMapCanvas(
+                    mapData = mapData,
+                    modifier = Modifier.fillMaxSize(),
+                    selectedPlateCode = selectedProvince?.plateCode,
+                    onProvinceClick = { province ->
+                        selectedProvince = province
+                        showProvinceDialog = true
+                    }
+                )
+            }
+        }
+
+        Box(modifier = Modifier.align(Alignment.TopStart)) {
+            KocKitTopBar(onBackClick = onNavigateBack)
         }
     }
 
