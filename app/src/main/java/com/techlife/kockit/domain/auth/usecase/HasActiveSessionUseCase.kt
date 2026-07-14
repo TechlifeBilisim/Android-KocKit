@@ -6,10 +6,9 @@ import javax.inject.Inject
 class HasActiveSessionUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
+    /** Kayıtlı access token varsa true — splash yönlendirmesi için. */
     suspend operator fun invoke(): Boolean {
-        val session = authRepository.getCurrentSession()
         val token = authRepository.getAccessToken()
-        // Otomatik giriş yalnızca "Beni hatırla" seçilmişse yapılır.
-        return session.isLoggedIn && !token.isNullOrBlank() && authRepository.isRemembered()
+        return !token.isNullOrBlank()
     }
 }

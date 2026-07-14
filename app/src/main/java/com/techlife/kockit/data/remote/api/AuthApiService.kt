@@ -5,18 +5,17 @@ import com.techlife.kockit.core.network.annotation.ApiServices
 import com.techlife.kockit.data.remote.dto.auth.AuthSessionDto
 import com.techlife.kockit.data.remote.dto.auth.GoogleLoginRequestDto
 import com.techlife.kockit.data.remote.dto.auth.GoogleLoginResponseDto
+import com.techlife.kockit.data.remote.dto.auth.GoogleRegisterRequestDto
 import com.techlife.kockit.data.remote.dto.auth.LoginInitResponseDto
 import com.techlife.kockit.data.remote.dto.auth.LoginSmsRequestDto
 import com.techlife.kockit.data.remote.dto.auth.LoginSmsVerifyRequestDto
 import com.techlife.kockit.data.remote.dto.auth.NicknameLoginRequestDto
 import com.techlife.kockit.data.remote.dto.auth.RefreshTokenRequestDto
 import com.techlife.kockit.data.remote.dto.auth.RefreshTokenResponseDto
-import com.techlife.kockit.data.remote.dto.auth.SendEmailCodeRequestDto
 import com.techlife.kockit.data.remote.dto.auth.SendSmsCodeRequestDto
 import com.techlife.kockit.data.remote.dto.auth.StudentRegisterRequestDto
 import com.techlife.kockit.data.remote.dto.auth.StudentRegisterResponseDto
 import com.techlife.kockit.data.remote.dto.auth.TechpassLoginRequestDto
-import com.techlife.kockit.data.remote.dto.auth.VerifyEmailCodeRequestDto
 import com.techlife.kockit.data.remote.dto.auth.VerifySmsCodeRequestDto
 import com.techlife.kockit.data.remote.dto.common.ApiEnvelopeDto
 import com.techlife.kockit.data.remote.dto.common.EmptyDataDto
@@ -30,6 +29,12 @@ interface AuthApiService {
     suspend fun registerStudent(
         @Body request: StudentRegisterRequestDto
     ): ApiEnvelopeDto<StudentRegisterResponseDto>
+
+    @POST("Api/Yonetim/Kullanici/Kayit/Google")
+    @ApiLog(ApiServices.AUTH_GOOGLE_REGISTER)
+    suspend fun registerWithGoogle(
+        @Body request: GoogleRegisterRequestDto
+    ): ApiEnvelopeDto<GoogleLoginResponseDto>
 
     @POST("Api/Yonetim/Kullanici/Giris/Rumuz")
     @ApiLog(ApiServices.AUTH_LOGIN_NICKNAME)
@@ -81,17 +86,5 @@ interface AuthApiService {
     @ApiLog(ApiServices.AUTH_SMS_VERIFY_CODE)
     suspend fun verifySmsCode(
         @Body request: VerifySmsCodeRequestDto
-    ): ApiEnvelopeDto<EmptyDataDto?>
-
-    @POST("Api/Yonetim/Kullanici/Email/KodGonder")
-    @ApiLog(ApiServices.AUTH_EMAIL_SEND_CODE)
-    suspend fun sendEmailCode(
-        @Body request: SendEmailCodeRequestDto
-    ): ApiEnvelopeDto<EmptyDataDto?>
-
-    @POST("Api/Yonetim/Kullanici/Email/KodDogrula")
-    @ApiLog(ApiServices.AUTH_EMAIL_VERIFY_CODE)
-    suspend fun verifyEmailCode(
-        @Body request: VerifyEmailCodeRequestDto
     ): ApiEnvelopeDto<EmptyDataDto?>
 }

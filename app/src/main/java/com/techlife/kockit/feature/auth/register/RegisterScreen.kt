@@ -44,7 +44,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.techlife.kockit.R
 import com.techlife.kockit.core.designsystem.background.KocKitBackground
-import com.techlife.kockit.core.designsystem.component.KocKitPasswordField
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitCheckbox
@@ -56,10 +55,10 @@ import com.techlife.kockit.core.designsystem.layout.AuthFormMetrics
 import com.techlife.kockit.core.designsystem.layout.rememberAuthFormMetrics
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.KocKitFontFamily
+import com.techlife.kockit.core.designsystem.theme.LavenderAccent
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.TextSecondary
-import androidx.compose.material3.Text
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -69,16 +68,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitOtpCodeField
-import com.techlife.kockit.core.designsystem.component.LoginFieldShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
-import com.techlife.kockit.feature.auth.common.AuthMethodTabs
 import com.techlife.kockit.feature.auth.common.AuthPhoneNumberField
 import com.techlife.kockit.feature.auth.common.KVKK_AGREEMENT_TEXT
 import com.techlife.kockit.feature.auth.common.LegalAgreementDialog
 import com.techlife.kockit.feature.auth.common.TERMS_AGREEMENT_TEXT
 import com.techlife.kockit.core.auth.GoogleSignInHelper
 import com.techlife.kockit.core.auth.GoogleSignInOutcome
+import com.techlife.kockit.domain.onboarding.model.Gender
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -139,7 +135,6 @@ private fun RegisterScreenContent(
 ) {
     val continueButtonText = when (uiState.currentStep) {
         RegisterSteps.ACCOUNT -> "Devam Et"
-        RegisterSteps.VERIFICATION -> "Kod Gönder"
         RegisterSteps.OTP -> "Doğrula"
         else -> "Devam Et"
     }
@@ -197,7 +192,6 @@ private fun RegisterFormBody(
 ) {
     val stepTitle = when (uiState.currentStep) {
         RegisterSteps.ACCOUNT -> "Kayıt Ol"
-        RegisterSteps.VERIFICATION -> "Hesabını Doğrula"
         RegisterSteps.OTP -> "Doğrulama Kodu"
         else -> "Kayıt Ol"
     }
@@ -216,8 +210,7 @@ private fun RegisterFormBody(
         KocKitSemiText(
             text = when (uiState.currentStep) {
                 RegisterSteps.ACCOUNT -> "Hesabını oluştur ve hedeflerine ulaş."
-                RegisterSteps.VERIFICATION -> "Doğrulama kodunu almak için e-posta veya telefonunu gir."
-                RegisterSteps.OTP -> "Gönderilen doğrulama kodunu gir."
+                RegisterSteps.OTP -> "Telefonuna gönderilen doğrulama kodunu gir."
                 else -> "Kaydını tamamla."
             },
             fontSize = metrics.bodyFontSize,
@@ -226,7 +219,6 @@ private fun RegisterFormBody(
 
         when (uiState.currentStep) {
             RegisterSteps.ACCOUNT -> RegisterStep1Content(uiState, metrics, onEvent)
-            RegisterSteps.VERIFICATION -> RegisterVerificationStep(uiState, metrics, onEvent)
             RegisterSteps.OTP -> RegisterOtpStep(uiState, metrics, onEvent)
         }
 
@@ -351,6 +343,19 @@ private fun RegisterStep1Content(
             textLineHeight = metrics.fieldLineHeight
         )
 
+        KocKitSemiText(
+            text = "Cinsiyet",
+            color = TextPrimary,
+            fontSize = metrics.subheadFontSize,
+            lineHeight = metrics.subheadLineHeight
+        )
+        RegisterGenderSwitch(
+            selectedGender = uiState.selectedGender,
+            onGenderSelected = { onEvent(RegisterEvent.GenderSelected(it)) },
+            metrics = metrics
+        )
+        uiState.genderError?.let { KocKitText(text = it, color = colors.coralAccent) }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -434,97 +439,39 @@ private fun RegisterStep1Content(
 }
 
 @Composable
-private fun RegisterVerificationStep(
-    uiState: RegisterUiState,
+private fun RegisterGenderSwitch(
+    selectedGender: Gender?,
+    onGenderSelected: (Gender) -> Unit,
     metrics: AuthFormMetrics,
-    onEvent: (RegisterEvent) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(metrics.fieldSpacing)) {
-        RegisterVerificationChannelTabs(
-            selectedChannel = uiState.verificationChannel,
-            onChannelSelected = { onEvent(RegisterEvent.VerificationChannelChanged(it)) },
-            metrics = metrics
-        )
-
-        when (uiState.verificationChannel) {
-            RegisterVerificationChannel.EMAIL -> {
-                KocKitTextField(
-                    value = uiState.verificationEmail,
-                    onValueChange = { onEvent(RegisterEvent.VerificationEmailChanged(it)) },
-                    placeholder = "example@gmail.com",
-                    error = uiState.verificationEmailError,
-                    leadingIconVector = Icons.Filled.Email,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    shape = LoginFieldShape,
-                    fieldHeight = metrics.fieldHeight,
-                    textFontSize = metrics.fieldFontSize,
-                    textLineHeight = metrics.fieldLineHeight
-                )
-                KocKitText(
-                    text = "Doğrulama kodunu e-posta adresine göndereceğiz.",
-                    color = TextSecondary,
-                    fontSize = metrics.subheadFontSize,
-                    lineHeight = metrics.subheadLineHeight
-                )
-            }
-            RegisterVerificationChannel.PHONE -> {
-                AuthPhoneNumberField(
-                    value = uiState.verificationPhone,
-                    onValueChange = { onEvent(RegisterEvent.VerificationPhoneChanged(it)) },
-                    placeholder = "5XX XXX XX XX",
-                    error = uiState.verificationPhoneError,
-                    metrics = metrics
-                )
-                KocKitText(
-                    text = "Doğrulama kodunu Türkiye cep telefonuna SMS ile göndereceğiz.",
-                    color = TextSecondary,
-                    fontSize = metrics.subheadFontSize,
-                    lineHeight = metrics.subheadLineHeight
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun RegisterVerificationChannelTabs(
-    selectedChannel: RegisterVerificationChannel,
-    onChannelSelected: (RegisterVerificationChannel) -> Unit,
-    metrics: AuthFormMetrics
+    modifier: Modifier = Modifier
 ) {
     val colors = KocKitTheme.extraColors
-    val tabRadius = if (metrics.isExpanded) 16.dp else 14.dp
-    val tabItemRadius = if (metrics.isExpanded) 12.dp else 10.dp
-    val tabItemPaddingV = if (metrics.isExpanded) 14.dp else 12.dp
+    val shape = RoundedCornerShape(if (metrics.isExpanded) 16.dp else 14.dp)
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(tabRadius))
-            .background(colors.borderLight.copy(alpha = 0.45f))
+            .clip(shape)
+            .background(Color.White)
             .padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        RegisterVerificationChannel.entries.forEach { channel ->
-            val isSelected = selectedChannel == channel
-            val label = when (channel) {
-                RegisterVerificationChannel.EMAIL -> "E-posta"
-                RegisterVerificationChannel.PHONE -> "Telefon"
-            }
+        Gender.entries.forEach { gender ->
+            val isSelected = selectedGender == gender
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(tabItemRadius))
-                    .background(if (isSelected) PastelGreen else Color.Transparent)
-                    .clickable { onChannelSelected(channel) }
-                    .padding(vertical = tabItemPaddingV),
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(if (isSelected) LavenderAccent else Color.Transparent)
+                    .clickable { onGenderSelected(gender) }
+                    .padding(vertical = if (metrics.isExpanded) 14.dp else 12.dp),
                 contentAlignment = Alignment.Center
             ) {
                 KocKitSemiText(
-                    text = label,
-                    color = if (isSelected) Color.White else colors.textPrimary,
-                    fontSize = metrics.subheadFontSize,
-                    lineHeight = metrics.subheadLineHeight
+                    text = gender.label,
+                    color = if (isSelected) Color.White else TextPrimary,
+                    fontSize = metrics.bodyFontSize,
+                    lineHeight = metrics.bodyLineHeight
                 )
             }
         }
@@ -537,14 +484,9 @@ private fun RegisterOtpStep(
     metrics: AuthFormMetrics,
     onEvent: (RegisterEvent) -> Unit
 ) {
-    val subtitle = when (uiState.verificationChannel) {
-        RegisterVerificationChannel.EMAIL -> "E-posta adresine gönderilen kodu gir"
-        RegisterVerificationChannel.PHONE -> "Telefon numarana gönderilen kodu gir"
-    }
-
     Column(verticalArrangement = Arrangement.spacedBy(metrics.fieldSpacing)) {
         KocKitText(
-            text = subtitle,
+            text = "Telefon numarana gönderilen kodu gir",
             color = TextSecondary,
             fontSize = metrics.bodyFontSize,
             lineHeight = metrics.bodyLineHeight
@@ -593,28 +535,12 @@ private fun RegisterOtpStep(
 
 @Preview(showBackground = true)
 @Composable
-private fun RegisterVerificationStepPreview() {
-    KocKitTheme {
-        RegisterScreenContent(
-            uiState = RegisterUiState(
-                currentStep = RegisterSteps.VERIFICATION,
-                verificationEmail = "adem@kockit.com"
-            ),
-            onEvent = {},
-            onGoogleClicked = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
 private fun RegisterOtpStepPreview() {
     KocKitTheme {
         RegisterScreenContent(
             uiState = RegisterUiState(
                 currentStep = RegisterSteps.OTP,
-                verificationChannel = RegisterVerificationChannel.EMAIL,
-                otpSentTo = "a***@kockit.com",
+                otpSentTo = "+90 532 *** ** 41",
                 otpCode = "123456"
             ),
             onEvent = {},
@@ -632,22 +558,8 @@ private fun RegisterScreenTabletPreview() {
                 fullName = "Adem KocKit",
                 email = "adem@kockit.com",
                 nickname = "ademkockit",
+                selectedGender = Gender.ERKEK,
                 accountMethod = RegisterAccountMethod.NICKNAME
-            ),
-            onEvent = {},
-            onGoogleClicked = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, widthDp = 840, heightDp = 1200, name = "Tablet Verification")
-@Composable
-private fun RegisterVerificationTabletPreview() {
-    KocKitTheme {
-        RegisterScreenContent(
-            uiState = RegisterUiState(
-                currentStep = RegisterSteps.VERIFICATION,
-                verificationEmail = "adem@kockit.com"
             ),
             onEvent = {},
             onGoogleClicked = {}
@@ -662,7 +574,6 @@ private fun RegisterOtpTabletPreview() {
         RegisterScreenContent(
             uiState = RegisterUiState(
                 currentStep = RegisterSteps.OTP,
-                verificationChannel = RegisterVerificationChannel.PHONE,
                 otpSentTo = "+90 532 *** ** 41",
                 otpCode = "123456"
             ),
@@ -681,7 +592,8 @@ private fun RegisterScreenPreview() {
                 fullName = "Adem KocKit",
                 email = "adem@kockit.com",
                 nickname = "ademkockit",
-                accountMethod = RegisterAccountMethod.NICKNAME
+                phone = "5320000041",
+                selectedGender = Gender.KADIN
             ),
             onEvent = {},
             onGoogleClicked = {}

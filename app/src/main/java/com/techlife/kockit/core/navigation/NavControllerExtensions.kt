@@ -9,6 +9,13 @@ fun NavHostController.navigateToMainClearingBackStack() {
     }
 }
 
+fun NavHostController.navigateToGoalSetupClearingBackStack() {
+    navigate(Screen.GoalSetup.route) {
+        popUpTo(graph.startDestinationId) { inclusive = true }
+        launchSingleTop = true
+    }
+}
+
 fun NavHostController.navigateToLoginClearingBackStack() {
     navigate(Screen.Login.route) {
         popUpTo(graph.startDestinationId) { inclusive = true }

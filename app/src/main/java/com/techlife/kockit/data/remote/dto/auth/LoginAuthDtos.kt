@@ -6,13 +6,9 @@ data class StudentRegisterRequestDto(
     val ad: String,
     val soyad: String,
     val cepTelefon: String? = null,
-    val loginTypeId: Int,
+    val rumuz: String? = null,
     val eposta: String,
-    val sifre: String? = null,
-    val cinsiyetId: Int = 1,
-    val ilId: Int = 1,
-    val ilceId: Int = 1,
-    val rumuz: String? = null
+    val cinsiyet: Int
 )
 
 data class StudentRegisterResponseDto(
@@ -44,6 +40,16 @@ data class LoginSmsVerifyRequestDto(
 data class GoogleLoginRequestDto(
     val oAuthIdToken: String,
     val email: String
+)
+
+data class GoogleRegisterRequestDto(
+    val ad: String,
+    val soyad: String,
+    val cepTelefon: String? = null,
+    val rumuz: String? = null,
+    val eposta: String,
+    val cinsiyet: Int,
+    val oAuthIdToken: String
 )
 
 data class TechpassLoginRequestDto(
@@ -101,11 +107,3 @@ data class VerifySmsCodeRequestDto(
     val kod: String
 )
 
-data class SendEmailCodeRequestDto(
-    val eposta: String
-)
-
-data class VerifyEmailCodeRequestDto(
-    val eposta: String,
-    val kod: String
-)

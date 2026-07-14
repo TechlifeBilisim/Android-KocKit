@@ -24,7 +24,7 @@ class SplashViewModel @Inject constructor(
             val hasSession = hasActiveSessionUseCase()
             delay(SPLASH_DURATION_MS)
             if (hasSession) {
-                emit(SplashEffect.NavigateToMain)
+                emit(SplashEffect.NavigateToGoalSetup)
             } else {
                 emit(SplashEffect.NavigateToLogin)
             }

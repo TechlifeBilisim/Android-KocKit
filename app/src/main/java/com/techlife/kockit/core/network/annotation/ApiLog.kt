@@ -7,6 +7,7 @@ annotation class ApiLog(val service: String)
 
 object ApiServices {
     const val AUTH_STUDENT_REGISTER = "AUTH_STUDENT_REGISTER"
+    const val AUTH_GOOGLE_REGISTER = "AUTH_GOOGLE_REGISTER"
     const val AUTH_LOGIN_NICKNAME = "AUTH_LOGIN_NICKNAME"
     const val AUTH_LOGIN_SMS_REQUEST = "AUTH_LOGIN_SMS_REQUEST"
     const val AUTH_LOGIN_SMS_VERIFY = "AUTH_LOGIN_SMS_VERIFY"
@@ -16,9 +17,9 @@ object ApiServices {
     const val AUTH_LOGOUT = "AUTH_LOGOUT"
     const val AUTH_SMS_SEND_CODE = "AUTH_SMS_SEND_CODE"
     const val AUTH_SMS_VERIFY_CODE = "AUTH_SMS_VERIFY_CODE"
-    const val AUTH_EMAIL_SEND_CODE = "AUTH_EMAIL_SEND_CODE"
-    const val AUTH_EMAIL_VERIFY_CODE = "AUTH_EMAIL_VERIFY_CODE"
     const val LESSON_LIST = "LESSON_LIST"
     const val PROVINCE_LIST = "PROVINCE_LIST"
     const val DISTRICT_LIST = "DISTRICT_LIST"
+    const val YO_BILIM_LIST = "YO_BILIM_LIST"
+    const val YO_FAKULTE_LIST = "YO_FAKULTE_LIST"
 }

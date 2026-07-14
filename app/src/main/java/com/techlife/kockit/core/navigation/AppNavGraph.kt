@@ -53,8 +53,8 @@ fun AppNavGraph(
                         popUpTo(Screen.Main.route) { inclusive = true }
                     }
                 },
-                onNavigateToMain = {
-                    navController.navigateToMainClearingBackStack()
+                onNavigateToGoalSetup = {
+                    navController.navigateToGoalSetupClearingBackStack()
                 }
             )
         }

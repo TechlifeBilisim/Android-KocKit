@@ -21,10 +21,12 @@ interface AuthRepository {
     suspend fun loginWithTechpass(xTechOturum: String): ApiResult<LoginResult>
     suspend fun refreshToken(): ApiResult<LoginResult>
     suspend fun register(registerInfo: RegisterInfo): ApiResult<RegisterResult>
+    suspend fun registerWithGoogle(
+        registerInfo: RegisterInfo,
+        oAuthIdToken: String
+    ): ApiResult<RegisterResult>
     suspend fun sendSmsCode(phone: String): ApiResult<Unit>
     suspend fun verifySmsCode(phone: String, code: String): ApiResult<Unit>
-    suspend fun sendEmailCode(email: String): ApiResult<Unit>
-    suspend fun verifyEmailCode(email: String, code: String): ApiResult<Unit>
     suspend fun logout()
     suspend fun setFirstLaunchCompleted()
 }

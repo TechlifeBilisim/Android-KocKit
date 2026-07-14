@@ -2,60 +2,47 @@ package com.techlife.kockit.data.remote.mapper
 
 import com.techlife.kockit.core.util.normalizeTurkishPhone
 import com.techlife.kockit.core.util.splitPersonName
-import com.techlife.kockit.data.remote.auth.AuthLoginType
 import com.techlife.kockit.data.remote.dto.auth.AuthSessionDto
 import com.techlife.kockit.data.remote.dto.auth.GoogleLoginRequestDto
 import com.techlife.kockit.data.remote.dto.auth.GoogleLoginResponseDto
+import com.techlife.kockit.data.remote.dto.auth.GoogleRegisterRequestDto
 import com.techlife.kockit.data.remote.dto.auth.LoginInitResponseDto
 import com.techlife.kockit.data.remote.dto.auth.LoginSmsRequestDto
 import com.techlife.kockit.data.remote.dto.auth.LoginSmsVerifyRequestDto
 import com.techlife.kockit.data.remote.dto.auth.NicknameLoginRequestDto
 import com.techlife.kockit.data.remote.dto.auth.RefreshTokenResponseDto
-import com.techlife.kockit.data.remote.dto.auth.SendEmailCodeRequestDto
 import com.techlife.kockit.data.remote.dto.auth.SendSmsCodeRequestDto
 import com.techlife.kockit.data.remote.dto.auth.StudentRegisterRequestDto
 import com.techlife.kockit.data.remote.dto.auth.StudentRegisterResponseDto
 import com.techlife.kockit.data.remote.dto.auth.TechpassLoginRequestDto
-import com.techlife.kockit.data.remote.dto.auth.VerifyEmailCodeRequestDto
 import com.techlife.kockit.data.remote.dto.auth.VerifySmsCodeRequestDto
 import com.techlife.kockit.domain.auth.model.LoginResult
-import com.techlife.kockit.domain.auth.model.RegisterAccountType
 import com.techlife.kockit.domain.auth.model.RegisterInfo
 import com.techlife.kockit.domain.auth.model.RegisterResult
 
-object RegisterApiConstants {
-    const val DEFAULT_CINSIYET_ID = 1
-    const val DEFAULT_IL_ID = 1
-    const val DEFAULT_ILCE_ID = 1
-}
-
 fun RegisterInfo.toStudentRegisterRequestDto(): StudentRegisterRequestDto {
     val (ad, soyad) = splitPersonName(fullName)
-    return when (accountType) {
-        RegisterAccountType.NICKNAME -> StudentRegisterRequestDto(
-            ad = ad,
-            soyad = soyad,
-            loginTypeId = AuthLoginType.RUMUZ,
-            rumuz = nickname.trim(),
-            eposta = email.trim(),
-            sifre = password,
-            cinsiyetId = RegisterApiConstants.DEFAULT_CINSIYET_ID,
-            ilId = RegisterApiConstants.DEFAULT_IL_ID,
-            ilceId = RegisterApiConstants.DEFAULT_ILCE_ID
-        )
-        RegisterAccountType.PHONE -> StudentRegisterRequestDto(
-            ad = ad,
-            soyad = soyad,
-            cepTelefon = normalizeTurkishPhone(phone),
-            loginTypeId = AuthLoginType.TELEFON,
-            eposta = email.trim(),
-            sifre = password.ifBlank { null },
-            rumuz = nickname.trim().ifBlank { null },
-            cinsiyetId = RegisterApiConstants.DEFAULT_CINSIYET_ID,
-            ilId = RegisterApiConstants.DEFAULT_IL_ID,
-            ilceId = RegisterApiConstants.DEFAULT_ILCE_ID
-        )
-    }
+    return StudentRegisterRequestDto(
+        ad = ad,
+        soyad = soyad,
+        cepTelefon = normalizeTurkishPhone(phone).ifBlank { null },
+        rumuz = nickname.trim().ifBlank { null },
+        eposta = email.trim(),
+        cinsiyet = gender.apiId
+    )
+}
+
+fun RegisterInfo.toGoogleRegisterRequestDto(oAuthIdToken: String): GoogleRegisterRequestDto {
+    val (ad, soyad) = splitPersonName(fullName)
+    return GoogleRegisterRequestDto(
+        ad = ad,
+        soyad = soyad,
+        cepTelefon = normalizeTurkishPhone(phone).ifBlank { null },
+        rumuz = nickname.trim().ifBlank { null },
+        eposta = email.trim(),
+        cinsiyet = gender.apiId,
+        oAuthIdToken = oAuthIdToken
+    )
 }
 
 fun StudentRegisterResponseDto.toDomain(): RegisterResult = RegisterResult(
@@ -75,17 +62,11 @@ fun String.toLoginSmsRequestDto(): LoginSmsRequestDto =
 fun String.toSendSmsCodeRequestDto(): SendSmsCodeRequestDto =
     SendSmsCodeRequestDto(cepTelefon = normalizeTurkishPhone(this))
 
-fun String.toSendEmailCodeRequestDto(): SendEmailCodeRequestDto =
-    SendEmailCodeRequestDto(eposta = trim())
-
 fun toVerifySmsCodeRequestDto(phone: String, code: String): VerifySmsCodeRequestDto =
     VerifySmsCodeRequestDto(cepTelefon = normalizeTurkishPhone(phone), kod = code)
 
 fun toLoginSmsVerifyRequestDto(phone: String, code: String): LoginSmsVerifyRequestDto =
     LoginSmsVerifyRequestDto(cepTelefon = normalizeTurkishPhone(phone), kod = code)
-
-fun toVerifyEmailCodeRequestDto(email: String, code: String): VerifyEmailCodeRequestDto =
-    VerifyEmailCodeRequestDto(eposta = email.trim(), kod = code)
 
 fun toGoogleLoginRequestDto(oAuthIdToken: String, email: String): GoogleLoginRequestDto =
     GoogleLoginRequestDto(oAuthIdToken = oAuthIdToken, email = email.trim())
@@ -110,6 +91,18 @@ fun AuthSessionDto.toDomain(): LoginResult {
 fun LoginInitResponseDto.toDomain(): LoginResult = toGoogleLoginDomain()
 
 fun GoogleLoginResponseDto.toDomain(): LoginResult = toGoogleLoginDomain()
+
+fun GoogleLoginResponseDto.toRegisterResult(): RegisterResult? {
+    val token = accessToken ?: kullaniciProfili?.accessToken ?: return null
+    val userId = kullaniciId ?: kullaniciProfili?.kullaniciId ?: return null
+    return RegisterResult(
+        userId = userId,
+        accessToken = token,
+        refreshToken = refreshToken ?: kullaniciProfili?.refreshToken,
+        email = eposta ?: kullaniciProfili?.eposta,
+        phone = cepTelefon ?: kullaniciProfili?.cepTelefon
+    )
+}
 
 private fun GoogleLoginResponseDto.toGoogleLoginDomain(): LoginResult {
     val profile = kullaniciProfili?.toDomain()

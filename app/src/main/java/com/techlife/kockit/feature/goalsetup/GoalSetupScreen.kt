@@ -61,11 +61,11 @@ import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.White
 import com.techlife.kockit.domain.location.model.Province
-import com.techlife.kockit.domain.onboarding.model.Department
 import com.techlife.kockit.domain.onboarding.model.ExamGoal
-import com.techlife.kockit.domain.onboarding.model.Gender
 import com.techlife.kockit.domain.onboarding.model.University
 import com.techlife.kockit.domain.onboarding.model.UniversityType
+import com.techlife.kockit.domain.yo.model.YoBilim
+import com.techlife.kockit.domain.yo.model.YoFakulte
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -158,13 +158,6 @@ private fun GoalSetupExamStep(
     )
     uiState.examError?.let { KocKitText(text = it, color = colors.coralAccent) }
 
-    GoalSetupSectionTitle(text = "Cinsiyet")
-    GoalSetupGenderSwitch(
-        selectedGender = uiState.selectedGender,
-        onGenderSelected = { onEvent(GoalSetupEvent.GenderSelected(it)) }
-    )
-    uiState.genderError?.let { KocKitText(text = it, color = colors.coralAccent) }
-
     GoalSetupSectionTitle(text = "Hedefini seç")
     GoalSetupUniversityTypeSwitch(
         selectedType = uiState.selectedUniversityType,
@@ -221,11 +214,29 @@ private fun GoalSetupExamStep(
         leadingIconBackground = PastelGreen.copy(alpha = 0.15f)
     )
     KocKitDropdownField(
+        label = "Fakülte",
+        options = uiState.fakulteler.map { it.name },
+        selectedOption = uiState.selectedFakulteName,
+        onOptionSelected = { name ->
+            val fakulte = uiState.fakulteler.find { it.name == name } ?: return@KocKitDropdownField
+            onEvent(GoalSetupEvent.FakulteSelected(fakulte.id, fakulte.name))
+        },
+        error = uiState.fakulteError ?: uiState.fakultelerError,
+        searchable = true,
+        searchPlaceholder = "Fakülte ara...",
+        leadingIcon = Icons.Filled.AccountBalance,
+        leadingIconTint = OrangeAccent,
+        leadingIconBackground = OrangeAccent.copy(alpha = 0.15f)
+    )
+    KocKitDropdownField(
         label = "Bilim",
-        options = uiState.departments.map { it.name },
-        selectedOption = uiState.selectedDepartmentName,
-        onOptionSelected = { onEvent(GoalSetupEvent.DepartmentSelected(it)) },
-        error = uiState.departmentError,
+        options = uiState.bilimler.map { it.name },
+        selectedOption = uiState.selectedBilimName,
+        onOptionSelected = { name ->
+            val bilim = uiState.bilimler.find { it.name == name } ?: return@KocKitDropdownField
+            onEvent(GoalSetupEvent.BilimSelected(bilim.id, bilim.name))
+        },
+        error = uiState.bilimError ?: uiState.bilimlerError,
         searchable = true,
         searchPlaceholder = "Bilim ara...",
         leadingIcon = Icons.Filled.MenuBook,
@@ -297,7 +308,6 @@ private fun GoalSetupContinueButton(
 }
 
 private val GoalSetupCardShape = RoundedCornerShape(20.dp)
-private val GoalSetupSegmentShape = RoundedCornerShape(16.dp)
 
 @Composable
 private fun GoalSetupUniversityTypeSwitch(
@@ -391,45 +401,6 @@ private data class GoalSetupUniversityTypeOption(
     val iconVector: ImageVector?,
     val accentColor: Color
 )
-
-@Composable
-private fun GoalSetupGenderSwitch(
-    selectedGender: Gender?,
-    onGenderSelected: (Gender) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val colors = KocKitTheme.extraColors
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(GoalSetupSegmentShape)
-            .background(White)
-            .border(1.dp, colors.borderLight.copy(alpha = 0.7f), GoalSetupSegmentShape)
-            .padding(4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Gender.entries.forEach { gender ->
-            val isSelected = selectedGender == gender
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(if (isSelected) LavenderAccent else Color.Transparent)
-                    .clickable { onGenderSelected(gender) }
-                    .padding(vertical = 14.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                KocKitSemiText(
-                    text = gender.label,
-                    color = if (isSelected) White else TextPrimary,
-                    fontSize = KocKitTextDefaults.fontSizeBody,
-                    lineHeight = KocKitTextDefaults.lineHeightBody
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun GoalSetupOnlyTytCard(
@@ -532,9 +503,13 @@ private fun GoalSetupScreenPreview() {
                     University("u001", "Boğaziçi Üniversitesi", "İstanbul", "Marmara", UniversityType.DEVLET),
                     University("u002", "İstanbul Teknik Üniversitesi", "İstanbul", "Marmara", UniversityType.DEVLET)
                 ),
-                departments = listOf(
-                    Department("d01", "Bilgisayar Mühendisliği"),
-                    Department("d02", "Yazılım Mühendisliği")
+                fakulteler = listOf(
+                    YoFakulte(1, "Mühendislik Bilimleri"),
+                    YoFakulte(2, "Temel Bilimler")
+                ),
+                bilimler = listOf(
+                    YoBilim(1, "Mühendislik Bilimleri"),
+                    YoBilim(2, "Temel Bilimler")
                 ),
                 selectedExamGoalId = "tyt",
                 provinces = listOf(Province(id = 34, name = "İstanbul")),
@@ -551,10 +526,12 @@ private fun GoalSetupScreenPreview() {
                 selectedDistrictId = 1,
                 selectedDistrictName = "Kadıköy",
                 selectedUniversityType = null,
-                selectedGender = Gender.ERKEK,
                 onlyTyt = true,
                 selectedUniversityName = "Boğaziçi Üniversitesi",
-                selectedDepartmentName = "Bilgisayar Mühendisliği"
+                selectedFakulteId = 1,
+                selectedFakulteName = "Mühendislik Bilimleri",
+                selectedBilimId = 1,
+                selectedBilimName = "Mühendislik Bilimleri"
             ),
             onEvent = {}
         )

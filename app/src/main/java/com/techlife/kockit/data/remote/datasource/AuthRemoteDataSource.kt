@@ -7,14 +7,14 @@ import com.techlife.kockit.data.remote.api.AuthApiService
 import com.techlife.kockit.data.remote.dto.auth.RefreshTokenRequestDto
 import com.techlife.kockit.data.remote.mapper.toDomain
 import com.techlife.kockit.data.remote.mapper.toGoogleLoginRequestDto
+import com.techlife.kockit.data.remote.mapper.toGoogleRegisterRequestDto
 import com.techlife.kockit.data.remote.mapper.toLoginSmsRequestDto
 import com.techlife.kockit.data.remote.mapper.toLoginSmsVerifyRequestDto
 import com.techlife.kockit.data.remote.mapper.toNicknameLoginRequestDto
-import com.techlife.kockit.data.remote.mapper.toSendEmailCodeRequestDto
+import com.techlife.kockit.data.remote.mapper.toRegisterResult
 import com.techlife.kockit.data.remote.mapper.toSendSmsCodeRequestDto
 import com.techlife.kockit.data.remote.mapper.toStudentRegisterRequestDto
 import com.techlife.kockit.data.remote.mapper.toTechpassLoginRequestDto
-import com.techlife.kockit.data.remote.mapper.toVerifyEmailCodeRequestDto
 import com.techlife.kockit.data.remote.mapper.toVerifySmsCodeRequestDto
 import com.techlife.kockit.data.remote.util.requireData
 import com.techlife.kockit.data.remote.util.requireSuccess
@@ -33,6 +33,17 @@ class AuthRemoteDataSource @Inject constructor(
 
     suspend fun registerStudent(registerInfo: RegisterInfo): ApiResult<RegisterResult> = execute {
         authApi.registerStudent(registerInfo.toStudentRegisterRequestDto()).requireData().toDomain()
+    }
+
+    suspend fun registerWithGoogle(
+        registerInfo: RegisterInfo,
+        oAuthIdToken: String
+    ): ApiResult<RegisterResult> = execute {
+        val response = authApi.registerWithGoogle(
+            registerInfo.toGoogleRegisterRequestDto(oAuthIdToken)
+        ).requireData()
+        response.toRegisterResult()
+            ?: error("Google kayıt yanıtında token bulunamadı.")
     }
 
     suspend fun loginWithNickname(nickname: String, password: String): ApiResult<LoginResult> = execute {
@@ -65,14 +76,6 @@ class AuthRemoteDataSource @Inject constructor(
 
     suspend fun verifySmsCode(phone: String, code: String): ApiResult<Unit> = execute {
         authApi.verifySmsCode(toVerifySmsCodeRequestDto(phone, code)).requireSuccess()
-    }
-
-    suspend fun sendEmailCode(email: String): ApiResult<Unit> = execute {
-        authApi.sendEmailCode(email.toSendEmailCodeRequestDto()).requireSuccess()
-    }
-
-    suspend fun verifyEmailCode(email: String, code: String): ApiResult<Unit> = execute {
-        authApi.verifyEmailCode(toVerifyEmailCodeRequestDto(email, code)).requireSuccess()
     }
 
     suspend fun logout(): ApiResult<Unit> = execute {
