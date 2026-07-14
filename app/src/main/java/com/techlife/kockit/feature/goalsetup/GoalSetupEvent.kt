@@ -9,9 +9,10 @@ sealed interface GoalSetupEvent {
     data class ProvinceSelected(val provinceId: Int, val name: String) : GoalSetupEvent
     data class DistrictSelected(val districtId: Int, val name: String) : GoalSetupEvent
     data class UniversityTypeSelected(val type: UniversityType?) : GoalSetupEvent
-    data class UniversitySelected(val name: String) : GoalSetupEvent
+    data class UniversitySelected(val universityId: Int, val name: String) : GoalSetupEvent
     data class FakulteSelected(val fakulteId: Int, val name: String) : GoalSetupEvent
     data class BilimSelected(val bilimId: Int, val name: String) : GoalSetupEvent
+    data class BolumSelected(val bolumId: Int, val name: String) : GoalSetupEvent
     data object ContinueClicked : GoalSetupEvent
     data object BackClicked : GoalSetupEvent
     data object SuccessDialogDismissed : GoalSetupEvent

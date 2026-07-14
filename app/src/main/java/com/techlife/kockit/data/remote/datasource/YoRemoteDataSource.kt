@@ -5,10 +5,14 @@ import com.techlife.kockit.core.network.model.ApiResult
 import com.techlife.kockit.data.remote.RemoteDataSource
 import com.techlife.kockit.data.remote.api.YoApiService
 import com.techlife.kockit.data.remote.mapper.toYoBilimDomain
+import com.techlife.kockit.data.remote.mapper.toYoBolumDomain
 import com.techlife.kockit.data.remote.mapper.toYoFakulteDomain
+import com.techlife.kockit.data.remote.mapper.toYoUniversiteDomain
 import com.techlife.kockit.data.remote.util.requireData
 import com.techlife.kockit.domain.yo.model.YoBilim
+import com.techlife.kockit.domain.yo.model.YoBolum
 import com.techlife.kockit.domain.yo.model.YoFakulte
+import com.techlife.kockit.domain.yo.model.YoUniversite
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,7 +27,20 @@ class YoRemoteDataSource @Inject constructor(
         yoApi.getBilimler().requireData().toYoBilimDomain()
     }
 
-    suspend fun getFakulteler(): ApiResult<List<YoFakulte>> = execute {
-        yoApi.getFakulteler().requireData().toYoFakulteDomain()
+    suspend fun getUniversiteler(): ApiResult<List<YoUniversite>> = execute {
+        yoApi.getUniversiteler().requireData().toYoUniversiteDomain()
+    }
+
+    suspend fun getFakulteler(yoUniversiteId: Int): ApiResult<List<YoFakulte>> = execute {
+        yoApi.getFakulteler(yoUniversiteId).requireData().toYoFakulteDomain()
+    }
+
+    suspend fun getBolumler(
+        yoBilimId: Int? = null,
+        yoUniversiteId: Int? = null
+    ): ApiResult<List<YoBolum>> = execute {
+        yoApi.getBolumler(yoBilimId = yoBilimId, yoUniversiteId = yoUniversiteId)
+            .requireData()
+            .toYoBolumDomain()
     }
 }

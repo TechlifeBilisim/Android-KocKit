@@ -21,5 +21,8 @@ object ApiServices {
     const val PROVINCE_LIST = "PROVINCE_LIST"
     const val DISTRICT_LIST = "DISTRICT_LIST"
     const val YO_BILIM_LIST = "YO_BILIM_LIST"
+    const val YO_UNIVERSITE_LIST = "YO_UNIVERSITE_LIST"
     const val YO_FAKULTE_LIST = "YO_FAKULTE_LIST"
+    const val YO_BOLUM_LIST = "YO_BOLUM_LIST"
+    const val OGRENCI_GET = "OGRENCI_GET"
 }

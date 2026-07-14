@@ -62,10 +62,11 @@ import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.White
 import com.techlife.kockit.domain.location.model.Province
 import com.techlife.kockit.domain.onboarding.model.ExamGoal
-import com.techlife.kockit.domain.onboarding.model.University
 import com.techlife.kockit.domain.onboarding.model.UniversityType
 import com.techlife.kockit.domain.yo.model.YoBilim
+import com.techlife.kockit.domain.yo.model.YoBolum
 import com.techlife.kockit.domain.yo.model.YoFakulte
+import com.techlife.kockit.domain.yo.model.YoUniversite
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -203,10 +204,14 @@ private fun GoalSetupExamStep(
     )
     KocKitDropdownField(
         label = "Üniversite",
-        options = uiState.universities.map { it.name },
+        options = uiState.universiteler.map { it.name },
         selectedOption = uiState.selectedUniversityName,
-        onOptionSelected = { onEvent(GoalSetupEvent.UniversitySelected(it)) },
-        error = uiState.universityError,
+        onOptionSelected = { name ->
+            val university = uiState.universiteler.find { it.name == name }
+                ?: return@KocKitDropdownField
+            onEvent(GoalSetupEvent.UniversitySelected(university.id, university.name))
+        },
+        error = uiState.universityError ?: uiState.universitelerError,
         searchable = true,
         searchPlaceholder = "Üniversite ara...",
         leadingIcon = Icons.Filled.School,
@@ -223,7 +228,11 @@ private fun GoalSetupExamStep(
         },
         error = uiState.fakulteError ?: uiState.fakultelerError,
         searchable = true,
-        searchPlaceholder = "Fakülte ara...",
+        searchPlaceholder = when {
+            uiState.isFakultelerLoading -> "Fakülteler yükleniyor..."
+            uiState.selectedUniversityId == null -> "Önce üniversite seçin"
+            else -> "Fakülte ara..."
+        },
         leadingIcon = Icons.Filled.AccountBalance,
         leadingIconTint = OrangeAccent,
         leadingIconBackground = OrangeAccent.copy(alpha = 0.15f)
@@ -242,6 +251,26 @@ private fun GoalSetupExamStep(
         leadingIcon = Icons.Filled.MenuBook,
         leadingIconTint = LavenderAccent,
         leadingIconBackground = LavenderAccent.copy(alpha = 0.12f)
+    )
+    KocKitDropdownField(
+        label = "Bölüm",
+        options = uiState.bolumler.map { it.name },
+        selectedOption = uiState.selectedBolumName,
+        onOptionSelected = { name ->
+            val bolum = uiState.bolumler.find { it.name == name } ?: return@KocKitDropdownField
+            onEvent(GoalSetupEvent.BolumSelected(bolum.id, bolum.name))
+        },
+        error = uiState.bolumError ?: uiState.bolumlerError,
+        searchable = true,
+        searchPlaceholder = when {
+            uiState.isBolumlerLoading -> "Bölümler yükleniyor..."
+            uiState.selectedBilimId == null && uiState.selectedUniversityId == null ->
+                "Önce bilim veya üniversite seçin"
+            else -> "Bölüm ara..."
+        },
+        leadingIcon = Icons.Filled.MenuBook,
+        leadingIconTint = PastelGreen,
+        leadingIconBackground = PastelGreen.copy(alpha = 0.12f)
     )
 }
 
@@ -499,17 +528,20 @@ private fun GoalSetupScreenPreview() {
                     ExamGoal("tyt", "TYT", "Temel Yeterlilik Testi", "tyt"),
                     ExamGoal("ayt", "AYT", "Alan Yeterlilik Testi", "ayt"),
                 ),
-                universities = listOf(
-                    University("u001", "Boğaziçi Üniversitesi", "İstanbul", "Marmara", UniversityType.DEVLET),
-                    University("u002", "İstanbul Teknik Üniversitesi", "İstanbul", "Marmara", UniversityType.DEVLET)
+                universiteler = listOf(
+                    YoUniversite(1, "Boğaziçi Üniversitesi"),
+                    YoUniversite(2, "İstanbul Teknik Üniversitesi")
                 ),
                 fakulteler = listOf(
-                    YoFakulte(1, "Mühendislik Bilimleri"),
-                    YoFakulte(2, "Temel Bilimler")
+                    YoFakulte(1, 1, "Mühendislik Fak."),
+                    YoFakulte(2, 1, "Fen-Edebiyat Fak.")
                 ),
                 bilimler = listOf(
                     YoBilim(1, "Mühendislik Bilimleri"),
-                    YoBilim(2, "Temel Bilimler")
+                    YoBilim(12, "Din Bilimleri")
+                ),
+                bolumler = listOf(
+                    YoBolum(52, 12, "İlahiyat")
                 ),
                 selectedExamGoalId = "tyt",
                 provinces = listOf(Province(id = 34, name = "İstanbul")),
@@ -527,11 +559,14 @@ private fun GoalSetupScreenPreview() {
                 selectedDistrictName = "Kadıköy",
                 selectedUniversityType = null,
                 onlyTyt = true,
+                selectedUniversityId = 1,
                 selectedUniversityName = "Boğaziçi Üniversitesi",
                 selectedFakulteId = 1,
-                selectedFakulteName = "Mühendislik Bilimleri",
-                selectedBilimId = 1,
-                selectedBilimName = "Mühendislik Bilimleri"
+                selectedFakulteName = "Mühendislik Fak.",
+                selectedBilimId = 12,
+                selectedBilimName = "Din Bilimleri",
+                selectedBolumId = 52,
+                selectedBolumName = "İlahiyat"
             ),
             onEvent = {}
         )

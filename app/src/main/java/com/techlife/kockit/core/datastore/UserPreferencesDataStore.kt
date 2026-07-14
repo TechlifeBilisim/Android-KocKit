@@ -34,6 +34,8 @@ class UserPreferencesDataStore @Inject constructor(
 
     override suspend fun getRefreshToken(): String? = dataStore.data.first()[Keys.REFRESH_TOKEN]
 
+    override suspend fun getKullaniciId(): String? = dataStore.data.first()[Keys.KULLANICI_ID]
+
     override suspend fun saveAuthTokens(accessToken: String, refreshToken: String?) {
         dataStore.edit { prefs ->
             prefs[Keys.ACCESS_TOKEN] = accessToken
@@ -60,12 +62,14 @@ class UserPreferencesDataStore @Inject constructor(
     override suspend fun saveUserInfo(
         fullName: String?,
         email: String?,
-        phoneNumber: String?
+        phoneNumber: String?,
+        kullaniciId: String?
     ) {
         dataStore.edit { prefs ->
             fullName?.let { prefs[Keys.FULL_NAME] = it }
             email?.let { prefs[Keys.EMAIL] = it }
             phoneNumber?.let { prefs[Keys.PHONE_NUMBER] = it }
+            kullaniciId?.takeIf { it.isNotBlank() }?.let { prefs[Keys.KULLANICI_ID] = it }
         }
     }
 
@@ -124,6 +128,7 @@ class UserPreferencesDataStore @Inject constructor(
             prefs.remove(Keys.FULL_NAME)
             prefs.remove(Keys.EMAIL)
             prefs.remove(Keys.PHONE_NUMBER)
+            prefs.remove(Keys.KULLANICI_ID)
             prefs.remove(Keys.SELECTED_EXAM_GOAL)
             prefs.remove(Keys.SELECTED_UNIVERSITY)
             prefs.remove(Keys.SELECTED_DEPARTMENT)
@@ -147,6 +152,7 @@ class UserPreferencesDataStore @Inject constructor(
         isFirstLaunch = this[Keys.IS_FIRST_LAUNCH] ?: true,
         isLoggedIn = this[Keys.IS_LOGGED_IN] ?: false,
         isOnboardingCompleted = this[Keys.IS_ONBOARDING_COMPLETED] ?: false,
+        kullaniciId = this[Keys.KULLANICI_ID],
         fullName = this[Keys.FULL_NAME],
         email = this[Keys.EMAIL],
         phoneNumber = this[Keys.PHONE_NUMBER],
@@ -159,6 +165,7 @@ class UserPreferencesDataStore @Inject constructor(
         val IS_FIRST_LAUNCH = booleanPreferencesKey("is_first_launch")
         val IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
         val IS_ONBOARDING_COMPLETED = booleanPreferencesKey("is_onboarding_completed")
+        val KULLANICI_ID = stringPreferencesKey("kullanici_id")
         val FULL_NAME = stringPreferencesKey("full_name")
         val EMAIL = stringPreferencesKey("email")
         val PHONE_NUMBER = stringPreferencesKey("phone_number")

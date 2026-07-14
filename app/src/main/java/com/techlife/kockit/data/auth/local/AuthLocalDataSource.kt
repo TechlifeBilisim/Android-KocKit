@@ -23,7 +23,8 @@ class AuthLocalDataSource @Inject constructor(
         userPreferences.saveUserInfo(
             fullName = result.fullName,
             email = result.email,
-            phoneNumber = result.phone
+            phoneNumber = result.phone,
+            kullaniciId = result.userId
         )
         password?.let { userPreferences.savePassword(it) }
         userPreferences.setLoggedIn(true)
@@ -33,6 +34,8 @@ class AuthLocalDataSource @Inject constructor(
 
     suspend fun getAccessToken(): String? = userPreferences.getAccessToken()
 
+    suspend fun getKullaniciId(): String? = userPreferences.getKullaniciId()
+
     suspend fun persistRegistration(registerInfo: RegisterInfo, result: RegisterResult) {
         userPreferences.saveAuthTokens(result.accessToken, result.refreshToken)
         val phoneNumber = result.phone?.takeIf { it.isNotBlank() }
@@ -40,7 +43,8 @@ class AuthLocalDataSource @Inject constructor(
         userPreferences.saveUserInfo(
             fullName = registerInfo.fullName.trim(),
             email = result.email ?: registerInfo.email.trim(),
-            phoneNumber = phoneNumber
+            phoneNumber = phoneNumber,
+            kullaniciId = result.userId
         )
         userPreferences.savePassword(registerInfo.password)
         userPreferences.setLoggedIn(true)

@@ -10,6 +10,7 @@ interface UserPreferences {
     suspend fun getUserSession(): UserSession
     suspend fun getAccessToken(): String?
     suspend fun getRefreshToken(): String?
+    suspend fun getKullaniciId(): String?
     suspend fun saveAuthTokens(accessToken: String, refreshToken: String? = null)
     suspend fun setFirstLaunch(isFirstLaunch: Boolean)
     suspend fun setLoggedIn(isLoggedIn: Boolean)
@@ -17,7 +18,8 @@ interface UserPreferences {
     suspend fun saveUserInfo(
         fullName: String?,
         email: String?,
-        phoneNumber: String?
+        phoneNumber: String?,
+        kullaniciId: String? = null
     )
     suspend fun saveOnboardingSelections(
         examGoal: String?,

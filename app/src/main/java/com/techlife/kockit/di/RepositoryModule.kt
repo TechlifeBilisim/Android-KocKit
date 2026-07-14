@@ -3,12 +3,14 @@ package com.techlife.kockit.di
 import com.techlife.kockit.data.auth.repository.AuthRepositoryImpl
 import com.techlife.kockit.data.lesson.repository.LessonRepositoryImpl
 import com.techlife.kockit.data.location.repository.LocationRepositoryImpl
+import com.techlife.kockit.data.ogrenci.repository.OgrenciRepositoryImpl
 import com.techlife.kockit.data.onboarding.repository.OnboardingRepositoryImpl
 import com.techlife.kockit.data.placement.repository.PlacementRepositoryImpl
 import com.techlife.kockit.data.yo.repository.YoCatalogRepositoryImpl
 import com.techlife.kockit.domain.auth.repository.AuthRepository
 import com.techlife.kockit.domain.lesson.repository.LessonRepository
 import com.techlife.kockit.domain.location.repository.LocationRepository
+import com.techlife.kockit.domain.ogrenci.repository.OgrenciRepository
 import com.techlife.kockit.domain.onboarding.repository.OnboardingRepository
 import com.techlife.kockit.domain.placement.repository.PlacementRepository
 import com.techlife.kockit.domain.yo.repository.YoCatalogRepository
@@ -45,4 +47,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindYoCatalogRepository(impl: YoCatalogRepositoryImpl): YoCatalogRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindOgrenciRepository(impl: OgrenciRepositoryImpl): OgrenciRepository
 }

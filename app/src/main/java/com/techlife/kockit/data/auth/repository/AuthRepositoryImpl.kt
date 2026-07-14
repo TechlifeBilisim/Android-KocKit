@@ -25,6 +25,9 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun getAccessToken(): String? =
         authLocalDataSource.getAccessToken()
 
+    override suspend fun getKullaniciId(): String? =
+        authLocalDataSource.getKullaniciId()
+
     override suspend fun setRememberMe(remember: Boolean, phone: String?) =
         authLocalDataSource.setRememberMe(remember, phone)
 
