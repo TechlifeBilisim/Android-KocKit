@@ -63,13 +63,15 @@ class UserPreferencesDataStore @Inject constructor(
         fullName: String?,
         email: String?,
         phoneNumber: String?,
-        kullaniciId: String?
+        kullaniciId: String?,
+        profileImage: String?
     ) {
         dataStore.edit { prefs ->
             fullName?.let { prefs[Keys.FULL_NAME] = it }
             email?.let { prefs[Keys.EMAIL] = it }
             phoneNumber?.let { prefs[Keys.PHONE_NUMBER] = it }
             kullaniciId?.takeIf { it.isNotBlank() }?.let { prefs[Keys.KULLANICI_ID] = it }
+            profileImage?.takeIf { it.isNotBlank() }?.let { prefs[Keys.PROFILE_IMAGE] = it }
         }
     }
 
@@ -129,6 +131,7 @@ class UserPreferencesDataStore @Inject constructor(
             prefs.remove(Keys.EMAIL)
             prefs.remove(Keys.PHONE_NUMBER)
             prefs.remove(Keys.KULLANICI_ID)
+            prefs.remove(Keys.PROFILE_IMAGE)
             prefs.remove(Keys.SELECTED_EXAM_GOAL)
             prefs.remove(Keys.SELECTED_UNIVERSITY)
             prefs.remove(Keys.SELECTED_DEPARTMENT)
@@ -156,6 +159,7 @@ class UserPreferencesDataStore @Inject constructor(
         fullName = this[Keys.FULL_NAME],
         email = this[Keys.EMAIL],
         phoneNumber = this[Keys.PHONE_NUMBER],
+        profileImage = this[Keys.PROFILE_IMAGE],
         selectedExamGoal = this[Keys.SELECTED_EXAM_GOAL],
         selectedUniversity = this[Keys.SELECTED_UNIVERSITY],
         selectedDepartment = this[Keys.SELECTED_DEPARTMENT]
@@ -169,6 +173,7 @@ class UserPreferencesDataStore @Inject constructor(
         val FULL_NAME = stringPreferencesKey("full_name")
         val EMAIL = stringPreferencesKey("email")
         val PHONE_NUMBER = stringPreferencesKey("phone_number")
+        val PROFILE_IMAGE = stringPreferencesKey("profile_image")
         val SELECTED_EXAM_GOAL = stringPreferencesKey("selected_exam_goal")
         val SELECTED_UNIVERSITY = stringPreferencesKey("selected_university")
         val SELECTED_DEPARTMENT = stringPreferencesKey("selected_department")

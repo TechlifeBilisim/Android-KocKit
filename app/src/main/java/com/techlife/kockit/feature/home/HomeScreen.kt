@@ -33,12 +33,25 @@ fun HomeScreen(
     onNavigateToPlacement: (sectionKey: String) -> Unit = {},
     onNavigateToLogin: () -> Unit = {},
     onSearchClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onStudyPlanClick: () -> Unit = {},
-    onNotificationClick: () -> Unit = {}
+    onGoalsClick: () -> Unit = {},
+    onAnalysisClick: () -> Unit = {},
+    onExamsClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onHelpClick: () -> Unit = {},
+    onAboutClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val closeDrawer: () -> Unit = remember(scope, drawerState) {
+        {
+            scope.launch { drawerState.close() }
+            Unit
+        }
+    }
     val onMenuClick: () -> Unit = remember(scope, drawerState) {
         {
             scope.launch { drawerState.open() }
@@ -60,13 +73,26 @@ fun HomeScreen(
         drawerContent = {
             HomeDrawerContent(
                 userName = uiState.fullName.ifBlank { HomeFakeData.USER_NAME },
-                onStudyPlanClick = {
-                    scope.launch { drawerState.close() }
-                    onStudyPlanClick()
+                profileImage = uiState.profileImage,
+                onCloseClick = closeDrawer,
+                onProfileClick = {
+                    closeDrawer()
+                    onProfileClick()
                 },
-                onLogoutClick = {
-                    scope.launch { drawerState.close() }
-                    viewModel.onLogoutClick()
+                onItemClick = { item ->
+                    closeDrawer()
+                    when (item) {
+                        DrawerNavId.HOME -> Unit
+                        DrawerNavId.STUDY_PLAN -> onStudyPlanClick()
+                        DrawerNavId.GOALS -> onGoalsClick()
+                        DrawerNavId.ANALYSIS -> onAnalysisClick()
+                        DrawerNavId.EXAMS -> onExamsClick()
+                        DrawerNavId.NOTIFICATIONS -> onNotificationClick()
+                        DrawerNavId.SETTINGS -> onSettingsClick()
+                        DrawerNavId.HELP -> onHelpClick()
+                        DrawerNavId.ABOUT -> onAboutClick()
+                        DrawerNavId.LOGOUT -> viewModel.onLogoutClick()
+                    }
                 }
             )
         }

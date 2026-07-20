@@ -19,7 +19,8 @@ interface UserPreferences {
         fullName: String?,
         email: String?,
         phoneNumber: String?,
-        kullaniciId: String? = null
+        kullaniciId: String? = null,
+        profileImage: String? = null
     )
     suspend fun saveOnboardingSelections(
         examGoal: String?,

@@ -25,10 +25,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountBalance
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Icon
@@ -60,10 +58,8 @@ import com.techlife.kockit.core.designsystem.theme.OrangeAccent
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.White
-import com.techlife.kockit.domain.location.model.Province
 import com.techlife.kockit.domain.onboarding.model.ExamGoal
 import com.techlife.kockit.domain.onboarding.model.UniversityType
-import com.techlife.kockit.domain.yo.model.YoBilim
 import com.techlife.kockit.domain.yo.model.YoBolum
 import com.techlife.kockit.domain.yo.model.YoFakulte
 import com.techlife.kockit.domain.yo.model.YoUniversite
@@ -167,42 +163,6 @@ private fun GoalSetupExamStep(
     uiState.universityTypeError?.let { KocKitText(text = it, color = colors.coralAccent) }
 
     KocKitDropdownField(
-        label = "İl",
-        options = uiState.provinces.map { it.name },
-        selectedOption = uiState.selectedProvinceName,
-        onOptionSelected = { name ->
-            val province = uiState.provinces.find { it.name == name } ?: return@KocKitDropdownField
-            onEvent(GoalSetupEvent.ProvinceSelected(province.id, province.name))
-        },
-        error = uiState.provinceError ?: uiState.provincesError,
-        searchable = true,
-        searchPlaceholder = "İl ara...",
-        leadingIcon = Icons.Filled.LocationOn,
-        leadingIconTint = OrangeAccent,
-        leadingIconBackground = OrangeAccent.copy(alpha = 0.15f)
-    )
-    KocKitDropdownField(
-        label = "İlçe",
-        options = uiState.districts.map { it.name },
-        selectedOption = uiState.selectedDistrictName,
-        onOptionSelected = { name ->
-            val district = uiState.districts.find { it.name == name } ?: return@KocKitDropdownField
-            onEvent(GoalSetupEvent.DistrictSelected(district.id, district.name))
-        },
-        error = uiState.districtError ?: uiState.districtsError,
-        searchable = true,
-        searchPlaceholder = if (uiState.isDistrictsLoading) {
-            "İlçeler yükleniyor..."
-        } else if (uiState.selectedProvinceId == null) {
-            "Önce il seçin"
-        } else {
-            "İlçe ara..."
-        },
-        leadingIcon = Icons.Filled.Place,
-        leadingIconTint = LavenderAccent,
-        leadingIconBackground = LavenderAccent.copy(alpha = 0.15f)
-    )
-    KocKitDropdownField(
         label = "Üniversite",
         options = uiState.universiteler.map { it.name },
         selectedOption = uiState.selectedUniversityName,
@@ -238,21 +198,6 @@ private fun GoalSetupExamStep(
         leadingIconBackground = OrangeAccent.copy(alpha = 0.15f)
     )
     KocKitDropdownField(
-        label = "Bilim",
-        options = uiState.bilimler.map { it.name },
-        selectedOption = uiState.selectedBilimName,
-        onOptionSelected = { name ->
-            val bilim = uiState.bilimler.find { it.name == name } ?: return@KocKitDropdownField
-            onEvent(GoalSetupEvent.BilimSelected(bilim.id, bilim.name))
-        },
-        error = uiState.bilimError ?: uiState.bilimlerError,
-        searchable = true,
-        searchPlaceholder = "Bilim ara...",
-        leadingIcon = Icons.Filled.MenuBook,
-        leadingIconTint = LavenderAccent,
-        leadingIconBackground = LavenderAccent.copy(alpha = 0.12f)
-    )
-    KocKitDropdownField(
         label = "Bölüm",
         options = uiState.bolumler.map { it.name },
         selectedOption = uiState.selectedBolumName,
@@ -264,8 +209,7 @@ private fun GoalSetupExamStep(
         searchable = true,
         searchPlaceholder = when {
             uiState.isBolumlerLoading -> "Bölümler yükleniyor..."
-            uiState.selectedBilimId == null && uiState.selectedUniversityId == null ->
-                "Önce bilim veya üniversite seçin"
+            uiState.selectedUniversityId == null -> "Önce üniversite seçin"
             else -> "Bölüm ara..."
         },
         leadingIcon = Icons.Filled.MenuBook,
@@ -536,35 +480,16 @@ private fun GoalSetupScreenPreview() {
                     YoFakulte(1, 1, "Mühendislik Fak."),
                     YoFakulte(2, 1, "Fen-Edebiyat Fak.")
                 ),
-                bilimler = listOf(
-                    YoBilim(1, "Mühendislik Bilimleri"),
-                    YoBilim(12, "Din Bilimleri")
-                ),
                 bolumler = listOf(
                     YoBolum(52, 12, "İlahiyat")
                 ),
                 selectedExamGoalId = "tyt",
-                provinces = listOf(Province(id = 34, name = "İstanbul")),
-                selectedProvinceId = 34,
-                selectedProvinceName = "İstanbul",
-                districts = listOf(
-                    com.techlife.kockit.domain.location.model.District(
-                        id = 1,
-                        name = "Kadıköy",
-                        provinceId = 34,
-                        provinceName = "İstanbul"
-                    )
-                ),
-                selectedDistrictId = 1,
-                selectedDistrictName = "Kadıköy",
                 selectedUniversityType = null,
                 onlyTyt = true,
                 selectedUniversityId = 1,
                 selectedUniversityName = "Boğaziçi Üniversitesi",
                 selectedFakulteId = 1,
                 selectedFakulteName = "Mühendislik Fak.",
-                selectedBilimId = 12,
-                selectedBilimName = "Din Bilimleri",
                 selectedBolumId = 52,
                 selectedBolumName = "İlahiyat"
             ),

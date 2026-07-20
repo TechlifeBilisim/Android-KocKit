@@ -16,4 +16,12 @@ object ProfileGoalOptions {
         GoalSetupOption(id = "10000", label = "İlk 10.000"),
         GoalSetupOption(id = "1000", label = "İlk 1.000")
     )
+
+    val puanTurOptions = listOf(
+        GoalSetupOption(id = "1", label = "TYT"),
+        GoalSetupOption(id = "2", label = "Sayısal"),
+        GoalSetupOption(id = "3", label = "Sözel"),
+        GoalSetupOption(id = "4", label = "Eşit Ağırlık"),
+        GoalSetupOption(id = "5", label = "Dil")
+    )
 }

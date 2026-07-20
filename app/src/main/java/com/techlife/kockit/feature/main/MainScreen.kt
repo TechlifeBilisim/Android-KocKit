@@ -70,7 +70,11 @@ fun MainScreen(
                             onNavigateToPlacement = onNavigateToPlacement,
                             onNavigateToLogin = onNavigateToLogin,
                             onSearchClick = { showSearch = true },
+                            onProfileClick = { selectedTab = MainTab.PROFILE },
                             onStudyPlanClick = { selectedTab = MainTab.STUDY_PLAN },
+                            onGoalsClick = { selectedTab = MainTab.PROFILE },
+                            onAnalysisClick = { selectedTab = MainTab.ANALYSIS },
+                            onExamsClick = { selectedTab = MainTab.EXAMS },
                             onNotificationClick = onNavigateToTurkeyMap
                         )
                     }

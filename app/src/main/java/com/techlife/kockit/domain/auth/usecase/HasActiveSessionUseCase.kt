@@ -1,14 +1,11 @@
 package com.techlife.kockit.domain.auth.usecase
 
-import com.techlife.kockit.domain.auth.repository.AuthRepository
+import com.techlife.kockit.domain.auth.model.StartupDestination
 import javax.inject.Inject
 
 class HasActiveSessionUseCase @Inject constructor(
-    private val authRepository: AuthRepository
+    private val getStartupDestinationUseCase: GetStartupDestinationUseCase
 ) {
-    /** Kayıtlı access token varsa true — splash yönlendirmesi için. */
-    suspend operator fun invoke(): Boolean {
-        val token = authRepository.getAccessToken()
-        return !token.isNullOrBlank()
-    }
+    suspend operator fun invoke(): Boolean =
+        getStartupDestinationUseCase() != StartupDestination.Login
 }

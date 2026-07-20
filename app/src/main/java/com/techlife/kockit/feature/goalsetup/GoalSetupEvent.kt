@@ -6,12 +6,9 @@ sealed interface GoalSetupEvent {
     data class ExamGoalSelected(val id: String) : GoalSetupEvent
     data class AytFieldSelected(val id: String) : GoalSetupEvent
     data class OnlyTytToggled(val value: Boolean) : GoalSetupEvent
-    data class ProvinceSelected(val provinceId: Int, val name: String) : GoalSetupEvent
-    data class DistrictSelected(val districtId: Int, val name: String) : GoalSetupEvent
     data class UniversityTypeSelected(val type: UniversityType?) : GoalSetupEvent
     data class UniversitySelected(val universityId: Int, val name: String) : GoalSetupEvent
     data class FakulteSelected(val fakulteId: Int, val name: String) : GoalSetupEvent
-    data class BilimSelected(val bilimId: Int, val name: String) : GoalSetupEvent
     data class BolumSelected(val bolumId: Int, val name: String) : GoalSetupEvent
     data object ContinueClicked : GoalSetupEvent
     data object BackClicked : GoalSetupEvent

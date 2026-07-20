@@ -17,6 +17,7 @@ import javax.inject.Singleton
 @Singleton
 class AuthTokenRefresher @Inject constructor(
     private val userPreferences: UserPreferences,
+    private val sessionTokenProvider: SessionTokenProvider,
     private val moshi: Moshi,
     loggingInterceptor: KocKitLoggingInterceptor
 ) {
@@ -45,9 +46,11 @@ class AuthTokenRefresher @Inject constructor(
                 val data = envelope.data
                 if (!envelope.success || data == null) {
                     userPreferences.clearSession()
+                    sessionTokenProvider.updateCachedAccessToken(null)
                     return@runBlocking null
                 }
                 userPreferences.saveAuthTokens(data.accessToken, data.refreshToken)
+                sessionTokenProvider.updateCachedAccessToken(data.accessToken)
                 data.accessToken
             } catch (_: Exception) {
                 null

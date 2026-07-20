@@ -1,10 +1,20 @@
 package com.techlife.kockit.data.remote.mapper
 
+import com.techlife.kockit.data.remote.dto.kullanici.KullaniciProfilDto
+import com.techlife.kockit.data.remote.dto.kullanici.UpdateKullaniciRequestDto
+import com.techlife.kockit.data.remote.dto.ogrenci.CreateOgrenciHedefRequestDto
 import com.techlife.kockit.data.remote.dto.ogrenci.OgrenciDto
+import com.techlife.kockit.data.remote.dto.ogrenci.OgrenciKullaniciDto
+import com.techlife.kockit.data.remote.dto.ogrenci.OgrenciHedefTercihDto
+import com.techlife.kockit.data.remote.dto.ogrenci.UpdateCalismaTakvimiRequestDto
 import com.techlife.kockit.data.remote.dto.yo.YoBilimDto
 import com.techlife.kockit.data.remote.dto.yo.YoBolumDto
 import com.techlife.kockit.data.remote.dto.yo.YoFakulteDto
 import com.techlife.kockit.data.remote.dto.yo.YoUniversiteDto
+import com.techlife.kockit.domain.kullanici.model.KullaniciProfile
+import com.techlife.kockit.domain.kullanici.model.UpdateKullaniciProfile
+import com.techlife.kockit.domain.ogrenci.model.CalismaTakvimiUpdate
+import com.techlife.kockit.domain.ogrenci.model.CreateOgrenciHedef
 import com.techlife.kockit.domain.ogrenci.model.Ogrenci
 import com.techlife.kockit.domain.yo.model.YoBilim
 import com.techlife.kockit.domain.yo.model.YoBolum
@@ -33,9 +43,24 @@ fun YoBolumDto.toDomain(): YoBolum = YoBolum(
     name = ad
 )
 
+fun OgrenciKullaniciDto.toDomain(): KullaniciProfile = KullaniciProfile(
+    kullaniciId = kullaniciId,
+    ad = ad,
+    soyad = soyad,
+    rumuz = rumuz,
+    eposta = eposta,
+    cepTelefon = cepTelefon,
+    cinsiyetId = cinsiyetId,
+    ilId = ilId,
+    ilceId = ilceId,
+    resim = resim,
+    uygulamaTemaId = uygulamaTemaId
+)
+
 fun OgrenciDto.toDomain(): Ogrenci = Ogrenci(
     ogrenciId = ogrenciId,
-    kullaniciId = kullaniciId,
+    kullaniciId = kullanici?.kullaniciId,
+    kullanici = kullanici?.toDomain(),
     sinifDuzeyId = sinifDuzeyId,
     hazirlikSinavTurId = hazirlikSinavTurId,
     hazirlikPuanTurId = hazirlikPuanTurId,
@@ -53,6 +78,57 @@ fun OgrenciDto.toDomain(): Ogrenci = Ogrenci(
     gunlukProblemSeans = gunlukProblemSeans,
     musaitOlmadigiGun = musaitOlmadigiGun,
     izinGunler = izinGunler
+)
+
+fun CalismaTakvimiUpdate.toRequestDto(): UpdateCalismaTakvimiRequestDto =
+    UpdateCalismaTakvimiRequestDto(
+        haftalikCalismaSure = haftalikCalismaSure,
+        gunlukOturumSure = gunlukOturumSure,
+        genelTekrarGun = genelTekrarGun,
+        gunlukParagrafSeans = gunlukParagrafSeans,
+        gunlukProblemSeans = gunlukProblemSeans,
+        musaitOlmadigiGun = musaitOlmadigiGun,
+        izinGunler = izinGunler
+    )
+
+fun CreateOgrenciHedef.toRequestDto(): CreateOgrenciHedefRequestDto =
+    CreateOgrenciHedefRequestDto(
+        ogrenciId = ogrenciId,
+        tercihler = tercihler.map {
+            OgrenciHedefTercihDto(
+                yoUniversiteId = it.yoUniversiteId,
+                yoBolumId = it.yoBolumId
+            )
+        },
+        puanTurIds = puanTurIds,
+        siralama = siralama
+    )
+
+fun UpdateKullaniciProfile.toRequestDto(): UpdateKullaniciRequestDto =
+    UpdateKullaniciRequestDto(
+        ad = ad,
+        soyad = soyad,
+        rumuz = rumuz,
+        eposta = eposta,
+        cinsiyetId = cinsiyetId,
+        ilId = ilId,
+        ilceId = ilceId,
+        resim = resim,
+        uygulamaTemaId = uygulamaTemaId
+    )
+
+fun KullaniciProfilDto.toDomain(): KullaniciProfile = KullaniciProfile(
+    kullaniciId = kullaniciId,
+    ad = ad,
+    soyad = soyad,
+    rumuz = rumuz,
+    eposta = eposta,
+    cepTelefon = cepTelefon,
+    cinsiyetId = cinsiyetId,
+    ilId = ilId,
+    ilceId = ilceId,
+    resim = resim,
+    uygulamaTemaId = uygulamaTemaId
 )
 
 fun List<YoBilimDto>.toYoBilimDomain(): List<YoBilim> = map { it.toDomain() }

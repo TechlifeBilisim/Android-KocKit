@@ -59,6 +59,7 @@ fun LoginScreen(
     viewModel: LoginViewModel,
     onNavigateToRegister: () -> Unit,
     onNavigateToGoalSetup: () -> Unit,
+    onNavigateToMain: () -> Unit,
     onShowMessage: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -82,6 +83,7 @@ fun LoginScreen(
             when (effect) {
                 LoginEffect.NavigateToRegister -> onNavigateToRegister()
                 LoginEffect.NavigateToGoalSetup -> onNavigateToGoalSetup()
+                LoginEffect.NavigateToMain -> onNavigateToMain()
                 LoginEffect.LaunchGoogleSignIn -> {
                     if (!GoogleSignInHelper.isConfigured(context)) {
                         onShowMessage(GoogleSignInHelper.configurationErrorMessage())

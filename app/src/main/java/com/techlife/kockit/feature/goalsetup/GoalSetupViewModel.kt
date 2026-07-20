@@ -4,8 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.techlife.kockit.core.network.model.ApiResult
 import com.techlife.kockit.domain.auth.usecase.GetKullaniciIdUseCase
-import com.techlife.kockit.domain.location.usecase.GetDistrictsUseCase
-import com.techlife.kockit.domain.location.usecase.GetProvincesUseCase
+import com.techlife.kockit.domain.ogrenci.model.CreateOgrenciHedef
+import com.techlife.kockit.domain.ogrenci.model.OgrenciHedefTercih
+import com.techlife.kockit.domain.ogrenci.usecase.CreateOgrenciHedefUseCase
 import com.techlife.kockit.domain.ogrenci.usecase.GetOgrenciUseCase
 import com.techlife.kockit.domain.onboarding.model.Department
 import com.techlife.kockit.domain.onboarding.model.OnboardingInfo
@@ -13,7 +14,6 @@ import com.techlife.kockit.domain.onboarding.model.University
 import com.techlife.kockit.domain.onboarding.model.UniversityType
 import com.techlife.kockit.domain.onboarding.usecase.GetExamGoalsUseCase
 import com.techlife.kockit.domain.onboarding.usecase.SaveOnboardingInfoUseCase
-import com.techlife.kockit.domain.yo.usecase.GetYoBilimlerUseCase
 import com.techlife.kockit.domain.yo.usecase.GetYoBolumlerUseCase
 import com.techlife.kockit.domain.yo.usecase.GetYoFakultelerUseCase
 import com.techlife.kockit.domain.yo.usecase.GetYoUniversitelerUseCase
@@ -32,20 +32,14 @@ import javax.inject.Inject
 @HiltViewModel
 class GoalSetupViewModel @Inject constructor(
     private val getExamGoalsUseCase: GetExamGoalsUseCase,
-    private val getProvincesUseCase: GetProvincesUseCase,
-    private val getDistrictsUseCase: GetDistrictsUseCase,
-    private val getYoBilimlerUseCase: GetYoBilimlerUseCase,
     private val getYoUniversitelerUseCase: GetYoUniversitelerUseCase,
     private val getYoFakultelerUseCase: GetYoFakultelerUseCase,
     private val getYoBolumlerUseCase: GetYoBolumlerUseCase,
     private val getKullaniciIdUseCase: GetKullaniciIdUseCase,
     private val getOgrenciUseCase: GetOgrenciUseCase,
+    private val createOgrenciHedefUseCase: CreateOgrenciHedefUseCase,
     private val saveOnboardingInfoUseCase: SaveOnboardingInfoUseCase
 ) : ViewModel() {
-
-    private companion object {
-        const val REQUIRE_SELECTIONS = false
-    }
 
     private val _uiState = MutableStateFlow(GoalSetupUiState())
     val uiState: StateFlow<GoalSetupUiState> = _uiState.asStateFlow()
@@ -59,33 +53,15 @@ class GoalSetupViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            val provincesDeferred = async { getProvincesUseCase() }
-            val bilimlerDeferred = async { getYoBilimlerUseCase() }
             val universitelerDeferred = async { getYoUniversitelerUseCase() }
             val kullaniciId = getKullaniciIdUseCase()
             val ogrenciDeferred = async {
                 kullaniciId?.takeIf { it.isNotBlank() }?.let { getOgrenciUseCase(it) }
             }
 
-            val provincesResult = provincesDeferred.await()
-            val bilimlerResult = bilimlerDeferred.await()
             val universitelerResult = universitelerDeferred.await()
             val ogrenciResult = ogrenciDeferred.await()
 
-            val provinces = when (provincesResult) {
-                is ApiResult.Success -> provincesResult.data
-                is ApiResult.Error -> {
-                    _uiState.update { it.copy(provincesError = provincesResult.message) }
-                    emptyList()
-                }
-            }
-            val bilimler = when (bilimlerResult) {
-                is ApiResult.Success -> bilimlerResult.data
-                is ApiResult.Error -> {
-                    _uiState.update { it.copy(bilimlerError = bilimlerResult.message) }
-                    emptyList()
-                }
-            }
             val universiteler = when (universitelerResult) {
                 is ApiResult.Success -> universitelerResult.data
                 is ApiResult.Error -> {
@@ -101,8 +77,6 @@ class GoalSetupViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     examGoals = getExamGoalsUseCase(),
-                    provinces = provinces,
-                    bilimler = bilimler,
                     universiteler = universiteler,
                     ogrenci = ogrenci,
                     isDataLoading = false
@@ -142,29 +116,6 @@ class GoalSetupViewModel @Inject constructor(
                 _uiState.update { it.copy(showSuccessDialog = false) }
                 emit(GoalSetupEffect.NavigateToMain)
             }
-            is GoalSetupEvent.ProvinceSelected -> {
-                _uiState.update {
-                    it.copy(
-                        selectedProvinceId = event.provinceId,
-                        selectedProvinceName = event.name,
-                        selectedDistrictId = null,
-                        selectedDistrictName = null,
-                        districts = emptyList(),
-                        districtsError = null,
-                        provinceError = null,
-                        districtError = null,
-                        isDistrictsLoading = true
-                    )
-                }
-                loadDistricts(event.provinceId)
-            }
-            is GoalSetupEvent.DistrictSelected -> _uiState.update {
-                it.copy(
-                    selectedDistrictId = event.districtId,
-                    selectedDistrictName = event.name,
-                    districtError = null
-                )
-            }
             is GoalSetupEvent.UniversityTypeSelected -> _uiState.update {
                 it.copy(
                     selectedUniversityType = event.type,
@@ -184,11 +135,12 @@ class GoalSetupViewModel @Inject constructor(
                         selectedBolumId = null,
                         selectedBolumName = null,
                         bolumler = emptyList(),
-                        isFakultelerLoading = true
+                        isFakultelerLoading = true,
+                        isBolumlerLoading = true
                     )
                 }
                 loadFakulteler(event.universityId)
-                reloadBolumler()
+                loadBolumler(event.universityId)
             }
             is GoalSetupEvent.FakulteSelected -> _uiState.update {
                 it.copy(
@@ -196,20 +148,6 @@ class GoalSetupViewModel @Inject constructor(
                     selectedFakulteName = event.name,
                     fakulteError = null
                 )
-            }
-            is GoalSetupEvent.BilimSelected -> {
-                _uiState.update {
-                    it.copy(
-                        selectedBilimId = event.bilimId,
-                        selectedBilimName = event.name,
-                        bilimError = null,
-                        selectedBolumId = null,
-                        selectedBolumName = null,
-                        bolumler = emptyList(),
-                        isBolumlerLoading = true
-                    )
-                }
-                reloadBolumler()
             }
             is GoalSetupEvent.BolumSelected -> _uiState.update {
                 it.copy(
@@ -220,27 +158,6 @@ class GoalSetupViewModel @Inject constructor(
             }
             GoalSetupEvent.ContinueClicked -> onContinue()
             GoalSetupEvent.BackClicked -> emit(GoalSetupEffect.NavigateBack)
-        }
-    }
-
-    private fun loadDistricts(provinceId: Int) {
-        viewModelScope.launch {
-            when (val result = getDistrictsUseCase(provinceId)) {
-                is ApiResult.Success -> _uiState.update {
-                    it.copy(
-                        districts = result.data,
-                        isDistrictsLoading = false,
-                        districtsError = null
-                    )
-                }
-                is ApiResult.Error -> _uiState.update {
-                    it.copy(
-                        districts = emptyList(),
-                        isDistrictsLoading = false,
-                        districtsError = result.message
-                    )
-                }
-            }
         }
     }
 
@@ -265,40 +182,20 @@ class GoalSetupViewModel @Inject constructor(
         }
     }
 
-    private fun reloadBolumler() {
-        val state = _uiState.value
-        val bilimId = state.selectedBilimId
-        val universityId = state.selectedUniversityId
-        if (bilimId == null && universityId == null) {
-            _uiState.update {
-                it.copy(
-                    bolumler = emptyList(),
-                    isBolumlerLoading = false,
-                    bolumlerError = null
-                )
-            }
-            return
-        }
-
+    private fun loadBolumler(yoUniversiteId: Int) {
         viewModelScope.launch {
             _uiState.update { it.copy(isBolumlerLoading = true, bolumlerError = null) }
             when (
                 val result = getYoBolumlerUseCase(
-                    yoBilimId = bilimId,
-                    yoUniversiteId = universityId
+                    yoBilimId = null,
+                    yoUniversiteId = yoUniversiteId
                 )
             ) {
                 is ApiResult.Success -> _uiState.update {
                     it.copy(
                         bolumler = result.data,
                         isBolumlerLoading = false,
-                        bolumlerError = null,
-                        selectedBolumId = it.selectedBolumId?.takeIf { id ->
-                            result.data.any { bolum -> bolum.id == id }
-                        },
-                        selectedBolumName = it.selectedBolumName?.takeIf { name ->
-                            result.data.any { bolum -> bolum.name == name }
-                        }
+                        bolumlerError = null
                     )
                 }
                 is ApiResult.Error -> _uiState.update {
@@ -325,7 +222,6 @@ class GoalSetupViewModel @Inject constructor(
         val exam = state.examGoals.find { it.id == state.selectedExamGoalId }
         val university = state.universiteler.find { it.id == state.selectedUniversityId }
         val fakulte = state.fakulteler.find { it.id == state.selectedFakulteId }
-        val bilim = state.bilimler.find { it.id == state.selectedBilimId }
         val bolum = state.bolumler.find { it.id == state.selectedBolumId }
         val examError = if (exam == null) "Sınav seçimi gerekli" else null
         val aytFieldError = if (state.selectedExamGoalId == "ayt" && state.selectedAytFieldId == null) {
@@ -333,8 +229,6 @@ class GoalSetupViewModel @Inject constructor(
         } else {
             null
         }
-        val provinceError = if (state.selectedProvinceName == null) "İl seçimi gerekli" else null
-        val districtError = if (state.selectedDistrictName == null) "İlçe seçimi gerekli" else null
         val universityTypeError = if (state.selectedUniversityType == null) {
             "Üniversite türü seçimi gerekli"
         } else {
@@ -342,29 +236,22 @@ class GoalSetupViewModel @Inject constructor(
         }
         val universityError = if (university == null) "Üniversite seçimi gerekli" else null
         val fakulteError = if (fakulte == null) "Fakülte seçimi gerekli" else null
-        val bilimError = if (bilim == null) "Bilim seçimi gerekli" else null
         val bolumError = if (bolum == null) "Bölüm seçimi gerekli" else null
         if (
             examError != null ||
             aytFieldError != null ||
-            provinceError != null ||
-            districtError != null ||
             universityTypeError != null ||
             universityError != null ||
             fakulteError != null ||
-            bilimError != null ||
             bolumError != null
         ) {
             _uiState.update {
                 it.copy(
                     examError = examError,
                     aytFieldError = aytFieldError,
-                    provinceError = provinceError,
-                    districtError = districtError,
                     universityTypeError = universityTypeError,
                     universityError = universityError,
                     fakulteError = fakulteError,
-                    bilimError = bilimError,
                     bolumError = bolumError
                 )
             }
@@ -381,19 +268,25 @@ class GoalSetupViewModel @Inject constructor(
             University(
                 id = it.id.toString(),
                 name = it.name,
-                city = state.selectedProvinceName.orEmpty(),
+                city = "",
                 region = "",
                 type = state.selectedUniversityType ?: UniversityType.DEVLET
             )
         }
         val department = state.bolumler.find { it.id == state.selectedBolumId }?.let {
             Department(id = it.id.toString(), name = it.name)
-        } ?: state.bilimler.find { it.id == state.selectedBilimId }?.let {
-            Department(id = it.id.toString(), name = it.name)
         }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
+
+            val hedefResult = createRemoteHedefIfPossible(state)
+            if (hedefResult is ApiResult.Error) {
+                _uiState.update { it.copy(isLoading = false) }
+                emit(GoalSetupEffect.ShowMessage(hedefResult.message))
+                return@launch
+            }
+
             if (exam != null && university != null && department != null) {
                 saveOnboardingInfoUseCase(OnboardingInfo(exam, university, department))
                     .onSuccess {
@@ -409,7 +302,61 @@ class GoalSetupViewModel @Inject constructor(
         }
     }
 
+    private suspend fun createRemoteHedefIfPossible(state: GoalSetupUiState): ApiResult<Unit>? {
+        val universityId = state.selectedUniversityId ?: return null
+        val bolumId = state.selectedBolumId ?: return null
+        var ogrenciId = state.ogrenci?.ogrenciId
+        if (ogrenciId == null) {
+            val kullaniciId = getKullaniciIdUseCase() ?: return null
+            when (val ogrenciResult = getOgrenciUseCase(kullaniciId)) {
+                is ApiResult.Success -> {
+                    ogrenciId = ogrenciResult.data.ogrenciId
+                    _uiState.update { it.copy(ogrenci = ogrenciResult.data) }
+                }
+                is ApiResult.Error -> return ogrenciResult
+            }
+        }
+        val resolvedOgrenciId = ogrenciId ?: return null
+        return createOgrenciHedefUseCase(
+            CreateOgrenciHedef(
+                ogrenciId = resolvedOgrenciId,
+                tercihler = listOf(
+                    OgrenciHedefTercih(
+                        yoUniversiteId = universityId,
+                        yoBolumId = bolumId
+                    )
+                ),
+                puanTurIds = resolvePuanTurIds(state),
+                siralama = null
+            )
+        )
+    }
+
+    private fun resolvePuanTurIds(state: GoalSetupUiState): List<Int> {
+        if (state.onlyTyt || state.selectedExamGoalId == "tyt") {
+            return listOf(PUAN_TUR_TYT)
+        }
+        return listOf(
+            when (state.selectedAytFieldId) {
+                "sayisal" -> PUAN_TUR_SAYISAL
+                "sozel" -> PUAN_TUR_SOZEL
+                "esit_agirlik" -> PUAN_TUR_EA
+                "dil" -> PUAN_TUR_DIL
+                else -> PUAN_TUR_SAYISAL
+            }
+        )
+    }
+
     private fun emit(effect: GoalSetupEffect) {
         viewModelScope.launch { _effect.emit(effect) }
+    }
+
+    private companion object {
+        const val REQUIRE_SELECTIONS = false
+        const val PUAN_TUR_TYT = 1
+        const val PUAN_TUR_SAYISAL = 2
+        const val PUAN_TUR_SOZEL = 3
+        const val PUAN_TUR_EA = 4
+        const val PUAN_TUR_DIL = 5
     }
 }

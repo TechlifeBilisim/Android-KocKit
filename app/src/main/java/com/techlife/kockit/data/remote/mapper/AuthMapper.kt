@@ -9,6 +9,7 @@ import com.techlife.kockit.data.remote.dto.auth.GoogleRegisterRequestDto
 import com.techlife.kockit.data.remote.dto.auth.LoginInitResponseDto
 import com.techlife.kockit.data.remote.dto.auth.LoginSmsRequestDto
 import com.techlife.kockit.data.remote.dto.auth.LoginSmsVerifyRequestDto
+import com.techlife.kockit.data.remote.dto.auth.LoginSmsVerifyResponseDto
 import com.techlife.kockit.data.remote.dto.auth.NicknameLoginRequestDto
 import com.techlife.kockit.data.remote.dto.auth.RefreshTokenResponseDto
 import com.techlife.kockit.data.remote.dto.auth.SendSmsCodeRequestDto
@@ -74,6 +75,22 @@ fun toGoogleLoginRequestDto(oAuthIdToken: String, email: String): GoogleLoginReq
 fun toTechpassLoginRequestDto(xTechOturum: String): TechpassLoginRequestDto =
     TechpassLoginRequestDto(xTechOturum = xTechOturum)
 
+fun LoginSmsVerifyResponseDto.toDomain(): LoginResult {
+    val user = kullanici
+    val fullName = listOfNotNull(user?.ad, user?.soyad).joinToString(" ").takeIf { it.isNotBlank() }
+    return LoginResult(
+        accountVerified = smsDogrulandi,
+        registered = true,
+        userId = user?.kullaniciId,
+        accessToken = user?.accessToken,
+        refreshToken = user?.refreshToken,
+        fullName = fullName,
+        email = user?.eposta,
+        phone = null,
+        hasStudentGoal = ogrenciHedefVarMi
+    )
+}
+
 fun AuthSessionDto.toDomain(): LoginResult {
     val fullName = listOfNotNull(ad, soyad).joinToString(" ").takeIf { it.isNotBlank() }
     return LoginResult(
@@ -105,29 +122,25 @@ fun GoogleLoginResponseDto.toRegisterResult(): RegisterResult? {
 }
 
 private fun GoogleLoginResponseDto.toGoogleLoginDomain(): LoginResult {
-    val profile = kullaniciProfili?.toDomain()
-        ?: if (!accessToken.isNullOrBlank()) {
-            AuthSessionDto(
-                kullaniciId = kullaniciId,
-                ad = ad,
-                soyad = soyad,
-                resim = resim,
-                eposta = eposta,
-                cepTelefon = cepTelefon,
-                cinsiyetId = cinsiyetId,
-                accessToken = accessToken,
-                refreshToken = refreshToken
-            ).toDomain()
-        } else {
-            null
-        }
+    val profile = kullaniciProfili
+    val resolvedAccessToken = accessToken?.takeIf { it.isNotBlank() }
+        ?: profile?.accessToken?.takeIf { it.isNotBlank() }
+    val resolvedRefreshToken = refreshToken?.takeIf { it.isNotBlank() }
+        ?: profile?.refreshToken?.takeIf { it.isNotBlank() }
+    val resolvedUserId = kullaniciId ?: profile?.kullaniciId
+    val resolvedAd = ad ?: profile?.ad
+    val resolvedSoyad = soyad ?: profile?.soyad
+    val fullName = listOfNotNull(resolvedAd, resolvedSoyad).joinToString(" ").takeIf { it.isNotBlank() }
 
-    return profile?.copy(
-        accountVerified = hesapOnaylandi ?: profile.accountVerified,
-        registered = kayitli ?: profile.registered
-    ) ?: LoginResult(
-        accountVerified = hesapOnaylandi ?: false,
-        registered = kayitli ?: false
+    return LoginResult(
+        accountVerified = hesapOnaylandi ?: !resolvedAccessToken.isNullOrBlank(),
+        registered = kayitli ?: !resolvedAccessToken.isNullOrBlank(),
+        userId = resolvedUserId,
+        accessToken = resolvedAccessToken,
+        refreshToken = resolvedRefreshToken,
+        fullName = fullName,
+        email = eposta ?: profile?.eposta,
+        phone = cepTelefon ?: profile?.cepTelefon
     )
 }
 

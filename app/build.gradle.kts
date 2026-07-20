@@ -88,6 +88,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.coil.compose)
     ksp(libs.hilt.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(composeBom)

@@ -6,6 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,5 +28,14 @@ class SessionTokenProvider @Inject constructor(
             .launchIn(applicationScope)
     }
 
-    override fun getAccessToken(): String? = cachedAccessToken
+    override fun getAccessToken(): String? {
+        cachedAccessToken?.let { return it }
+        return runBlocking {
+            userPreferences.getAccessToken()
+        }.also { cachedAccessToken = it }
+    }
+
+    fun updateCachedAccessToken(token: String?) {
+        cachedAccessToken = token
+    }
 }

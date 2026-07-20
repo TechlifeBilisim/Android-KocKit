@@ -49,12 +49,13 @@ fun AppNavGraph(
             SplashScreen(
                 viewModel = viewModel,
                 onNavigateToLogin = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Main.route) { inclusive = true }
-                    }
+                    navController.navigateToLoginClearingBackStack()
                 },
                 onNavigateToGoalSetup = {
                     navController.navigateToGoalSetupClearingBackStack()
+                },
+                onNavigateToMain = {
+                    navController.navigateToMainClearingBackStack()
                 }
             )
         }
@@ -67,7 +68,10 @@ fun AppNavGraph(
                     navController.navigate(Screen.Register.route)
                 },
                 onNavigateToGoalSetup = {
-                    navController.navigate(Screen.GoalSetup.route)
+                    navController.navigateToGoalSetupClearingBackStack()
+                },
+                onNavigateToMain = {
+                    navController.navigateToMainClearingBackStack()
                 },
                 onShowMessage = ::showToast
             )

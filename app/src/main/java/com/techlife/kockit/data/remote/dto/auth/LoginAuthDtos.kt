@@ -37,6 +37,24 @@ data class LoginSmsVerifyRequestDto(
     val kod: String
 )
 
+data class LoginSmsVerifyResponseDto(
+    val ogrenciHedefVarMi: Boolean = false,
+    val smsDogrulandi: Boolean = false,
+    val kullanici: LoginSmsKullaniciDto? = null
+)
+
+data class LoginSmsKullaniciDto(
+    val kullaniciId: String? = null,
+    val ogrenciId: Int? = null,
+    val ad: String? = null,
+    val soyad: String? = null,
+    val rumuz: String? = null,
+    val eposta: String? = null,
+    val resim: String? = null,
+    val accessToken: String? = null,
+    val refreshToken: String? = null
+)
+
 data class GoogleLoginRequestDto(
     val oAuthIdToken: String,
     val email: String

@@ -43,6 +43,7 @@ class HomeViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         fullName = session.fullName.orEmpty(),
+                        profileImage = session.profileImage,
                         examGoal = session.selectedExamGoal.orEmpty(),
                         university = session.selectedUniversity.orEmpty(),
                         department = session.selectedDepartment.orEmpty()

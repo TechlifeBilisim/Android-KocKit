@@ -11,6 +11,7 @@ interface AuthRepository {
     fun observeUserSession(): Flow<UserSession>
     suspend fun getCurrentSession(): UserSession
     suspend fun getAccessToken(): String?
+    suspend fun getRefreshToken(): String?
     suspend fun getKullaniciId(): String?
     suspend fun setRememberMe(remember: Boolean, phone: String?)
     suspend fun isRemembered(): Boolean

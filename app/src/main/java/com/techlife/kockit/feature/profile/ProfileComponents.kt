@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.sp
 import com.techlife.kockit.core.designsystem.component.KocKitBackButton
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
+import com.techlife.kockit.core.designsystem.component.KocKitProfileAvatar
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.layout.LocalProfileLayoutMetrics
@@ -133,6 +134,7 @@ fun ProfileSummaryCard(
     location: String,
     school: String,
     levelLabel: String,
+    profileImage: String? = null,
     modifier: Modifier = Modifier
 ) {
     val metrics = profileMetrics()
@@ -150,36 +152,11 @@ fun ProfileSummaryCard(
                 verticalAlignment = Alignment.Top
             ) {
                 Box {
-                    Box(
-                        modifier = Modifier
-                            .size(metrics.profileAvatarSize)
-                            .clip(CircleShape)
-                            .background(Color(0xFFE8F0FE)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Person,
-                            contentDescription = null,
-                            tint = Color(0xFF90A4C8),
-                            modifier = Modifier.size(metrics.profileAvatarIconSize)
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .offset(x = 2.dp, y = 2.dp)
-                            .size(metrics.cameraBadgeSize)
-                            .clip(CircleShape)
-                            .background(PastelGreen),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.CameraAlt,
-                            contentDescription = "Fotoğraf düzenle",
-                            tint = White,
-                            modifier = Modifier.size(metrics.cameraBadgeIconSize)
-                        )
-                    }
+                    KocKitProfileAvatar(
+                        imageSource = profileImage,
+                        size = metrics.profileAvatarSize,
+                        showCameraBadge = true
+                    )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(
@@ -674,7 +651,7 @@ fun ProfileAccountSettingsCard(
             )
             Spacer(modifier = Modifier.height(12.dp))
             ProfileAccountSettingRow(
-                label = "Kişisel Bilgiler",
+                label = "Profili Düzenle",
                 icon = Icons.Outlined.Person,
                 onClick = onPersonalInfoClick
             )

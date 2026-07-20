@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.techlife.kockit.core.common.Constants
 import com.techlife.kockit.core.network.model.ApiResult
+import com.techlife.kockit.domain.auth.model.StartupDestination
+import com.techlife.kockit.domain.auth.usecase.CheckSessionUseCase
 import com.techlife.kockit.domain.auth.usecase.GetRememberedPhoneUseCase
+import com.techlife.kockit.domain.auth.usecase.GetStartupDestinationUseCase
 import com.techlife.kockit.domain.auth.usecase.HasActiveSessionUseCase
 import com.techlife.kockit.domain.auth.usecase.LoginUseCase
 import com.techlife.kockit.domain.auth.usecase.LoginWithGoogleUseCase
@@ -34,7 +37,9 @@ class LoginViewModel @Inject constructor(
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
     private val setRememberMeUseCase: SetRememberMeUseCase,
     private val getRememberedPhoneUseCase: GetRememberedPhoneUseCase,
-    private val hasActiveSessionUseCase: HasActiveSessionUseCase
+    private val hasActiveSessionUseCase: HasActiveSessionUseCase,
+    private val getStartupDestinationUseCase: GetStartupDestinationUseCase,
+    private val checkSessionUseCase: CheckSessionUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -53,6 +58,7 @@ class LoginViewModel @Inject constructor(
                     it.copy(phone = rememberedPhone, rememberMe = true)
                 }
             }
+            redirectIfAlreadyLoggedIn()
         }
     }
 
@@ -118,8 +124,8 @@ class LoginViewModel @Inject constructor(
                 is ApiResult.Success -> {
                     setRememberMeUseCase(_uiState.value.rememberMe, null)
                     _uiState.update { it.copy(isLoading = false) }
-                    emit(LoginEffect.ShowMessage("Giriş başarılı."))
-                    emit(LoginEffect.NavigateToGoalSetup)
+                    _effect.emit(LoginEffect.ShowMessage("Giriş başarılı."))
+                    emitPostLoginNavigation()
                 }
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(isLoading = false) }
@@ -151,8 +157,8 @@ class LoginViewModel @Inject constructor(
             val sameRememberedPhone = !rememberedPhone.isNullOrBlank() &&
                 normalizeTurkishPhone(state.phone) == normalizeTurkishPhone(rememberedPhone)
             if (state.rememberMe && sameRememberedPhone && hasActiveSessionUseCase()) {
-                emit(LoginEffect.ShowMessage("Giriş başarılı."))
-                emit(LoginEffect.NavigateToGoalSetup)
+                _effect.emit(LoginEffect.ShowMessage("Giriş başarılı."))
+                emitPostLoginNavigation()
                 return@launch
             }
             requestPhoneLoginSms()
@@ -179,8 +185,8 @@ class LoginViewModel @Inject constructor(
             when (val result = loginUseCase(state.nickname.trim(), state.password)) {
                 is ApiResult.Success -> {
                     _uiState.update { it.copy(isLoading = false) }
-                    emit(LoginEffect.ShowMessage("Giriş başarılı."))
-                    emit(LoginEffect.NavigateToGoalSetup)
+                    _effect.emit(LoginEffect.ShowMessage("Giriş başarılı."))
+                    emitPostLoginNavigation()
                 }
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(isLoading = false) }
@@ -241,8 +247,8 @@ class LoginViewModel @Inject constructor(
                         if (state.rememberMe) normalizeTurkishPhone(state.phone) else null
                     )
                     _uiState.update { it.copy(isLoading = false) }
-                    emit(LoginEffect.ShowMessage("Giriş başarılı."))
-                    emit(LoginEffect.NavigateToGoalSetup)
+                    _effect.emit(LoginEffect.ShowMessage("Giriş başarılı."))
+                    emitPostLoginNavigation()
                 }
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(isLoading = false, otpError = result.message) }
@@ -295,6 +301,25 @@ class LoginViewModel @Inject constructor(
     override fun onCleared() {
         resendCountdownJob?.cancel()
         super.onCleared()
+    }
+
+    private suspend fun redirectIfAlreadyLoggedIn() {
+        when (getStartupDestinationUseCase()) {
+            StartupDestination.Login -> Unit
+            StartupDestination.GoalSetup -> _effect.emit(LoginEffect.NavigateToGoalSetup)
+            StartupDestination.Main -> _effect.emit(LoginEffect.NavigateToMain)
+        }
+    }
+
+    private suspend fun emitPostLoginNavigation() {
+        val session = checkSessionUseCase()
+        _effect.emit(
+            if (session.isOnboardingCompleted) {
+                LoginEffect.NavigateToMain
+            } else {
+                LoginEffect.NavigateToGoalSetup
+            }
+        )
     }
 
     private fun emit(effect: LoginEffect) {

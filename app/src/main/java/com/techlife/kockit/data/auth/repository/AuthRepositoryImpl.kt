@@ -25,6 +25,9 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun getAccessToken(): String? =
         authLocalDataSource.getAccessToken()
 
+    override suspend fun getRefreshToken(): String? =
+        authLocalDataSource.getRefreshToken()
+
     override suspend fun getKullaniciId(): String? =
         authLocalDataSource.getKullaniciId()
 
@@ -37,10 +40,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun loginWithNickname(nickname: String, password: String): ApiResult<LoginResult> {
         return when (val result = authRemoteDataSource.loginWithNickname(nickname, password)) {
-            is ApiResult.Success -> {
-                authLocalDataSource.persistLogin(result.data, password)
-                result
-            }
+            is ApiResult.Success -> completeLogin(result.data, password)
             is ApiResult.Error -> result
         }
     }
@@ -50,10 +50,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun loginWithSms(phone: String, code: String): ApiResult<LoginResult> {
         return when (val result = authRemoteDataSource.loginWithSms(phone, code)) {
-            is ApiResult.Success -> {
-                authLocalDataSource.persistLogin(result.data)
-                result
-            }
+            is ApiResult.Success -> completeLogin(result.data)
             is ApiResult.Error -> result
         }
     }
@@ -70,8 +67,7 @@ class AuthRepositoryImpl @Inject constructor(
                         }
                     )
                 } else {
-                    authLocalDataSource.persistLogin(loginResult)
-                    result
+                    completeLogin(loginResult)
                 }
             }
             is ApiResult.Error -> result
@@ -80,10 +76,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun loginWithTechpass(xTechOturum: String): ApiResult<LoginResult> {
         return when (val result = authRemoteDataSource.loginWithTechpass(xTechOturum)) {
-            is ApiResult.Success -> {
-                authLocalDataSource.persistLogin(result.data)
-                result
-            }
+            is ApiResult.Success -> completeLogin(result.data)
             is ApiResult.Error -> result
         }
     }
@@ -99,7 +92,9 @@ class AuthRepositoryImpl @Inject constructor(
                 result
             }
             is ApiResult.Error -> {
-                authLocalDataSource.logout()
+                if (result.code == 401) {
+                    authLocalDataSource.logout()
+                }
                 result
             }
         }
@@ -143,5 +138,16 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun setFirstLaunchCompleted() {
         authLocalDataSource.setFirstLaunchCompleted()
+    }
+
+    private suspend fun completeLogin(
+        loginResult: LoginResult,
+        password: String? = null
+    ): ApiResult<LoginResult> {
+        if (loginResult.accessToken.isNullOrBlank()) {
+            return ApiResult.Error(message = "Giriş yanıtında token bulunamadı.")
+        }
+        authLocalDataSource.persistLogin(loginResult, password)
+        return ApiResult.Success(loginResult)
     }
 }

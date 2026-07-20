@@ -8,5 +8,6 @@ data class LoginResult(
     val refreshToken: String? = null,
     val fullName: String? = null,
     val email: String? = null,
-    val phone: String? = null
+    val phone: String? = null,
+    val hasStudentGoal: Boolean? = null
 )

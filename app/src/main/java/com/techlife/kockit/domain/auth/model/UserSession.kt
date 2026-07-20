@@ -8,6 +8,7 @@ data class UserSession(
     val fullName: String? = null,
     val email: String? = null,
     val phoneNumber: String? = null,
+    val profileImage: String? = null,
     val selectedExamGoal: String? = null,
     val selectedUniversity: String? = null,
     val selectedDepartment: String? = null

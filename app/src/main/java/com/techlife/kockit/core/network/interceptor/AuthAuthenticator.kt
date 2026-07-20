@@ -1,6 +1,7 @@
 package com.techlife.kockit.core.network.interceptor
 
 import com.techlife.kockit.core.network.auth.AuthTokenRefresher
+import com.techlife.kockit.core.network.config.AuthExemptPaths
 import com.techlife.kockit.core.network.config.NetworkConfig
 import okhttp3.Authenticator
 import okhttp3.Request
@@ -19,7 +20,7 @@ class AuthAuthenticator @Inject constructor(
         if (responseCount(response) >= 2) return null
 
         val path = response.request.url.encodedPath
-        if (path.contains("token/yenile") || path.contains("/giris/")) return null
+        if (AuthExemptPaths.shouldSkipAuthorization(path)) return null
 
         val newToken = authTokenRefresher.refreshAccessToken() ?: return null
         return response.request.newBuilder()

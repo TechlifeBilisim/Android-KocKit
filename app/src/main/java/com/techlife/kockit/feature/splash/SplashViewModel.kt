@@ -2,7 +2,8 @@ package com.techlife.kockit.feature.splash
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.techlife.kockit.domain.auth.usecase.HasActiveSessionUseCase
+import com.techlife.kockit.domain.auth.model.StartupDestination
+import com.techlife.kockit.domain.auth.usecase.GetStartupDestinationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -13,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    private val hasActiveSessionUseCase: HasActiveSessionUseCase
+    private val getStartupDestinationUseCase: GetStartupDestinationUseCase
 ) : ViewModel() {
 
     private val _effect = MutableSharedFlow<SplashEffect>()
@@ -21,13 +22,15 @@ class SplashViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val hasSession = hasActiveSessionUseCase()
+            val destination = getStartupDestinationUseCase()
             delay(SPLASH_DURATION_MS)
-            if (hasSession) {
-                emit(SplashEffect.NavigateToGoalSetup)
-            } else {
-                emit(SplashEffect.NavigateToLogin)
-            }
+            emit(
+                when (destination) {
+                    StartupDestination.Login -> SplashEffect.NavigateToLogin
+                    StartupDestination.GoalSetup -> SplashEffect.NavigateToGoalSetup
+                    StartupDestination.Main -> SplashEffect.NavigateToMain
+                }
+            )
         }
     }
 

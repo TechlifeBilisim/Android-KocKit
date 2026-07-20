@@ -1,6 +1,7 @@
 package com.techlife.kockit.data.auth.local
 
 import com.techlife.kockit.core.datastore.UserPreferences
+import com.techlife.kockit.core.network.auth.SessionTokenProvider
 import com.techlife.kockit.core.util.normalizeTurkishPhone
 import com.techlife.kockit.domain.auth.model.LoginResult
 import com.techlife.kockit.domain.auth.model.RegisterInfo
@@ -10,7 +11,8 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class AuthLocalDataSource @Inject constructor(
-    private val userPreferences: UserPreferences
+    private val userPreferences: UserPreferences,
+    private val sessionTokenProvider: SessionTokenProvider
 ) {
     fun observeUserSession(): Flow<UserSession> = userPreferences.userSessionFlow
 
@@ -19,6 +21,7 @@ class AuthLocalDataSource @Inject constructor(
     suspend fun persistLogin(result: LoginResult, password: String? = null) {
         result.accessToken?.let { token ->
             userPreferences.saveAuthTokens(token, result.refreshToken)
+            sessionTokenProvider.updateCachedAccessToken(token)
         }
         userPreferences.saveUserInfo(
             fullName = result.fullName,
@@ -28,6 +31,7 @@ class AuthLocalDataSource @Inject constructor(
         )
         password?.let { userPreferences.savePassword(it) }
         userPreferences.setLoggedIn(true)
+        result.hasStudentGoal?.let { userPreferences.setOnboardingCompleted(it) }
     }
 
     suspend fun getRefreshToken(): String? = userPreferences.getRefreshToken()
@@ -38,6 +42,7 @@ class AuthLocalDataSource @Inject constructor(
 
     suspend fun persistRegistration(registerInfo: RegisterInfo, result: RegisterResult) {
         userPreferences.saveAuthTokens(result.accessToken, result.refreshToken)
+        sessionTokenProvider.updateCachedAccessToken(result.accessToken)
         val phoneNumber = result.phone?.takeIf { it.isNotBlank() }
             ?: normalizeTurkishPhone(registerInfo.phone).takeIf { it.isNotBlank() }
         userPreferences.saveUserInfo(
@@ -62,6 +67,7 @@ class AuthLocalDataSource @Inject constructor(
 
     suspend fun logout() {
         userPreferences.clearSession()
+        sessionTokenProvider.updateCachedAccessToken(null)
     }
 
     suspend fun setFirstLaunchCompleted() {
