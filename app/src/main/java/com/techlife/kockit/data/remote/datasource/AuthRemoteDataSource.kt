@@ -50,8 +50,8 @@ class AuthRemoteDataSource @Inject constructor(
         authApi.loginWithNickname(toNicknameLoginRequestDto(nickname, password)).requireData().toDomain()
     }
 
-    suspend fun requestLoginSms(phone: String): ApiResult<Unit> = execute {
-        authApi.requestLoginSms(phone.toLoginSmsRequestDto()).requireSuccess()
+    suspend fun requestLoginSms(phone: String): ApiResult<LoginResult> = execute {
+        authApi.requestLoginSms(phone.toLoginSmsRequestDto()).requireData().toDomain()
     }
 
     suspend fun loginWithSms(phone: String, code: String): ApiResult<LoginResult> = execute {

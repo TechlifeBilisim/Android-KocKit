@@ -22,7 +22,7 @@ class AuthAuthenticator @Inject constructor(
         val path = response.request.url.encodedPath
         if (AuthExemptPaths.shouldSkipAuthorization(path)) return null
 
-        val newToken = authTokenRefresher.refreshAccessToken() ?: return null
+        val newToken = authTokenRefresher.refreshAccessToken(force = true) ?: return null
         return response.request.newBuilder()
             .header(
                 NetworkConfig.HEADER_AUTHORIZATION,

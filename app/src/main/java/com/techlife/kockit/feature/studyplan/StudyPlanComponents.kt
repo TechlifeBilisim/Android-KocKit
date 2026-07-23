@@ -34,6 +34,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -986,32 +987,45 @@ fun StudyPlanAddDateButton(
 @Composable
 fun StudyPlanSaveButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    isLoading: Boolean = false
 ) {
     val metrics = studyPlanMetrics()
     Button(
         onClick = onClick,
+        enabled = enabled && !isLoading,
         modifier = modifier
             .fillMaxWidth()
             .height(metrics.saveButtonHeight),
         shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = StudyPlanStyle.emerald,
-            contentColor = White
+            contentColor = White,
+            disabledContainerColor = StudyPlanStyle.emerald.copy(alpha = 0.55f),
+            disabledContentColor = White.copy(alpha = 0.85f)
         )
     ) {
-        Icon(
-            imageVector = Icons.Filled.Save,
-            contentDescription = null,
-            modifier = Modifier.size(if (metrics.isExpanded) 20.dp else 18.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        KocKitBoldText(
-            text = "Kaydet",
-            color = White,
-            fontSize = metrics.saveButtonTextSize,
-            lineHeight = metrics.saveButtonTextLineHeight
-        )
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(if (metrics.isExpanded) 20.dp else 18.dp),
+                color = White,
+                strokeWidth = 2.dp
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Filled.Save,
+                contentDescription = null,
+                modifier = Modifier.size(if (metrics.isExpanded) 20.dp else 18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            KocKitBoldText(
+                text = "Kaydet",
+                color = White,
+                fontSize = metrics.saveButtonTextSize,
+                lineHeight = metrics.saveButtonTextLineHeight
+            )
+        }
     }
 }
 

@@ -38,13 +38,25 @@ class AuthTokenRefresher @Inject constructor(
 
     private val lock = Any()
 
-    fun refreshAccessToken(): String? = synchronized(lock) {
+    /**
+     * Geçerli access token varsa onu döner.
+     * Süresi dolmuşsa / yoksa refresh token ile [Token/Yenile] çağırır.
+     */
+    fun refreshAccessToken(force: Boolean = false): String? = synchronized(lock) {
         runBlocking {
-            val refreshToken = userPreferences.getRefreshToken() ?: return@runBlocking null
+            val currentAccess = sessionTokenProvider.getAccessToken()
+                ?: userPreferences.getAccessToken()
+            if (!force && JwtExpiry.isValid(currentAccess)) {
+                return@runBlocking currentAccess
+            }
+
+            val refreshToken = userPreferences.getRefreshToken()?.takeIf { it.isNotBlank() }
+                ?: return@runBlocking null
+
             try {
                 val envelope = refreshApi.refreshToken(RefreshTokenRequestDto(refreshToken))
                 val data = envelope.data
-                if (!envelope.success || data == null) {
+                if (!envelope.success || data == null || data.accessToken.isBlank()) {
                     userPreferences.clearSession()
                     sessionTokenProvider.updateCachedAccessToken(null)
                     return@runBlocking null

@@ -17,8 +17,8 @@ class GetYoBilimlerUseCase @Inject constructor(
 class GetYoUniversitelerUseCase @Inject constructor(
     private val yoCatalogRepository: YoCatalogRepository
 ) {
-    suspend operator fun invoke(): ApiResult<List<YoUniversite>> =
-        yoCatalogRepository.getUniversiteler()
+    suspend operator fun invoke(unversiteTurId: Int? = null): ApiResult<List<YoUniversite>> =
+        yoCatalogRepository.getUniversiteler(unversiteTurId)
 }
 
 class GetYoFakultelerUseCase @Inject constructor(

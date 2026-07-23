@@ -27,8 +27,8 @@ class YoRemoteDataSource @Inject constructor(
         yoApi.getBilimler().requireData().toYoBilimDomain()
     }
 
-    suspend fun getUniversiteler(): ApiResult<List<YoUniversite>> = execute {
-        yoApi.getUniversiteler().requireData().toYoUniversiteDomain()
+    suspend fun getUniversiteler(unversiteTurId: Int? = null): ApiResult<List<YoUniversite>> = execute {
+        yoApi.getUniversiteler(unversiteTurId).requireData().toYoUniversiteDomain()
     }
 
     suspend fun getFakulteler(yoUniversiteId: Int): ApiResult<List<YoFakulte>> = execute {

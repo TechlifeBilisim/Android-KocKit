@@ -94,7 +94,15 @@ fun RegisterScreen(
         ) { result ->
             when (val outcome = GoogleSignInHelper.parseSignInResult(result.resultCode, result.data)) {
                 is GoogleSignInOutcome.Success -> {
-                    viewModel.onGoogleSignInSuccess(outcome.account.idToken, outcome.account.email)
+                    val account = outcome.account
+                    viewModel.onGoogleAccountSelected(
+                        oAuthIdToken = account.idToken,
+                        email = account.email,
+                        displayName = account.displayName,
+                        givenName = account.givenName,
+                        familyName = account.familyName,
+                        phoneNumber = null
+                    )
                 }
                 is GoogleSignInOutcome.Error -> onShowMessage(outcome.message)
                 GoogleSignInOutcome.Cancelled -> Unit
@@ -134,7 +142,7 @@ private fun RegisterScreenContent(
     onGoogleClicked: () -> Unit
 ) {
     val continueButtonText = when (uiState.currentStep) {
-        RegisterSteps.ACCOUNT -> "Devam Et"
+        RegisterSteps.ACCOUNT -> if (uiState.isGoogleLinked) "Kayıt Ol" else "Devam Et"
         RegisterSteps.OTP -> "Doğrula"
         else -> "Devam Et"
     }
@@ -242,23 +250,36 @@ private fun RegisterFormBody(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Surface(
-                    modifier = Modifier
-                        .size(metrics.socialButtonHeight)
-                        .clickable { onGoogleClicked() }
-                        .clip(CircleShape),
-                    shape = CircleShape,
-                    color = Color.White,
-                    shadowElevation = 6.dp
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_google),
-                            contentDescription = null,
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(if (metrics.isExpanded) 34.dp else 32.dp)
-                        )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Surface(
+                        modifier = Modifier
+                            .size(metrics.socialButtonHeight)
+                            .clickable { onGoogleClicked() }
+                            .clip(CircleShape),
+                        shape = CircleShape,
+                        color = Color.White,
+                        shadowElevation = 6.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_google),
+                                contentDescription = "Google ile kayıt ol",
+                                tint = Color.Unspecified,
+                                modifier = Modifier.size(if (metrics.isExpanded) 34.dp else 32.dp)
+                            )
+                        }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    KocKitText(
+                        text = if (uiState.isGoogleLinked) {
+                            "Google hesabı bağlandı"
+                        } else {
+                            "Google ile kayıt ol"
+                        },
+                        color = if (uiState.isGoogleLinked) PastelGreen else TextSecondary,
+                        fontSize = metrics.bodyFontSize,
+                        lineHeight = metrics.bodyLineHeight
+                    )
                 }
             }
         }

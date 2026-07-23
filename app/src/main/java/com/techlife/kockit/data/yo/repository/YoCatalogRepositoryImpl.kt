@@ -16,8 +16,8 @@ class YoCatalogRepositoryImpl @Inject constructor(
     override suspend fun getBilimler(): ApiResult<List<YoBilim>> =
         yoRemoteDataSource.getBilimler()
 
-    override suspend fun getUniversiteler(): ApiResult<List<YoUniversite>> =
-        yoRemoteDataSource.getUniversiteler()
+    override suspend fun getUniversiteler(unversiteTurId: Int?): ApiResult<List<YoUniversite>> =
+        yoRemoteDataSource.getUniversiteler(unversiteTurId)
 
     override suspend fun getFakulteler(yoUniversiteId: Int): ApiResult<List<YoFakulte>> =
         yoRemoteDataSource.getFakulteler(yoUniversiteId)

@@ -17,7 +17,7 @@ interface AuthRepository {
     suspend fun isRemembered(): Boolean
     suspend fun getRememberedPhone(): String?
     suspend fun loginWithNickname(nickname: String, password: String): ApiResult<LoginResult>
-    suspend fun requestLoginSms(phone: String): ApiResult<Unit>
+    suspend fun requestLoginSms(phone: String): ApiResult<LoginResult>
     suspend fun loginWithSms(phone: String, code: String): ApiResult<LoginResult>
     suspend fun loginWithGoogle(oAuthIdToken: String, email: String): ApiResult<LoginResult>
     suspend fun loginWithTechpass(xTechOturum: String): ApiResult<LoginResult>

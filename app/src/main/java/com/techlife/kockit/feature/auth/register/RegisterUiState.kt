@@ -16,6 +16,9 @@ data class RegisterUiState(
     val isConfirmPasswordVisible: Boolean = false,
     val isTermsAccepted: Boolean = false,
     val isDataAccepted: Boolean = false,
+    /** Google hesap seçiminden gelen id token; doluysa kayıt Google endpoint'ine gider. */
+    val googleOAuthIdToken: String? = null,
+    val isGoogleLinked: Boolean = false,
     val verificationPhone: String = "",
     val otpCode: String = "",
     val otpSentTo: String = "",

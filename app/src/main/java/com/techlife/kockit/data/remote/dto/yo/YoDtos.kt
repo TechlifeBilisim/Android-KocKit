@@ -7,7 +7,8 @@ data class YoBilimDto(
 
 data class YoUniversiteDto(
     val yoUniversiteId: Int,
-    val ad: String
+    val ad: String,
+    val unversiteTurId: Int? = null
 )
 
 data class YoFakulteDto(

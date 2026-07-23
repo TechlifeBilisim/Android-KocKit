@@ -6,7 +6,6 @@ import com.techlife.kockit.data.remote.dto.auth.AuthSessionDto
 import com.techlife.kockit.data.remote.dto.auth.GoogleLoginRequestDto
 import com.techlife.kockit.data.remote.dto.auth.GoogleLoginResponseDto
 import com.techlife.kockit.data.remote.dto.auth.GoogleRegisterRequestDto
-import com.techlife.kockit.data.remote.dto.auth.LoginInitResponseDto
 import com.techlife.kockit.data.remote.dto.auth.LoginSmsRequestDto
 import com.techlife.kockit.data.remote.dto.auth.LoginSmsVerifyRequestDto
 import com.techlife.kockit.data.remote.dto.auth.LoginSmsVerifyResponseDto
@@ -47,7 +46,7 @@ interface AuthApiService {
     @ApiLog(ApiServices.AUTH_LOGIN_SMS_REQUEST)
     suspend fun requestLoginSms(
         @Body request: LoginSmsRequestDto
-    ): ApiEnvelopeDto<LoginInitResponseDto>
+    ): ApiEnvelopeDto<LoginSmsVerifyResponseDto>
 
     @POST("Api/Yonetim/Kullanici/Giris/Sms/Dogrula")
     @ApiLog(ApiServices.AUTH_LOGIN_SMS_VERIFY)

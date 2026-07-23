@@ -8,7 +8,6 @@ import com.techlife.kockit.domain.auth.model.StartupDestination
 import com.techlife.kockit.domain.auth.usecase.CheckSessionUseCase
 import com.techlife.kockit.domain.auth.usecase.GetRememberedPhoneUseCase
 import com.techlife.kockit.domain.auth.usecase.GetStartupDestinationUseCase
-import com.techlife.kockit.domain.auth.usecase.HasActiveSessionUseCase
 import com.techlife.kockit.domain.auth.usecase.LoginUseCase
 import com.techlife.kockit.domain.auth.usecase.LoginWithGoogleUseCase
 import com.techlife.kockit.domain.auth.usecase.LoginWithSmsUseCase
@@ -37,7 +36,6 @@ class LoginViewModel @Inject constructor(
     private val loginWithGoogleUseCase: LoginWithGoogleUseCase,
     private val setRememberMeUseCase: SetRememberMeUseCase,
     private val getRememberedPhoneUseCase: GetRememberedPhoneUseCase,
-    private val hasActiveSessionUseCase: HasActiveSessionUseCase,
     private val getStartupDestinationUseCase: GetStartupDestinationUseCase,
     private val checkSessionUseCase: CheckSessionUseCase
 ) : ViewModel() {
@@ -149,20 +147,8 @@ class LoginViewModel @Inject constructor(
             _uiState.update { it.copy(phoneError = phoneError) }
             return
         }
-
-        viewModelScope.launch {
-            // "Beni hatırla" ile daha önce girilmiş aynı telefon numarası ve hâlâ geçerli
-            // bir oturum varsa SMS adımını atlayıp doğrudan içeri al.
-            val rememberedPhone = getRememberedPhoneUseCase()
-            val sameRememberedPhone = !rememberedPhone.isNullOrBlank() &&
-                normalizeTurkishPhone(state.phone) == normalizeTurkishPhone(rememberedPhone)
-            if (state.rememberMe && sameRememberedPhone && hasActiveSessionUseCase()) {
-                _effect.emit(LoginEffect.ShowMessage("Giriş başarılı."))
-                emitPostLoginNavigation()
-                return@launch
-            }
-            requestPhoneLoginSms()
-        }
+        // Her girişte CepTelefon çağrılır; smsDogrulandi=false ise OTP adımına gidilir.
+        requestPhoneLoginSms()
     }
 
     private fun submitNicknameLogin() {
@@ -208,16 +194,29 @@ class LoginViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
             when (val result = requestLoginSmsUseCase(state.phone)) {
                 is ApiResult.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            currentStep = LoginSteps.OTP,
-                            otpCode = "",
-                            otpError = null
+                    val loginResult = result.data
+                    if (loginResult.accountVerified && !loginResult.accessToken.isNullOrBlank()) {
+                        // smsDogrulandi=true → doğrulama atlanır, doğrudan giriş.
+                        setRememberMeUseCase(
+                            state.rememberMe,
+                            if (state.rememberMe) normalizeTurkishPhone(state.phone) else null
                         )
+                        _uiState.update { it.copy(isLoading = false) }
+                        _effect.emit(LoginEffect.ShowMessage("Giriş başarılı."))
+                        emitPostLoginNavigation(loginResult.hasStudentGoal)
+                    } else {
+                        // smsDogrulandi=false → OTP sayfasına git.
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                currentStep = LoginSteps.OTP,
+                                otpCode = "",
+                                otpError = null
+                            )
+                        }
+                        startResendCountdown()
+                        emit(LoginEffect.ShowMessage("Doğrulama kodu telefon numarana gönderildi."))
                     }
-                    startResendCountdown()
-                    emit(LoginEffect.ShowMessage("Doğrulama kodu telefon numarana gönderildi."))
                 }
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(isLoading = false) }
@@ -242,13 +241,24 @@ class LoginViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, otpError = null) }
             when (val result = loginWithSmsUseCase(state.phone, state.otpCode)) {
                 is ApiResult.Success -> {
+                    val loginResult = result.data
+                    if (!loginResult.accountVerified || loginResult.accessToken.isNullOrBlank()) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                otpError = "SMS doğrulanamadı. Kodu kontrol edip tekrar dene."
+                            )
+                        }
+                        emit(LoginEffect.ShowMessage("SMS doğrulanamadı. Kodu kontrol edip tekrar dene."))
+                        return@launch
+                    }
                     setRememberMeUseCase(
                         state.rememberMe,
                         if (state.rememberMe) normalizeTurkishPhone(state.phone) else null
                     )
                     _uiState.update { it.copy(isLoading = false) }
                     _effect.emit(LoginEffect.ShowMessage("Giriş başarılı."))
-                    emitPostLoginNavigation()
+                    emitPostLoginNavigation(loginResult.hasStudentGoal)
                 }
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(isLoading = false, otpError = result.message) }
@@ -263,8 +273,15 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             when (val result = requestLoginSmsUseCase(_uiState.value.phone)) {
                 is ApiResult.Success -> {
-                    startResendCountdown()
-                    emit(LoginEffect.ShowMessage("Doğrulama kodu yeniden gönderildi."))
+                    // Yeniden gönderimde de doğrulanmış gelirse içeri al.
+                    val loginResult = result.data
+                    if (loginResult.accountVerified && !loginResult.accessToken.isNullOrBlank()) {
+                        _effect.emit(LoginEffect.ShowMessage("Giriş başarılı."))
+                        emitPostLoginNavigation(loginResult.hasStudentGoal)
+                    } else {
+                        startResendCountdown()
+                        emit(LoginEffect.ShowMessage("Doğrulama kodu yeniden gönderildi."))
+                    }
                 }
                 is ApiResult.Error -> emit(LoginEffect.ShowMessage(result.message))
             }
@@ -311,10 +328,10 @@ class LoginViewModel @Inject constructor(
         }
     }
 
-    private suspend fun emitPostLoginNavigation() {
-        val session = checkSessionUseCase()
+    private suspend fun emitPostLoginNavigation(hasStudentGoal: Boolean? = null) {
+        val goToMain = hasStudentGoal == true || checkSessionUseCase().isOnboardingCompleted
         _effect.emit(
-            if (session.isOnboardingCompleted) {
+            if (goToMain) {
                 LoginEffect.NavigateToMain
             } else {
                 LoginEffect.NavigateToGoalSetup

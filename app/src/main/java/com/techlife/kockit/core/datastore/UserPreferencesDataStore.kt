@@ -39,11 +39,8 @@ class UserPreferencesDataStore @Inject constructor(
     override suspend fun saveAuthTokens(accessToken: String, refreshToken: String?) {
         dataStore.edit { prefs ->
             prefs[Keys.ACCESS_TOKEN] = accessToken
-            if (refreshToken != null) {
-                prefs[Keys.REFRESH_TOKEN] = refreshToken
-            } else {
-                prefs.remove(Keys.REFRESH_TOKEN)
-            }
+            // Refresh token yanıtta yoksa eski değer korunur (silinmez).
+            refreshToken?.takeIf { it.isNotBlank() }?.let { prefs[Keys.REFRESH_TOKEN] = it }
         }
     }
 

@@ -1,6 +1,7 @@
 package com.techlife.kockit.core.network.interceptor
 
 import com.techlife.kockit.core.network.auth.AuthTokenRefresher
+import com.techlife.kockit.core.network.auth.JwtExpiry
 import com.techlife.kockit.core.network.auth.TokenProvider
 import com.techlife.kockit.core.network.config.AuthExemptPaths
 import com.techlife.kockit.core.network.config.NetworkConfig
@@ -18,14 +19,16 @@ class AuthTokenInterceptor @Inject constructor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
 
-        // Giriş/kayıt/SMS: token gönderilmez.
+        // Giriş/kayıt/SMS/token yenile: Authorization gönderilmez.
         if (AuthExemptPaths.shouldSkipAuthorization(originalRequest.url.encodedPath)) {
             return chain.proceed(originalRequest)
         }
 
-        var token = tokenProvider.getAccessToken()?.takeIf { it.isNotBlank() }
-        if (token == null) {
-            token = authTokenRefresher.refreshAccessToken()?.takeIf { it.isNotBlank() }
+        val cached = tokenProvider.getAccessToken()?.takeIf { it.isNotBlank() }
+        val token = when {
+            JwtExpiry.isValid(cached) -> cached
+            else -> authTokenRefresher.refreshAccessToken(force = true)
+                ?.takeIf { it.isNotBlank() }
         }
 
         val request = if (token == null) {

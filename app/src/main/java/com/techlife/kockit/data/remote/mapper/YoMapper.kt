@@ -28,7 +28,8 @@ fun YoBilimDto.toDomain(): YoBilim = YoBilim(
 
 fun YoUniversiteDto.toDomain(): YoUniversite = YoUniversite(
     id = yoUniversiteId,
-    name = ad
+    name = ad,
+    unversiteTurId = unversiteTurId
 )
 
 fun YoFakulteDto.toDomain(): YoFakulte = YoFakulte(

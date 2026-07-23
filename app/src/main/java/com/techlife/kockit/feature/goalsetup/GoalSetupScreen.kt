@@ -21,12 +21,14 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Icon
@@ -40,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,10 +50,10 @@ import com.techlife.kockit.R
 import com.techlife.kockit.core.designsystem.background.KocKitBackground
 import com.techlife.kockit.core.designsystem.component.KocKitBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitDropdownField
-import com.techlife.kockit.core.designsystem.component.KocKitExtraBoldText
 import com.techlife.kockit.core.designsystem.component.KocKitSemiText
 import com.techlife.kockit.core.designsystem.component.KocKitText
 import com.techlife.kockit.core.designsystem.component.KocKitTextDefaults
+import com.techlife.kockit.core.designsystem.component.KocKitTextField
 import com.techlife.kockit.core.designsystem.component.KocKitTopBar
 import com.techlife.kockit.core.designsystem.theme.KocKitTheme
 import com.techlife.kockit.core.designsystem.theme.LavenderAccent
@@ -58,12 +61,12 @@ import com.techlife.kockit.core.designsystem.theme.OrangeAccent
 import com.techlife.kockit.core.designsystem.theme.PastelGreen
 import com.techlife.kockit.core.designsystem.theme.TextPrimary
 import com.techlife.kockit.core.designsystem.theme.White
-import com.techlife.kockit.domain.onboarding.model.ExamGoal
 import com.techlife.kockit.domain.onboarding.model.UniversityType
 import com.techlife.kockit.domain.yo.model.YoBolum
-import com.techlife.kockit.domain.yo.model.YoFakulte
 import com.techlife.kockit.domain.yo.model.YoUniversite
 import kotlinx.coroutines.flow.collectLatest
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun GoalSetupScreen(
@@ -112,15 +115,14 @@ fun GoalSetupScreenContent(
                         .padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    GoalSetupExamStep(
+                    GoalSetupForm(
                         uiState = uiState,
                         onEvent = onEvent
                     )
                 }
-                GoalSetupContinueButton(
+                GoalSetupFooter(
                     isLoading = uiState.isLoading,
-                    onClick = { onEvent(GoalSetupEvent.ContinueClicked) },
-                    modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 32.dp)
+                    onContinue = { onEvent(GoalSetupEvent.ContinueClicked) }
                 )
             }
         }
@@ -136,26 +138,36 @@ fun GoalSetupScreenContent(
 }
 
 @Composable
-private fun GoalSetupExamStep(
+private fun GoalSetupForm(
     uiState: GoalSetupUiState,
     onEvent: (GoalSetupEvent) -> Unit
 ) {
     val colors = KocKitTheme.extraColors
 
-    KocKitExtraBoldText(
-        text = "Sınav Seçimi",
-        color = TextPrimary,
-        fontSize = KocKitTextDefaults.fontSizeHeadline,
-        lineHeight = KocKitTextDefaults.lineHeightHeadline
-    )
-
     GoalSetupOnlyTytCard(
         onlyTyt = uiState.onlyTyt,
         onToggle = { onEvent(GoalSetupEvent.OnlyTytToggled(it)) }
     )
-    uiState.examError?.let { KocKitText(text = it, color = colors.coralAccent) }
 
-    GoalSetupSectionTitle(text = "Hedefini seç")
+    GoalSetupSectionTitle(text = "Puan Türü")
+    GoalSetupPuanTurGrid(
+        selectedPuanTurId = uiState.selectedPuanTurId,
+        enabled = !uiState.onlyTyt,
+        onSelect = { onEvent(GoalSetupEvent.PuanTurSelected(it)) }
+    )
+    uiState.puanTurError?.let { KocKitText(text = it, color = colors.coralAccent) }
+
+    GoalSetupSectionTitle(text = "Sıralama Seç")
+    KocKitTextField(
+        value = formatSiralamaDisplay(uiState.siralamaInput),
+        onValueChange = { onEvent(GoalSetupEvent.SiralamaChanged(it)) },
+        placeholder = "50.000",
+        leadingIconVector = Icons.Filled.KeyboardArrowUp,
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        error = uiState.siralamaError
+    )
+
+    GoalSetupSectionTitle(text = "Üniversite Türü")
     GoalSetupUniversityTypeSwitch(
         selectedType = uiState.selectedUniversityType,
         onTypeSelected = { onEvent(GoalSetupEvent.UniversityTypeSelected(it)) }
@@ -163,42 +175,7 @@ private fun GoalSetupExamStep(
     uiState.universityTypeError?.let { KocKitText(text = it, color = colors.coralAccent) }
 
     KocKitDropdownField(
-        label = "Üniversite",
-        options = uiState.universiteler.map { it.name },
-        selectedOption = uiState.selectedUniversityName,
-        onOptionSelected = { name ->
-            val university = uiState.universiteler.find { it.name == name }
-                ?: return@KocKitDropdownField
-            onEvent(GoalSetupEvent.UniversitySelected(university.id, university.name))
-        },
-        error = uiState.universityError ?: uiState.universitelerError,
-        searchable = true,
-        searchPlaceholder = "Üniversite ara...",
-        leadingIcon = Icons.Filled.School,
-        leadingIconTint = PastelGreen,
-        leadingIconBackground = PastelGreen.copy(alpha = 0.15f)
-    )
-    KocKitDropdownField(
-        label = "Fakülte",
-        options = uiState.fakulteler.map { it.name },
-        selectedOption = uiState.selectedFakulteName,
-        onOptionSelected = { name ->
-            val fakulte = uiState.fakulteler.find { it.name == name } ?: return@KocKitDropdownField
-            onEvent(GoalSetupEvent.FakulteSelected(fakulte.id, fakulte.name))
-        },
-        error = uiState.fakulteError ?: uiState.fakultelerError,
-        searchable = true,
-        searchPlaceholder = when {
-            uiState.isFakultelerLoading -> "Fakülteler yükleniyor..."
-            uiState.selectedUniversityId == null -> "Önce üniversite seçin"
-            else -> "Fakülte ara..."
-        },
-        leadingIcon = Icons.Filled.AccountBalance,
-        leadingIconTint = OrangeAccent,
-        leadingIconBackground = OrangeAccent.copy(alpha = 0.15f)
-    )
-    KocKitDropdownField(
-        label = "Bölüm",
+        label = "Bölüm Seç",
         options = uiState.bolumler.map { it.name },
         selectedOption = uiState.selectedBolumName,
         onOptionSelected = { name ->
@@ -209,13 +186,160 @@ private fun GoalSetupExamStep(
         searchable = true,
         searchPlaceholder = when {
             uiState.isBolumlerLoading -> "Bölümler yükleniyor..."
-            uiState.selectedUniversityId == null -> "Önce üniversite seçin"
             else -> "Bölüm ara..."
         },
         leadingIcon = Icons.Filled.MenuBook,
         leadingIconTint = PastelGreen,
         leadingIconBackground = PastelGreen.copy(alpha = 0.12f)
     )
+    KocKitDropdownField(
+        label = "Üniversite Seç",
+        options = uiState.universiteler.map { it.name },
+        selectedOption = uiState.selectedUniversityName,
+        onOptionSelected = { name ->
+            val university = uiState.universiteler.find { it.name == name }
+                ?: return@KocKitDropdownField
+            onEvent(GoalSetupEvent.UniversitySelected(university.id, university.name))
+        },
+        error = uiState.universityError ?: uiState.universitelerError,
+        searchable = true,
+        searchPlaceholder = when {
+            uiState.isUniversitelerLoading -> "Üniversiteler yükleniyor..."
+            else -> "Üniversite ara..."
+        },
+        leadingIcon = Icons.Filled.School,
+        leadingIconTint = PastelGreen,
+        leadingIconBackground = PastelGreen.copy(alpha = 0.15f)
+    )
+}
+
+@Composable
+private fun GoalSetupFooter(
+    isLoading: Boolean,
+    onContinue: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 32.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        GoalSetupStepIndicator(
+            totalSteps = 4,
+            currentStep = 0,
+            modifier = Modifier.weight(1f)
+        )
+        GoalSetupContinueButton(
+            isLoading = isLoading,
+            onClick = onContinue,
+            modifier = Modifier.weight(2f)
+        )
+    }
+}
+
+@Composable
+private fun GoalSetupStepIndicator(
+    totalSteps: Int,
+    currentStep: Int,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(totalSteps) { index ->
+            Box(
+                modifier = Modifier
+                    .size(if (index == currentStep) 10.dp else 8.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (index == currentStep) PastelGreen
+                        else Color(0xFFD9DDE3)
+                    )
+            )
+        }
+    }
+}
+
+@Composable
+private fun GoalSetupPuanTurGrid(
+    selectedPuanTurId: Int?,
+    enabled: Boolean,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val options = GoalSetupPuanTurOptions.options
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        options.chunked(2).forEach { rowOptions ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                rowOptions.forEach { option ->
+                    GoalSetupPuanTurCard(
+                        option = option,
+                        isSelected = selectedPuanTurId == option.id,
+                        enabled = enabled,
+                        onClick = { onSelect(option.id) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                if (rowOptions.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GoalSetupPuanTurCard(
+    option: GoalSetupPuanTurOption,
+    isSelected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = KocKitTheme.extraColors
+    val borderColor = when {
+        isSelected -> option.accentColor
+        else -> colors.borderLight.copy(alpha = 0.7f)
+    }
+
+    Column(
+        modifier = modifier
+            .clip(GoalSetupCardShape)
+            .background(White)
+            .border(
+                width = if (isSelected) 2.dp else 1.dp,
+                color = borderColor,
+                shape = GoalSetupCardShape
+            )
+            .clickable(enabled = enabled) { onClick() }
+            .padding(vertical = 18.dp, horizontal = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Icon(
+            imageVector = option.icon,
+            contentDescription = null,
+            tint = if (enabled) option.accentColor else option.accentColor.copy(alpha = 0.4f),
+            modifier = Modifier.size(24.dp)
+        )
+        KocKitSemiText(
+            text = option.label,
+            color = if (enabled) TextPrimary else TextPrimary.copy(alpha = 0.4f),
+            fontSize = KocKitTextDefaults.fontSizeBody,
+            lineHeight = KocKitTextDefaults.lineHeightBody,
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
+    }
 }
 
 @Composable
@@ -237,9 +361,7 @@ private fun GoalSetupContinueButton(
     Surface(
         onClick = onClick,
         enabled = !isLoading,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp),
+        modifier = modifier.height(56.dp),
         shape = RoundedCornerShape(28.dp),
         color = PastelGreen
     ) {
@@ -259,22 +381,6 @@ private fun GoalSetupContinueButton(
                     color = White,
                     fontSize = KocKitTextDefaults.fontSizeButton
                 )
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 8.dp)
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(White.copy(alpha = 0.25f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = White,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
             }
         }
     }
@@ -307,9 +413,9 @@ private fun GoalSetupUniversityTypeSwitch(
         ),
         GoalSetupUniversityTypeOption(
             UniversityType.OZEL,
-            "Özel",
+            "Diğer",
             iconPainter = null,
-            iconVector = Icons.Filled.Person,
+            iconVector = Icons.Filled.Apps,
             accentColor = PastelGreen
         )
     )
@@ -393,23 +499,8 @@ private fun GoalSetupOnlyTytCard(
             .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(LavenderAccent.copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.School,
-                contentDescription = null,
-                tint = LavenderAccent,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(12.dp))
         KocKitSemiText(
-            text = "Sadece TYT'ye mi girmek istiyorsunuz?",
+            text = "Sadece TYT'ye girmek istiyorum.",
             color = TextPrimary,
             modifier = Modifier.weight(1f),
             fontSize = KocKitTextDefaults.fontSizeBodyLarge,
@@ -462,34 +553,32 @@ private fun GoalSetupPillSwitch(
     }
 }
 
+private fun formatSiralamaDisplay(rawDigits: String): String {
+    if (rawDigits.isBlank()) return ""
+    val number = rawDigits.toLongOrNull() ?: return rawDigits
+    return NumberFormat.getIntegerInstance(Locale("tr", "TR")).format(number)
+}
+
 @androidx.compose.ui.tooling.preview.Preview
 @Composable
 private fun GoalSetupScreenPreview() {
     KocKitTheme {
         GoalSetupScreenContent(
             uiState = GoalSetupUiState(
-                examGoals = listOf(
-                    ExamGoal("tyt", "TYT", "Temel Yeterlilik Testi", "tyt"),
-                    ExamGoal("ayt", "AYT", "Alan Yeterlilik Testi", "ayt"),
-                ),
                 universiteler = listOf(
                     YoUniversite(1, "Boğaziçi Üniversitesi"),
                     YoUniversite(2, "İstanbul Teknik Üniversitesi")
                 ),
-                fakulteler = listOf(
-                    YoFakulte(1, 1, "Mühendislik Fak."),
-                    YoFakulte(2, 1, "Fen-Edebiyat Fak.")
-                ),
                 bolumler = listOf(
-                    YoBolum(52, 12, "İlahiyat")
+                    YoBolum(52, 12, "İlahiyat"),
+                    YoBolum(53, 12, "Bilgisayar Mühendisliği")
                 ),
-                selectedExamGoalId = "tyt",
+                onlyTyt = false,
+                selectedPuanTurId = GoalSetupPuanTurOptions.PUAN_TUR_SAYISAL,
+                siralamaInput = "50000",
                 selectedUniversityType = null,
-                onlyTyt = true,
                 selectedUniversityId = 1,
                 selectedUniversityName = "Boğaziçi Üniversitesi",
-                selectedFakulteId = 1,
-                selectedFakulteName = "Mühendislik Fak.",
                 selectedBolumId = 52,
                 selectedBolumName = "İlahiyat"
             ),

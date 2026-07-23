@@ -9,13 +9,12 @@ import com.techlife.kockit.domain.ogrenci.model.OgrenciHedefTercih
 import com.techlife.kockit.domain.ogrenci.usecase.CreateOgrenciHedefUseCase
 import com.techlife.kockit.domain.ogrenci.usecase.GetOgrenciUseCase
 import com.techlife.kockit.domain.onboarding.model.Department
+import com.techlife.kockit.domain.onboarding.model.ExamGoal
 import com.techlife.kockit.domain.onboarding.model.OnboardingInfo
 import com.techlife.kockit.domain.onboarding.model.University
 import com.techlife.kockit.domain.onboarding.model.UniversityType
-import com.techlife.kockit.domain.onboarding.usecase.GetExamGoalsUseCase
 import com.techlife.kockit.domain.onboarding.usecase.SaveOnboardingInfoUseCase
 import com.techlife.kockit.domain.yo.usecase.GetYoBolumlerUseCase
-import com.techlife.kockit.domain.yo.usecase.GetYoFakultelerUseCase
 import com.techlife.kockit.domain.yo.usecase.GetYoUniversitelerUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
@@ -31,9 +30,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GoalSetupViewModel @Inject constructor(
-    private val getExamGoalsUseCase: GetExamGoalsUseCase,
     private val getYoUniversitelerUseCase: GetYoUniversitelerUseCase,
-    private val getYoFakultelerUseCase: GetYoFakultelerUseCase,
     private val getYoBolumlerUseCase: GetYoBolumlerUseCase,
     private val getKullaniciIdUseCase: GetKullaniciIdUseCase,
     private val getOgrenciUseCase: GetOgrenciUseCase,
@@ -53,19 +50,30 @@ class GoalSetupViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            val universitelerDeferred = async { getYoUniversitelerUseCase() }
+            val universitelerDeferred = async {
+                getYoUniversitelerUseCase(_uiState.value.selectedUniversityType?.id)
+            }
+            val bolumlerDeferred = async { getYoBolumlerUseCase(yoBilimId = null, yoUniversiteId = null) }
             val kullaniciId = getKullaniciIdUseCase()
             val ogrenciDeferred = async {
                 kullaniciId?.takeIf { it.isNotBlank() }?.let { getOgrenciUseCase(it) }
             }
 
             val universitelerResult = universitelerDeferred.await()
+            val bolumlerResult = bolumlerDeferred.await()
             val ogrenciResult = ogrenciDeferred.await()
 
             val universiteler = when (universitelerResult) {
                 is ApiResult.Success -> universitelerResult.data
                 is ApiResult.Error -> {
                     _uiState.update { it.copy(universitelerError = universitelerResult.message) }
+                    emptyList()
+                }
+            }
+            val bolumler = when (bolumlerResult) {
+                is ApiResult.Success -> bolumlerResult.data
+                is ApiResult.Error -> {
+                    _uiState.update { it.copy(bolumlerError = bolumlerResult.message) }
                     emptyList()
                 }
             }
@@ -76,33 +84,68 @@ class GoalSetupViewModel @Inject constructor(
 
             _uiState.update {
                 it.copy(
-                    examGoals = getExamGoalsUseCase(),
                     universiteler = universiteler,
+                    bolumler = bolumler,
                     ogrenci = ogrenci,
+                    isBolumlerLoading = false,
+                    isUniversitelerLoading = false,
                     isDataLoading = false
                 )
             }
         }
     }
 
-    fun onEvent(event: GoalSetupEvent) {
-        when (event) {
-            is GoalSetupEvent.ExamGoalSelected -> _uiState.update {
+    private fun loadUniversiteler(unversiteTurId: Int?) {
+        viewModelScope.launch {
+            _uiState.update {
                 it.copy(
-                    selectedExamGoalId = event.id,
-                    examError = null,
-                    selectedAytFieldId = if (event.id == "ayt") it.selectedAytFieldId else null,
-                    aytFieldError = null
+                    isUniversitelerLoading = true,
+                    universitelerError = null,
+                    selectedUniversityId = null,
+                    selectedUniversityName = null
                 )
             }
-            is GoalSetupEvent.AytFieldSelected -> _uiState.update {
-                it.copy(selectedAytFieldId = event.id, aytFieldError = null)
+            when (val result = getYoUniversitelerUseCase(unversiteTurId)) {
+                is ApiResult.Success -> _uiState.update {
+                    it.copy(
+                        universiteler = result.data,
+                        isUniversitelerLoading = false
+                    )
+                }
+                is ApiResult.Error -> _uiState.update {
+                    it.copy(
+                        universiteler = emptyList(),
+                        universitelerError = result.message,
+                        isUniversitelerLoading = false
+                    )
+                }
             }
+        }
+    }
+
+    fun onEvent(event: GoalSetupEvent) {
+        when (event) {
             is GoalSetupEvent.OnlyTytToggled -> _uiState.update {
                 it.copy(
                     onlyTyt = event.value,
-                    selectedExamGoalId = if (event.value) "tyt" else "ayt",
-                    examError = null
+                    selectedPuanTurId = if (event.value) GoalSetupPuanTurOptions.PUAN_TUR_TYT else it.selectedPuanTurId,
+                    puanTurError = null
+                )
+            }
+            is GoalSetupEvent.PuanTurSelected -> {
+                if (_uiState.value.onlyTyt) return
+                _uiState.update {
+                    it.copy(
+                        selectedPuanTurId = event.puanTurId,
+                        onlyTyt = event.puanTurId == GoalSetupPuanTurOptions.PUAN_TUR_TYT,
+                        puanTurError = null
+                    )
+                }
+            }
+            is GoalSetupEvent.SiralamaChanged -> _uiState.update {
+                it.copy(
+                    siralamaInput = event.value.filter { char -> char.isDigit() },
+                    siralamaError = null
                 )
             }
             GoalSetupEvent.SuccessDialogDismissed -> _uiState.update {
@@ -116,37 +159,21 @@ class GoalSetupViewModel @Inject constructor(
                 _uiState.update { it.copy(showSuccessDialog = false) }
                 emit(GoalSetupEffect.NavigateToMain)
             }
-            is GoalSetupEvent.UniversityTypeSelected -> _uiState.update {
-                it.copy(
-                    selectedUniversityType = event.type,
-                    universityTypeError = null
-                )
-            }
-            is GoalSetupEvent.UniversitySelected -> {
+            is GoalSetupEvent.UniversityTypeSelected -> {
+                if (_uiState.value.selectedUniversityType == event.type) return
                 _uiState.update {
                     it.copy(
-                        selectedUniversityId = event.universityId,
-                        selectedUniversityName = event.name,
-                        universityError = null,
-                        selectedFakulteId = null,
-                        selectedFakulteName = null,
-                        fakulteler = emptyList(),
-                        fakultelerError = null,
-                        selectedBolumId = null,
-                        selectedBolumName = null,
-                        bolumler = emptyList(),
-                        isFakultelerLoading = true,
-                        isBolumlerLoading = true
+                        selectedUniversityType = event.type,
+                        universityTypeError = null
                     )
                 }
-                loadFakulteler(event.universityId)
-                loadBolumler(event.universityId)
+                loadUniversiteler(event.type?.id)
             }
-            is GoalSetupEvent.FakulteSelected -> _uiState.update {
+            is GoalSetupEvent.UniversitySelected -> _uiState.update {
                 it.copy(
-                    selectedFakulteId = event.fakulteId,
-                    selectedFakulteName = event.name,
-                    fakulteError = null
+                    selectedUniversityId = event.universityId,
+                    selectedUniversityName = event.name,
+                    universityError = null
                 )
             }
             is GoalSetupEvent.BolumSelected -> _uiState.update {
@@ -161,97 +188,29 @@ class GoalSetupViewModel @Inject constructor(
         }
     }
 
-    private fun loadFakulteler(yoUniversiteId: Int) {
-        viewModelScope.launch {
-            when (val result = getYoFakultelerUseCase(yoUniversiteId)) {
-                is ApiResult.Success -> _uiState.update {
-                    it.copy(
-                        fakulteler = result.data,
-                        isFakultelerLoading = false,
-                        fakultelerError = null
-                    )
-                }
-                is ApiResult.Error -> _uiState.update {
-                    it.copy(
-                        fakulteler = emptyList(),
-                        isFakultelerLoading = false,
-                        fakultelerError = result.message
-                    )
-                }
-            }
-        }
-    }
-
-    private fun loadBolumler(yoUniversiteId: Int) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isBolumlerLoading = true, bolumlerError = null) }
-            when (
-                val result = getYoBolumlerUseCase(
-                    yoBilimId = null,
-                    yoUniversiteId = yoUniversiteId
-                )
-            ) {
-                is ApiResult.Success -> _uiState.update {
-                    it.copy(
-                        bolumler = result.data,
-                        isBolumlerLoading = false,
-                        bolumlerError = null
-                    )
-                }
-                is ApiResult.Error -> _uiState.update {
-                    it.copy(
-                        bolumler = emptyList(),
-                        isBolumlerLoading = false,
-                        bolumlerError = result.message
-                    )
-                }
-            }
-        }
-    }
-
     private fun onContinue() {
-        if (!REQUIRE_SELECTIONS || validate()) {
+        if (validate()) {
             save()
         }
     }
 
     private fun validate(): Boolean {
-        if (!REQUIRE_SELECTIONS) return true
-
         val state = _uiState.value
-        val exam = state.examGoals.find { it.id == state.selectedExamGoalId }
-        val university = state.universiteler.find { it.id == state.selectedUniversityId }
-        val fakulte = state.fakulteler.find { it.id == state.selectedFakulteId }
-        val bolum = state.bolumler.find { it.id == state.selectedBolumId }
-        val examError = if (exam == null) "Sınav seçimi gerekli" else null
-        val aytFieldError = if (state.selectedExamGoalId == "ayt" && state.selectedAytFieldId == null) {
-            "AYT alan seçimi gerekli"
+        val puanTurError = if (state.selectedPuanTurId == null) "Puan türü seçimi gerekli" else null
+        val siralamaError = if (parseSiralama(state.siralamaInput) == null) {
+            "Hedef sıralama gerekli"
         } else {
             null
         }
-        val universityTypeError = if (state.selectedUniversityType == null) {
-            "Üniversite türü seçimi gerekli"
-        } else {
-            null
-        }
-        val universityError = if (university == null) "Üniversite seçimi gerekli" else null
-        val fakulteError = if (fakulte == null) "Fakülte seçimi gerekli" else null
-        val bolumError = if (bolum == null) "Bölüm seçimi gerekli" else null
-        if (
-            examError != null ||
-            aytFieldError != null ||
-            universityTypeError != null ||
-            universityError != null ||
-            fakulteError != null ||
-            bolumError != null
-        ) {
+        val universityError = if (state.selectedUniversityId == null) "Üniversite seçimi gerekli" else null
+        val bolumError = if (state.selectedBolumId == null) "Bölüm seçimi gerekli" else null
+
+        if (puanTurError != null || siralamaError != null || universityError != null || bolumError != null) {
             _uiState.update {
                 it.copy(
-                    examError = examError,
-                    aytFieldError = aytFieldError,
-                    universityTypeError = universityTypeError,
+                    puanTurError = puanTurError,
+                    siralamaError = siralamaError,
                     universityError = universityError,
-                    fakulteError = fakulteError,
                     bolumError = bolumError
                 )
             }
@@ -262,49 +221,58 @@ class GoalSetupViewModel @Inject constructor(
 
     private fun save() {
         val state = _uiState.value
-        val examId = state.selectedExamGoalId ?: if (state.onlyTyt) "tyt" else "ayt"
-        val exam = state.examGoals.find { it.id == examId }
-        val university = state.universiteler.find { it.id == state.selectedUniversityId }?.let {
-            University(
-                id = it.id.toString(),
-                name = it.name,
-                city = "",
-                region = "",
-                type = state.selectedUniversityType ?: UniversityType.DEVLET
-            )
-        }
-        val department = state.bolumler.find { it.id == state.selectedBolumId }?.let {
-            Department(id = it.id.toString(), name = it.name)
-        }
+        val puanTurId = state.selectedPuanTurId ?: return
+        val siralama = parseSiralama(state.siralamaInput) ?: return
+        val university = state.universiteler.find { it.id == state.selectedUniversityId }
+        val bolum = state.bolumler.find { it.id == state.selectedBolumId }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
 
-            val hedefResult = createRemoteHedefIfPossible(state)
+            val hedefResult = createRemoteHedefIfPossible(state, siralama)
             if (hedefResult is ApiResult.Error) {
                 _uiState.update { it.copy(isLoading = false) }
                 emit(GoalSetupEffect.ShowMessage(hedefResult.message))
                 return@launch
             }
 
-            if (exam != null && university != null && department != null) {
-                saveOnboardingInfoUseCase(OnboardingInfo(exam, university, department))
-                    .onSuccess {
-                        _uiState.update { it.copy(isLoading = false, showSuccessDialog = true) }
-                    }
-                    .onFailure {
-                        _uiState.update { it.copy(isLoading = false) }
-                        emit(GoalSetupEffect.ShowMessage("Kayıt başarısız."))
-                    }
+            if (university != null && bolum != null) {
+                val examGoal = examGoalForPuanTur(puanTurId)
+                saveOnboardingInfoUseCase(
+                    OnboardingInfo(
+                        examGoal = examGoal,
+                        university = University(
+                            id = university.id.toString(),
+                            name = university.name,
+                            city = "",
+                            region = "",
+                            type = state.selectedUniversityType ?: UniversityType.DEVLET
+                        ),
+                        department = Department(
+                            id = bolum.id.toString(),
+                            name = bolum.name
+                        )
+                    )
+                ).onSuccess {
+                    _uiState.update { it.copy(isLoading = false, showSuccessDialog = true) }
+                }.onFailure {
+                    _uiState.update { it.copy(isLoading = false) }
+                    emit(GoalSetupEffect.ShowMessage("Kayıt başarısız."))
+                }
             } else {
                 _uiState.update { it.copy(isLoading = false, showSuccessDialog = true) }
             }
         }
     }
 
-    private suspend fun createRemoteHedefIfPossible(state: GoalSetupUiState): ApiResult<Unit>? {
+    private suspend fun createRemoteHedefIfPossible(
+        state: GoalSetupUiState,
+        siralama: Int
+    ): ApiResult<Unit>? {
         val universityId = state.selectedUniversityId ?: return null
         val bolumId = state.selectedBolumId ?: return null
+        val puanTurId = state.selectedPuanTurId ?: return null
+
         var ogrenciId = state.ogrenci?.ogrenciId
         if (ogrenciId == null) {
             val kullaniciId = getKullaniciIdUseCase() ?: return null
@@ -317,6 +285,7 @@ class GoalSetupViewModel @Inject constructor(
             }
         }
         val resolvedOgrenciId = ogrenciId ?: return null
+
         return createOgrenciHedefUseCase(
             CreateOgrenciHedef(
                 ogrenciId = resolvedOgrenciId,
@@ -326,37 +295,31 @@ class GoalSetupViewModel @Inject constructor(
                         yoBolumId = bolumId
                     )
                 ),
-                puanTurIds = resolvePuanTurIds(state),
-                siralama = null
+                puanTurIds = listOf(puanTurId),
+                siralama = siralama
             )
         )
     }
 
-    private fun resolvePuanTurIds(state: GoalSetupUiState): List<Int> {
-        if (state.onlyTyt || state.selectedExamGoalId == "tyt") {
-            return listOf(PUAN_TUR_TYT)
-        }
-        return listOf(
-            when (state.selectedAytFieldId) {
-                "sayisal" -> PUAN_TUR_SAYISAL
-                "sozel" -> PUAN_TUR_SOZEL
-                "esit_agirlik" -> PUAN_TUR_EA
-                "dil" -> PUAN_TUR_DIL
-                else -> PUAN_TUR_SAYISAL
-            }
+    private fun examGoalForPuanTur(puanTurId: Int): ExamGoal = when (puanTurId) {
+        GoalSetupPuanTurOptions.PUAN_TUR_TYT -> ExamGoal(
+            id = "tyt",
+            title = "TYT",
+            subtitle = "Temel Yeterlilik Testi",
+            type = "TYT"
+        )
+        else -> ExamGoal(
+            id = "ayt",
+            title = "AYT",
+            subtitle = "Alan Yeterlilik Testleri",
+            type = "AYT"
         )
     }
 
+    private fun parseSiralama(raw: String): Int? =
+        raw.filter(Char::isDigit).toIntOrNull()?.takeIf { it > 0 }
+
     private fun emit(effect: GoalSetupEffect) {
         viewModelScope.launch { _effect.emit(effect) }
-    }
-
-    private companion object {
-        const val REQUIRE_SELECTIONS = false
-        const val PUAN_TUR_TYT = 1
-        const val PUAN_TUR_SAYISAL = 2
-        const val PUAN_TUR_SOZEL = 3
-        const val PUAN_TUR_EA = 4
-        const val PUAN_TUR_DIL = 5
     }
 }

@@ -38,8 +38,8 @@ fun RegisterInfo.toGoogleRegisterRequestDto(oAuthIdToken: String): GoogleRegiste
     return GoogleRegisterRequestDto(
         ad = ad,
         soyad = soyad,
-        cepTelefon = normalizeTurkishPhone(phone).ifBlank { null },
-        rumuz = nickname.trim().ifBlank { null },
+        cepTelefon = normalizeTurkishPhone(phone),
+        rumuz = nickname.trim(),
         eposta = email.trim(),
         cinsiyet = gender.apiId,
         oAuthIdToken = oAuthIdToken
@@ -110,26 +110,37 @@ fun LoginInitResponseDto.toDomain(): LoginResult = toGoogleLoginDomain()
 fun GoogleLoginResponseDto.toDomain(): LoginResult = toGoogleLoginDomain()
 
 fun GoogleLoginResponseDto.toRegisterResult(): RegisterResult? {
-    val token = accessToken ?: kullaniciProfili?.accessToken ?: return null
-    val userId = kullaniciId ?: kullaniciProfili?.kullaniciId ?: return null
+    val user = kullanici
+    val profile = kullaniciProfili
+    val token = accessToken?.takeIf { it.isNotBlank() }
+        ?: user?.accessToken?.takeIf { it.isNotBlank() }
+        ?: profile?.accessToken?.takeIf { it.isNotBlank() }
+        ?: return null
+    val userId = kullaniciId
+        ?: user?.kullaniciId
+        ?: profile?.kullaniciId
+        ?: return null
     return RegisterResult(
         userId = userId,
         accessToken = token,
-        refreshToken = refreshToken ?: kullaniciProfili?.refreshToken,
-        email = eposta ?: kullaniciProfili?.eposta,
-        phone = cepTelefon ?: kullaniciProfili?.cepTelefon
+        refreshToken = refreshToken ?: user?.refreshToken ?: profile?.refreshToken,
+        email = eposta ?: user?.eposta ?: profile?.eposta,
+        phone = cepTelefon ?: profile?.cepTelefon
     )
 }
 
 private fun GoogleLoginResponseDto.toGoogleLoginDomain(): LoginResult {
+    val user = kullanici
     val profile = kullaniciProfili
     val resolvedAccessToken = accessToken?.takeIf { it.isNotBlank() }
+        ?: user?.accessToken?.takeIf { it.isNotBlank() }
         ?: profile?.accessToken?.takeIf { it.isNotBlank() }
     val resolvedRefreshToken = refreshToken?.takeIf { it.isNotBlank() }
+        ?: user?.refreshToken?.takeIf { it.isNotBlank() }
         ?: profile?.refreshToken?.takeIf { it.isNotBlank() }
-    val resolvedUserId = kullaniciId ?: profile?.kullaniciId
-    val resolvedAd = ad ?: profile?.ad
-    val resolvedSoyad = soyad ?: profile?.soyad
+    val resolvedUserId = kullaniciId ?: user?.kullaniciId ?: profile?.kullaniciId
+    val resolvedAd = ad ?: user?.ad ?: profile?.ad
+    val resolvedSoyad = soyad ?: user?.soyad ?: profile?.soyad
     val fullName = listOfNotNull(resolvedAd, resolvedSoyad).joinToString(" ").takeIf { it.isNotBlank() }
 
     return LoginResult(
@@ -139,7 +150,7 @@ private fun GoogleLoginResponseDto.toGoogleLoginDomain(): LoginResult {
         accessToken = resolvedAccessToken,
         refreshToken = resolvedRefreshToken,
         fullName = fullName,
-        email = eposta ?: profile?.eposta,
+        email = eposta ?: user?.eposta ?: profile?.eposta,
         phone = cepTelefon ?: profile?.cepTelefon
     )
 }

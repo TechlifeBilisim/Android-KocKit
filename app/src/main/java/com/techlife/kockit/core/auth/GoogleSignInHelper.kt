@@ -40,6 +40,7 @@ object GoogleSignInHelper {
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(webClientId)
             .requestEmail()
+            .requestProfile()
             .build()
         return GoogleSignIn.getClient(context, options)
     }

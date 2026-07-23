@@ -18,7 +18,9 @@ interface YoApiService {
 
     @GET("Api/YOUniversite")
     @ApiLog(ApiServices.YO_UNIVERSITE_LIST)
-    suspend fun getUniversiteler(): ApiEnvelopeDto<List<YoUniversiteDto>>
+    suspend fun getUniversiteler(
+        @Query("UnversiteTurId") unversiteTurId: Int? = null
+    ): ApiEnvelopeDto<List<YoUniversiteDto>>
 
     @GET("Api/YOFakulte")
     @ApiLog(ApiServices.YO_FAKULTE_LIST)

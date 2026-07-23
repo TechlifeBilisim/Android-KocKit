@@ -82,55 +82,47 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun onGoogleClicked() {
-        if (!validateAccountStep()) return
         emit(RegisterEffect.LaunchGoogleSignIn)
     }
 
-    fun onGoogleSignInSuccess(oAuthIdToken: String?, email: String?) {
+    fun onGoogleAccountSelected(
+        oAuthIdToken: String?,
+        email: String?,
+        displayName: String?,
+        givenName: String?,
+        familyName: String?,
+        phoneNumber: String?
+    ) {
         if (oAuthIdToken.isNullOrBlank()) {
             emit(RegisterEffect.ShowMessage("Google token alınamadı."))
             return
         }
-        val state = _uiState.value
-        val gender = state.selectedGender
-        if (gender == null) {
-            _uiState.update { it.copy(genderError = "Cinsiyet seçimi gerekli") }
-            return
-        }
-        val registerEmail = email?.takeIf { it.isNotBlank() } ?: state.email.trim()
-        if (registerEmail.isBlank()) {
-            emit(RegisterEffect.ShowMessage("Google e-posta adresi alınamadı."))
-            return
-        }
 
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            when (
-                val result = registerWithGoogleUseCase(
-                    RegisterInfo(
-                        accountType = RegisterAccountType.PHONE,
-                        fullName = state.fullName.trim(),
-                        email = registerEmail,
-                        nickname = state.nickname.trim(),
-                        phone = state.phone,
-                        gender = gender
-                    ),
-                    oAuthIdToken = oAuthIdToken
-                )
-            ) {
-                is ApiResult.Success -> {
-                    val registeredPhone = result.data.phone.orEmpty().ifBlank { state.phone }
-                    continueWithSmsVerification(
-                        phone = registeredPhone,
-                        successMessage = "Google ile kayıt başarılı. Telefonuna gönderilen kodu gir."
-                    )
-                }
-                is ApiResult.Error -> {
-                    _uiState.update { it.copy(isLoading = false) }
-                    emit(RegisterEffect.ShowMessage(result.message))
-                }
-            }
+        val fullName = buildGoogleFullName(givenName, familyName, displayName)
+        val googleEmail = email.orEmpty().trim()
+        val googlePhone = normalizeGooglePhone(phoneNumber)
+
+        _uiState.update { state ->
+            state.copy(
+                googleOAuthIdToken = oAuthIdToken,
+                isGoogleLinked = true,
+                fullName = fullName.ifBlank { state.fullName },
+                fullNameError = null,
+                email = googleEmail.ifBlank { state.email },
+                emailError = null,
+                phone = googlePhone.ifBlank { state.phone },
+                phoneError = null
+            )
         }
+        emit(
+            RegisterEffect.ShowMessage(
+                if (fullName.isNotBlank() || googleEmail.isNotBlank()) {
+                    "Google hesabın bağlandı. Eksik alanları tamamla ve devam et."
+                } else {
+                    "Google hesabın bağlandı. Bilgilerini tamamla."
+                }
+            )
+        )
     }
 
     private fun onContinue() {
@@ -145,26 +137,41 @@ class RegisterViewModel @Inject constructor(
 
         val state = _uiState.value
         val gender = state.selectedGender ?: return
+        val googleToken = state.googleOAuthIdToken?.takeIf { it.isNotBlank() }
+        val useGoogleRegister = state.isGoogleLinked || googleToken != null
+
+        if (useGoogleRegister && googleToken == null) {
+            emit(RegisterEffect.ShowMessage("Google oturumu eksik. Lütfen Google ile tekrar bağlan."))
+            return
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            when (
-                val result = registerUseCase(
-                    RegisterInfo(
-                        accountType = RegisterAccountType.PHONE,
-                        fullName = state.fullName.trim(),
-                        email = state.email.trim(),
-                        nickname = state.nickname.trim(),
-                        phone = state.phone,
-                        gender = gender
-                    )
-                )
-            ) {
+            val registerInfo = RegisterInfo(
+                accountType = RegisterAccountType.PHONE,
+                fullName = state.fullName.trim(),
+                email = state.email.trim(),
+                nickname = state.nickname.trim(),
+                phone = state.phone,
+                gender = gender
+            )
+            // Google ile gelindiyse Kayit/Google + oAuthIdToken gönderilir.
+            val result = if (googleToken != null) {
+                registerWithGoogleUseCase(registerInfo, googleToken)
+            } else {
+                registerUseCase(registerInfo)
+            }
+            when (result) {
                 is ApiResult.Success -> {
                     val registeredPhone = result.data.phone.orEmpty().ifBlank { state.phone }
+                    val successMessage = if (googleToken != null) {
+                        "Google ile kayıt başarılı. Telefonuna gönderilen kodu gir."
+                    } else {
+                        "Kayıt başarılı. Telefonuna gönderilen kodu gir."
+                    }
                     continueWithSmsVerification(
                         phone = registeredPhone,
-                        successMessage = "Kayıt başarılı. Telefonuna gönderilen kodu gir."
+                        successMessage = successMessage
                     )
                 }
                 is ApiResult.Error -> {
@@ -172,6 +179,29 @@ class RegisterViewModel @Inject constructor(
                     emit(RegisterEffect.ShowMessage(result.message))
                 }
             }
+        }
+    }
+
+    private fun buildGoogleFullName(
+        givenName: String?,
+        familyName: String?,
+        displayName: String?
+    ): String {
+        val fromParts = listOfNotNull(
+            givenName?.trim()?.takeIf { it.isNotBlank() },
+            familyName?.trim()?.takeIf { it.isNotBlank() }
+        ).joinToString(" ")
+        return fromParts.ifBlank { displayName.orEmpty().trim() }
+    }
+
+    private fun normalizeGooglePhone(raw: String?): String {
+        if (raw.isNullOrBlank()) return ""
+        val digits = raw.filter(Char::isDigit)
+        return when {
+            digits.length == 12 && digits.startsWith("90") -> digits.drop(2)
+            digits.length == 11 && digits.startsWith("0") -> digits.drop(1)
+            digits.length == 10 && digits.startsWith("5") -> digits
+            else -> digits.takeLast(10).takeIf { it.length == 10 && it.startsWith("5") }.orEmpty()
         }
     }
 

@@ -63,8 +63,8 @@ data class GoogleLoginRequestDto(
 data class GoogleRegisterRequestDto(
     val ad: String,
     val soyad: String,
-    val cepTelefon: String? = null,
-    val rumuz: String? = null,
+    val cepTelefon: String,
+    val rumuz: String,
     val eposta: String,
     val cinsiyet: Int,
     val oAuthIdToken: String
@@ -93,6 +93,7 @@ data class GoogleLoginResponseDto(
     @Json(name = "hesapOnaylandı") val hesapOnaylandi: Boolean? = null,
     @Json(name = "kayıtlı") val kayitli: Boolean? = null,
     val kullaniciProfili: AuthSessionDto? = null,
+    val kullanici: LoginSmsKullaniciDto? = null,
     val kullaniciId: String? = null,
     val ad: String? = null,
     val soyad: String? = null,

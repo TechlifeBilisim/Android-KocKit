@@ -45,12 +45,28 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun requestLoginSms(phone: String): ApiResult<Unit> =
-        authRemoteDataSource.requestLoginSms(phone)
+    override suspend fun requestLoginSms(phone: String): ApiResult<LoginResult> {
+        return when (val result = authRemoteDataSource.requestLoginSms(phone)) {
+            is ApiResult.Success -> {
+                // SMS zaten doğrulanmış ve token geldiyse oturumu kaydet.
+                if (result.data.accountVerified && !result.data.accessToken.isNullOrBlank()) {
+                    authLocalDataSource.persistLogin(result.data)
+                }
+                result
+            }
+            is ApiResult.Error -> result
+        }
+    }
 
     override suspend fun loginWithSms(phone: String, code: String): ApiResult<LoginResult> {
         return when (val result = authRemoteDataSource.loginWithSms(phone, code)) {
-            is ApiResult.Success -> completeLogin(result.data)
+            is ApiResult.Success -> {
+                if (!result.data.accountVerified || result.data.accessToken.isNullOrBlank()) {
+                    ApiResult.Error(message = "SMS doğrulanamadı. Kodu kontrol edip tekrar dene.")
+                } else {
+                    completeLogin(result.data)
+                }
+            }
             is ApiResult.Error -> result
         }
     }
